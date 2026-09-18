@@ -2526,7 +2526,8 @@ export class Casa3DCard extends HTMLElement {
 
   setConfig(config) {
     this._config = Object.assign({ title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, car_color: '#f3f3f0', entities: {},
-      latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180 }, config || {});   // no HA a posição real vem de hass.config
+      latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180, quality: 'alta' }, config || {});
+    this._lite = this._config.quality === 'leve';   // no HA a posição real vem de hass.config
     this._mode = ['auto', 'day', 'night'].includes(this._config.mode) ? this._config.mode : 'auto';
     this._nightVision = this._config.night_vision !== false;
     if (this._config.height) this.style.setProperty('--casa3d-height', String(this._config.height));
@@ -2630,7 +2631,7 @@ export class Casa3DCard extends HTMLElement {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = this._lite ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     renderer.shadowMap.autoUpdate = false;   // cena estática: sombras só recalculam quando algo muda
     this._renderer = renderer;
 
@@ -2656,7 +2657,7 @@ export class Casa3DCard extends HTMLElement {
     this._sunCol = new THREE.Color(0xfff0d2); this._moonCol = new THREE.Color(0x8fa6d8);
     this._sun.position.copy(this._sunPos); this._sun.target.position.set(6.7, 0, 8.2);
     this._sun.castShadow = true;
-    this._sun.shadow.mapSize.set(2048, 2048);
+    this._sun.shadow.mapSize.set(this._lite ? 1024 : 2048, this._lite ? 1024 : 2048);
     const sc = this._sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 70;
     this._sun.shadow.bias = -0.0005; this._sun.shadow.normalBias = 0.025;
     scene.add(this._sun); scene.add(this._sun.target);
@@ -2706,8 +2707,8 @@ export class Casa3DCard extends HTMLElement {
       for (const f of it.fixtures) {
         const L = new THREE.PointLight(rt.color, 0, f.d, 2);
         L.position.set(f.p[0], f.p[1], f.p[2]);
-        if (f.shadow) {
-          L.castShadow = true; L.shadow.mapSize.set(512, 512);
+        if (f.shadow && !(this._lite && !['quarto', 'sala', 'garagem'].includes(it.key))) {
+          L.castShadow = true; L.shadow.mapSize.set(this._lite ? 256 : 512, this._lite ? 256 : 512);
           L.shadow.bias = -0.004; L.shadow.normalBias = 0.03;
           L.shadow.camera.near = 0.15; L.shadow.camera.far = f.d + 1;
         }
@@ -3514,7 +3515,7 @@ export class Casa3DCard extends HTMLElement {
     if (!this._renderer) return;
     const w = Math.max(1, this.clientWidth), h = Math.max(1, this.clientHeight);
     // Orçamento de ~2,4 Mpx por quadro: em telas Retina grandes baixa o pixel ratio
-    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(2.4e6 / (w * h))));
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, this._lite ? 1.25 : 2, Math.sqrt((this._lite ? 1.4e6 : 2.4e6) / (w * h))));
     this._renderer.setPixelRatio(dpr);
     this._renderer.setSize(w, h, false);
     // Com o painel aberto, a cena é enquadrada na área visível acima dele

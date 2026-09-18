@@ -51,6 +51,7 @@ labels: true          # nomes dos cômodos flutuando
 height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
 panel: true           # painel inferior aberto ao iniciar (false = recolhido)
 roof: false           # começa com o telhado visível (botão "Telhado" alterna)
+quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
 car_color: '#f3f3f0'  # cor do up! TSI na garagem (branco)
 timezone: America/Sao_Paulo      # relógio do cartão (horário de Brasília)
 latitude: -10.2                  # posição do sol (o HA fornece a sua via hass.config;
@@ -122,6 +123,12 @@ enquadra a casa na área que sobra acima dela.
   saída, com hora e tempo relativo.
 
 ## Desempenho
+
+Uso de memória medido no navegador (a cena roda no dispositivo que abre o dashboard, não no
+HA nem no GitHub): ~30 MB de JavaScript + ~64 MB de mapas de sombra na GPU + ~15 MB de
+texturas/geometria, na qualidade `alta`. Com `quality: leve` os mapas de sombra caem para
+~14 MB e o pixel ratio fica em 1,25× — bom para tablets de parede ou notebooks fracos.
+No disco o cartão tem 238 KB; nada é armazenado além disso.
 
 - As malhas estáticas (paredes, mobília) são fundidas por material na inicialização:
   ~750 objetos viram ~55 draw calls.
