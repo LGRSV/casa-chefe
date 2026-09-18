@@ -1,0 +1,119 @@
+<meta charset="utf-8">
+<title>Casa 3D</title>
+<meta name="description" content="Planta 3D interativa da casa: gire, dê zoom e acenda as luzes por cômodo.">
+<style>
+  :root {
+    --bg: #eef1f6; --fg: #17203a; --muted: #5b6785; --line: #d7dce8; --accent: #b86a12; --accent-soft: #fff1dc;
+    --banner-bg: #fff8ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0a0f1e; --fg: #e6edf7; --muted: #9aa6bd; --line: #1f2a44; --accent: #ffc46b; --accent-soft: #1d2438; --banner-bg: #10172a; }
+  }
+  :root[data-theme="dark"] { --bg: #0a0f1e; --fg: #e6edf7; --muted: #9aa6bd; --line: #1f2a44; --accent: #ffc46b; --accent-soft: #1d2438; --banner-bg: #10172a; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .app { position: fixed; inset: 0; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+  .banner { flex: none; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    padding: 8px 16px; background: var(--banner-bg); border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.35; }
+  .banner b { color: var(--accent); letter-spacing: .04em; text-transform: uppercase; font-size: 11px; }
+  .banner span { color: var(--muted); }
+  .toast { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); background: var(--accent-soft); color: var(--fg); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; max-width: calc(100% - 32px); box-sizing: border-box; z-index: 5; }
+  .toast.show { opacity: 1; }
+  casa3d-card { flex: 1; min-height: 0; --casa3d-height: 100%; border-radius: 0; }
+  .timectl { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .timectl input { width: 160px; accent-color: var(--accent); }
+  .timectl output { min-width: 44px; font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 600; }
+  .timectl button { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+</style>
+<div class="app">
+  <div class="banner" role="status">
+    <div><b>Demo</b> &nbsp;<span>Estados simulados — clique num cômodo ou num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
+    <label class="timectl"><span>Hora do dia</span><input id="hora" type="range" min="0" max="1439" step="5" aria-label="Hora simulada"><output id="horaOut">agora</output><button id="horaAgora" type="button">agora</button></label>
+  </div>
+  <casa3d-card id="card"></casa3d-card>
+</div>
+<div class="toast" id="toast"></div>
+<script type="module">
+/*__CARD_MODULE__*/
+
+// ------------------------------------------------------------------
+// Mock do objeto `hass` só para a demo (estados simulados)
+// ------------------------------------------------------------------
+const states = {};
+const ago = (min) => new Date(Date.now() - min * 60000).toISOString();
+const mk = (id, state, attributes = {}, min = 0) => { states[id] = { entity_id: id, state, attributes, last_changed: ago(min) }; };
+mk('switch.quarto_interruptor_1', 'on', { friendly_name: 'Luz Quarto' }, 12);
+mk('light.0xa4c1387cf3257eb7', 'on', { friendly_name: 'LED Quarto', rgb_color: [255, 120, 60], brightness: 190, supported_color_modes: ['color_temp', 'xy'] }, 12);
+mk('light.interruptor_cozinha_left', 'on', { friendly_name: 'Luz Cozinha' }, 47);
+mk('switch.balcao_interruptor_1', 'off', { friendly_name: 'Luz Balcão' }, 95);
+mk('light.interruptor_cozinha_center', 'off', { friendly_name: 'Luz Externa' }, 130);
+mk('switch.garagem_interruptor_1', 'off', { friendly_name: 'Garagem' }, 410);
+mk('switch.led_piscina_interruptor_1', 'on', { friendly_name: 'LED piscina' }, 25);
+mk('switch.piscina_interruptor_1', 'on', { friendly_name: 'Piscina' }, 180);
+mk('climate.ir_ac_cozinha_ac_cozinha', 'cool', { friendly_name: 'AC Cozinha', temperature: 23, current_temperature: 27, min_temp: 16, max_temp: 31, hvac_modes: ['off', 'heat_cool', 'cool', 'fan_only', 'dry'] }, 33);
+mk('media_player.m_s', 'playing', { friendly_name: 'M&S', media_title: 'Netflix', volume_level: 0.35 }, 8);
+mk('binary_sensor.0xa4c13846f2a0df88_occupancy', 'on', { friendly_name: 'Ocupação', device_class: 'occupancy' }, 3);
+mk('sensor.0xa4c13846f2a0df88_illuminance', '18', { friendly_name: 'Iluminância', unit_of_measurement: 'lx' }, 1);
+mk('person.sandro', 'home', { friendly_name: 'Sandro' }, 140);
+// Automações reais do HA (nomes do registro); last_triggered simulado
+const autos = [['automation.led_e_sensor', 'LED e sensor', 3], ['automation.botao_cama_liga_luz_quarto', 'Botão cama liga luz quarto', 12], ['automation.botao_cama_liga_balcao', 'Botão cama liga balcão', 95],
+  ['automation.nova_automatizacao', 'Automação botão cama', 620], ['automation.luz_balcao_off', 'Luz balcão OFF', 130], ['automation.liga_luz_pela_manha', 'Liga luz pela manhã', 700],
+  ['automation.automacao_botao_quarto', 'Automação botão quarto', 1500], ['automation.automacao_luz_balcao', 'Automação luz balcão ON', 95], ['automation.botao_balcao_1', 'Botão balcão - 1', 2900],
+  ['automation.botao_balcao_3', 'Botão balcão - 3', 0], ['automation.botao_quarto_1', 'Botão quarto 1', 4100], ['automation.botao_quarto_2', 'Botão quarto 2', 0]];
+for (const [id, name, min] of autos) mk(id, id === 'automation.botao_quarto_2' ? 'off' : 'on', { friendly_name: name, last_triggered: min ? ago(min) : null, mode: 'single' }, 99999);
+
+const toastEl = document.getElementById('toast'); let toastT = 0;
+const toast = (msg) => { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2600); };
+
+const card = document.getElementById('card');
+const push = () => { card.hass = { states: { ...states }, language: 'pt', callService }; };
+// Simula os serviços que o cartão usa (com a latência de um interruptor Wi-Fi)
+function callService(domain, service, data) {
+  const id = data && data.entity_id; const s = states[id]; if (!s) return;
+  const set = (state, attrs) => { s.state = state; if (attrs) Object.assign(s.attributes, attrs); s.last_changed = new Date().toISOString(); push(); };
+  const later = (fn) => setTimeout(fn, 220);
+  const isMedia = domain === 'media_player' || id.startsWith('media_player.');
+  if (service === 'toggle') later(() => set(isMedia ? (s.state === 'off' ? 'playing' : 'off') : (s.state === 'on' ? 'off' : 'on')));
+  else if (service === 'turn_on') {
+    const attrs = {};
+    if (data.rgb_color) attrs.rgb_color = data.rgb_color;
+    if (data.brightness_pct != null) attrs.brightness = Math.round(data.brightness_pct * 2.55);
+    if (data.brightness != null) attrs.brightness = data.brightness;
+    later(() => set(isMedia ? 'playing' : 'on', attrs));
+  }
+  else if (service === 'turn_off') later(() => set('off'));
+  else if (service === 'set_hvac_mode') later(() => set(data.hvac_mode));
+  else if (service === 'set_temperature') later(() => set(s.state, { temperature: data.temperature }));
+  else if (service === 'media_play_pause') later(() => set(s.state === 'playing' ? 'paused' : 'playing'));
+  else if (service === 'volume_up') set(s.state, { volume_level: Math.min(1, +((s.attributes.volume_level || 0.3) + 0.05).toFixed(2)) });
+  else if (service === 'volume_down') set(s.state, { volume_level: Math.max(0, +((s.attributes.volume_level || 0.3) - 0.05).toFixed(2)) });
+  else if (domain === 'automation' && service === 'trigger') {
+    // efeito plausível de cada automação real
+    const fx = { 'automation.led_e_sensor': () => states['light.0xa4c1387cf3257eb7'].state = 'on', 'automation.botao_cama_liga_luz_quarto': () => { const l = states['light.0xa4c1387cf3257eb7']; l.state = l.state === 'on' ? 'off' : 'on'; l.attributes.rgb_color = [203, 240, 255]; },
+      'automation.botao_cama_liga_balcao': () => { const l = states['light.0xa4c1387cf3257eb7']; l.state = 'on'; l.attributes.rgb_color = [255, 171, 1]; }, 'automation.nova_automatizacao': () => { for (const k of ['switch.quarto_interruptor_1', 'light.0xa4c1387cf3257eb7', 'light.interruptor_cozinha_left', 'switch.balcao_interruptor_1', 'light.interruptor_cozinha_center', 'switch.led_piscina_interruptor_1', 'switch.piscina_interruptor_1']) states[k].state = 'off'; },
+      'automation.luz_balcao_off': () => states['switch.balcao_interruptor_1'].state = 'off', 'automation.liga_luz_pela_manha': () => states['light.interruptor_cozinha_left'].state = 'on', 'automation.automacao_luz_balcao': () => states['switch.balcao_interruptor_1'].state = 'on' };
+    later(() => { (fx[id] || (() => {}))(); for (const k of Object.keys(states)) states[k].last_changed = states[k].last_changed; s.attributes.last_triggered = new Date().toISOString(); push(); });
+  }
+}
+card.addEventListener('hass-more-info', (e) => {
+  const id = e.detail.entityId; const s = states[id]; if (!s) return;
+  if (id.startsWith('climate.')) { s.state = s.state === 'off' ? 'cool' : 'off'; toast(`No Home Assistant isso abre o painel do ${s.attributes.friendly_name}. Na demo: ${s.state === 'off' ? 'desligado' : 'ligado (frio)'}.`); }
+  else if (id.startsWith('media_player.')) { s.state = { playing: 'paused', paused: 'off', off: 'playing' }[s.state] || 'playing'; toast(`No Home Assistant isso abre o controle da TV. Na demo: ${s.state}.`); }
+  push();
+});
+card.setConfig({ title: 'Casa 3D', labels: true, mode: 'auto', height: '100%' });
+push();
+// Controle de hora simulada (só na demo): anda o relógio e o sol
+const hora = document.getElementById('hora'), horaOut = document.getElementById('horaOut');
+const fmtTZ = (dt) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(dt);
+const nowMin = () => { const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date()); const h = +p.find((x) => x.type === 'hour').value % 24, m = +p.find((x) => x.type === 'minute').value; return h * 60 + m; };
+hora.value = nowMin();
+hora.addEventListener('input', () => {
+  const target = +hora.value, cur = nowMin();
+  const dt = new Date(Date.now() + (target - cur) * 60000);
+  card.setSimTime(dt); horaOut.textContent = fmtTZ(dt);
+  // o sun.sun simulado acompanha
+});
+document.getElementById('horaAgora').addEventListener('click', () => { card.setSimTime(null); hora.value = nowMin(); horaOut.textContent = 'agora'; });
+</script>
