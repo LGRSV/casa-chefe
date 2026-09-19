@@ -29,7 +29,7 @@ A demo fica publicada em `https://lgrsv.github.io/casa-chefe/` (Settings → Pag
 1. Copie `casa3d-card.js` para `/config/www/casa3d/casa3d-card.js`
    (pelo Samba: `\\homeassistant\config\www\casa3d\`, ou pelo File editor).
 2. **Definições → Painéis → ⋮ (canto superior direito) → Recursos → Adicionar recurso**
-   - URL: `/local/casa3d/casa3d-card.js?v=5`
+   - URL: `/local/casa3d/casa3d-card.js?v=6`
    - Tipo: **Módulo JavaScript**
    - Se a opção "Recursos" não aparecer, ative o *Modo avançado* no seu perfil de usuário.
 3. No dashboard, crie uma vista do tipo **Painel** (ou edite a vista "3D" que já existe,
@@ -54,6 +54,8 @@ height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
 panel: true           # painel inferior aberto ao iniciar (false = recolhido)
 roof: false           # começa com o telhado visível (botão "Telhado" alterna)
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
+weather: true         # widget de clima ao vivo no canto inferior direito (Open-Meteo, sem chave)
+weather_city: 'Palmas, TO'   # nome mostrado no widget
 car_color: '#f3f3f0'  # cor do up! TSI na garagem (branco)
 timezone: America/Sao_Paulo      # relógio do cartão (horário de Brasília)
 latitude: -10.2                  # posição do sol (o HA fornece a sua via hass.config;
@@ -104,6 +106,14 @@ quiser trocar alguma coisa.
 - **Telhado**: botão que cobre a casa com telhado de telha cerâmica (e forro), para a vista
   externa; desligado, volta a vista de casinha de boneca.
 - **Rua**: calçada, meio-fio e asfalto na frente do lote, só para dar contexto.
+- **Clima ao vivo**: widget no canto inferior direito com temperatura, condição, sensação
+  térmica e vento — dados reais da [Open-Meteo](https://open-meteo.com/) (gratuita, sem
+  chave), atualizados a cada 15 min. Usa `latitude`/`longitude` do YAML (padrão: Palmas-TO).
+  Some quando o painel de automações abre por cima e volta quando fecha. Desative com
+  `weather: false`, ou troque a cidade mudando as coordenadas + `weather_city`.
+  **Não funciona dentro do preview do Claude Artifact** (o sandbox do artifact bloqueia
+  requisições de rede a domínios externos) — funciona normalmente no GitHub Pages e no
+  Home Assistant, que rodam num navegador comum sem essa restrição.
 
 ## Painel inferior (Cômodos · Automações · Atividade)
 

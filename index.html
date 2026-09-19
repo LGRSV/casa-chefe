@@ -44,7 +44,18 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.3.0';
+export const VERSION = '1.3.1';
+
+// Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
+// qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
+// quanto em setConfig(). Evita que os dois fiquem dessincronizados (foi assim que o
+// widget de clima nascia ausente: só existia no default do setConfig, não no do construtor).
+const DEFAULT_CONFIG = {
+  title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, panel: true, roof: false,
+  quality: 'alta', car_color: '#f3f3f0', entities: {},
+  latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180,
+  weather: true, weather_city: 'Palmas, TO',
+};
 
 // ---------------------------------------------------------------------------
 // Entidades (sobrescreva no YAML do cartão em `entities:`)
@@ -132,6 +143,28 @@ const ICONS = {
   auto: '<path d="M8.8 1.8 4.2 9h3.4l-.9 5.2L11.8 7H8.4z"/>',
   timer: '<circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M6 1.8h4"/>',
   pause: '<path d="M5.5 3.5v9M10.5 3.5v9" stroke-width="2"/>',
+  sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>',
+  moon: '<path d="M13 9.6A5.2 5.2 0 0 1 6.4 3a5.4 5.4 0 1 0 6.6 6.6z"/>',
+  cloudsun: '<circle cx="4.6" cy="4.6" r="2" /><path d="M4.6 1v1M4.6 8.2v1M1 4.6h1M8.2 4.6h1M1.9 1.9l.8.8M6.5 6.5l.8.8M1.9 7.3l.8-.8"/><path d="M5.6 13.4h5.9a2.5 2.5 0 0 0 .5-4.95 3.4 3.4 0 0 0-6.3-1.6A2.7 2.7 0 0 0 3 9.2a2.5 2.5 0 0 0 .3 5.0h.1"/>',
+  cloud: '<path d="M4.4 13h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 9.1 2.7 2.7 0 0 0 4.4 13z"/>',
+  fog: '<path d="M4 6.6h7.3a2.4 2.4 0 0 0 .5-4.75A3.2 3.2 0 0 0 5.7 .95 2.6 2.6 0 0 0 1.9 3.3 2.5 2.5 0 0 0 4 6.6z"/><path d="M2 9.4h12M2 12h12"/>',
+  rain: '<path d="M4.4 8.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 4.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M4.6 10.4 3.6 13M8 10.4 7 13M11.4 10.4l-1 2.6"/>',
+  storm: '<path d="M4.4 7.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 3.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M8.6 9.2 6.4 12.4h2.3L7 15"/>',
+  snow: '<path d="M4.4 8.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 4.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M5 10.6v3M3.6 12.1h2.8M10.6 10.6v3M9.2 12.1h2.8"/>',
+};
+
+// Códigos WMO (Open-Meteo) → ícone + descrição em pt-BR
+const WEATHER_CODE = {
+  0: ['sun', 'Céu limpo'], 1: ['cloudsun', 'Poucas nuvens'], 2: ['cloudsun', 'Parcialmente nublado'], 3: ['cloud', 'Nublado'],
+  45: ['fog', 'Neblina'], 48: ['fog', 'Neblina com geada'],
+  51: ['rain', 'Garoa fraca'], 53: ['rain', 'Garoa'], 55: ['rain', 'Garoa forte'],
+  56: ['rain', 'Garoa congelante'], 57: ['rain', 'Garoa congelante forte'],
+  61: ['rain', 'Chuva fraca'], 63: ['rain', 'Chuva'], 65: ['rain', 'Chuva forte'],
+  66: ['rain', 'Chuva congelante'], 67: ['rain', 'Chuva congelante forte'],
+  71: ['snow', 'Neve fraca'], 73: ['snow', 'Neve'], 75: ['snow', 'Neve forte'], 77: ['snow', 'Grãos de neve'],
+  80: ['rain', 'Pancadas fracas'], 81: ['rain', 'Pancadas de chuva'], 82: ['rain', 'Pancadas fortes'],
+  85: ['snow', 'Pancadas de neve fracas'], 86: ['snow', 'Pancadas de neve fortes'],
+  95: ['storm', 'Trovoada'], 96: ['storm', 'Trovoada com granizo'], 99: ['storm', 'Trovoada forte com granizo'],
 };
 
 // Cenas: ações compostas disparadas pelo cartão (não precisam existir no HA)
@@ -2515,6 +2548,24 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .feed .empty { color: #8f9bb3; padding: 12px 4px; font-size: 12px; }
 .reopen { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 8px 14px; z-index: 3; }
 .reopen[hidden] { display: none; }
+/* Clima ao vivo — canto inferior direito, some quando o painel de automações abre por cima */
+.weather { position: absolute; right: 10px; bottom: 10px; width: 168px; box-sizing: border-box; padding: 10px 12px; z-index: 3;
+  display: flex; flex-direction: column; gap: 4px; transition: opacity .25s, transform .25s; }
+.weather[hidden] { display: none; }
+.weather.out { opacity: 0; transform: translateY(6px); pointer-events: none; }
+.weather .wtop { display: flex; align-items: center; gap: 8px; }
+.weather .wicon { width: 30px; height: 30px; color: #ffc46b; flex: none; display: flex; }
+.weather .wicon svg { width: 30px; height: 30px; }
+.weather .wtemp { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.weather .wtemp sup { font-size: 15px; font-weight: 600; opacity: .8; }
+.weather .wcond { font-size: 12px; color: #c9d2e3; line-height: 1.25; }
+.weather .wcity { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #8f9bb3; font-weight: 700; }
+.weather .wmeta { display: flex; justify-content: space-between; font-size: 11px; color: #9aa6bd; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.weather .wupd { font-size: 10px; color: #6b768f; text-align: right; }
+@media (max-width: 640px) {
+  .weather { width: 140px; padding: 8px 10px; }
+  .weather .wtemp { font-size: 22px; } .weather .wicon, .weather .wicon svg { width: 24px; height: 24px; }
+}
 @media (max-width: 640px) {
   .dock { height: 50%; left: 6px; right: 6px; bottom: 6px; }
   .tiles { grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 6px; }
@@ -2538,7 +2589,8 @@ export class Casa3DCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._config = { title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, entities: {} };
+    this._config = Object.assign({}, DEFAULT_CONFIG);
+    this._lite = this._config.quality === 'leve';
     this._nightVision = true;
     this._state = {};          // key -> { on, state, attrs }
     this._lastChanged = {};    // key -> ISO da última mudança (do HA)
@@ -2562,8 +2614,7 @@ export class Casa3DCard extends HTMLElement {
   getLayoutOptions() { return { grid_columns: 'full', grid_rows: 8, grid_min_rows: 5 }; }
 
   setConfig(config) {
-    this._config = Object.assign({ title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, car_color: '#f3f3f0', entities: {},
-      latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180, quality: 'alta' }, config || {});
+    this._config = Object.assign({}, DEFAULT_CONFIG, config || {});
     this._lite = this._config.quality === 'leve';   // no HA a posição real vem de hass.config
     this._mode = ['auto', 'day', 'night'].includes(this._config.mode) ? this._config.mode : 'auto';
     this._nightVision = this._config.night_vision !== false;
@@ -2591,7 +2642,7 @@ export class Casa3DCard extends HTMLElement {
     if (!this._built) this._build();
     this._start();
   }
-  disconnectedCallback() { this._stop(); }
+  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); }
 
   // ---- Construção do DOM ----
   _build() {
@@ -3337,6 +3388,7 @@ export class Casa3DCard extends HTMLElement {
   _setPanel(open) {
     this._panelOpen = !!open;
     this._dock.hidden = !open; this._reopen.hidden = !!open;
+    if (this._weatherEl) this._weatherEl.classList.toggle('out', !!open);
     this._panelBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
     if (open) this._renderPanel();
     requestAnimationFrame(() => this._resize());
@@ -3361,6 +3413,7 @@ export class Casa3DCard extends HTMLElement {
     for (const pane of panes) dock.appendChild(pane);
     this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.textContent = 'Painel ▴'; this._reopen.hidden = true;
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
+    this._buildWeather(wrap);
 
     // Cômodos: blocos quadrados agrupados por ambiente
     this._tiles = {};
@@ -3384,6 +3437,45 @@ export class Casa3DCard extends HTMLElement {
     this._feed = document.createElement('ul'); this._feed.className = 'feed'; this._panes.act.pane.appendChild(this._feed);
     this._showTab('ctl');
     this._feedTimer = setInterval(() => { if (this._panelOpen) this._renderPanel(); this._updateTime(true); }, 30000);
+  }
+  // Clima ao vivo (Open-Meteo, sem chave) — atualiza a cada 15 min
+  _buildWeather(wrap) {
+    if (!this._config.weather) return;
+    const w = document.createElement('div'); w.className = 'panel weather'; wrap.appendChild(w); this._weatherEl = w;
+    const top = document.createElement('div'); top.className = 'wtop';
+    const ico = document.createElement('span'); ico.className = 'wicon'; ico.innerHTML = iconSvg('cloudsun');
+    const temp = document.createElement('span'); temp.className = 'wtemp'; temp.textContent = '—';
+    top.append(ico, temp); w.appendChild(top);
+    const city = document.createElement('div'); city.className = 'wcity'; city.textContent = this._config.weather_city || 'Local';
+    const cond = document.createElement('div'); cond.className = 'wcond'; cond.textContent = 'Carregando…';
+    const meta = document.createElement('div'); meta.className = 'wmeta';
+    const upd = document.createElement('div'); upd.className = 'wupd'; upd.textContent = '';
+    w.append(city, cond, meta, upd);
+    this._weatherUI = { ico, temp, cond, meta, upd };
+    this._fetchWeather();
+    this._weatherTimer = setInterval(() => this._fetchWeather(), 15 * 60000);
+  }
+  async _fetchWeather() {
+    const ui = this._weatherUI; if (!ui) return;
+    const lat = this._config.latitude, lon = this._config.longitude;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&timezone=auto`;
+    try {
+      const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(url, { signal: ctrl.signal }); clearTimeout(to);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json(); const c = j.current; if (!c) throw new Error('sem dados');
+      const [iconKey, desc] = WEATHER_CODE[c.weather_code] || ['cloud', '—'];
+      const icon = !c.is_day && iconKey === 'sun' ? 'moon' : !c.is_day && iconKey === 'cloudsun' ? 'cloud' : iconKey;
+      ui.ico.innerHTML = iconSvg(icon);
+      ui.temp.innerHTML = `${Math.round(c.temperature_2m)}<sup>°C</sup>`;
+      ui.cond.textContent = desc;
+      ui.meta.innerHTML = `<span>sensação ${Math.round(c.apparent_temperature)}°</span><span>${Math.round(c.wind_speed_10m)} km/h</span>`;
+      ui.upd.textContent = `atualizado ${fmtClock(Date.now())}`;
+      this._weatherOk = true;
+    } catch (err) {
+      if (!this._weatherOk) { ui.cond.textContent = 'Indisponível'; ui.upd.textContent = 'sem conexão'; }
+      console.warn('[casa3d-card] clima indisponível:', err && err.message);
+    }
   }
   _showTab(id) {
     for (const [k, t] of Object.entries(this._panes)) { t.btn.setAttribute('aria-selected', k === id ? 'true' : 'false'); t.pane.classList.toggle('active', k === id); }
