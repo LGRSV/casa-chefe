@@ -1,5 +1,7 @@
 # Casa 3D — cartão Lovelace para Home Assistant
 
+Demo: https://lgrsv.github.io/casa-chefe/ · Repositório: https://github.com/LGRSV/casa-chefe
+
 Modelo 3D interativo da sua casa (Three.js) ligado às entidades do Home Assistant:
 gira, dá zoom, e cada cômodo acende conforme o interruptor real. Clicar no cômodo,
 na luminária ou no chip alterna a entidade. Substitui o `picture-elements` com PNGs
@@ -17,10 +19,10 @@ da vista "3D" por uma cena de verdade.
 
 ### Opção A — pelo GitHub (sem copiar arquivo)
 Recurso do Lovelace apontando para o CDN do GitHub (jsDelivr):
-`https://cdn.jsdelivr.net/gh/<usuário>/casa-3d@main/casa3d-card.js` (tipo Módulo JavaScript).
+`https://cdn.jsdelivr.net/gh/LGRSV/casa-chefe@main/casa3d-card.js` (tipo Módulo JavaScript).
 Ou pelo HACS: *HACS → ⋮ → Repositórios personalizados → URL do repositório, categoria Dashboard*,
-depois "Baixar" — o `hacs.json` já está no repositório. A demo fica publicada em
-`https://<usuário>.github.io/casa-3d/` (Settings → Pages → branch `main`, pasta `/`).
+depois "Baixar" — o `hacs.json` já está no repositório (URL: `https://github.com/LGRSV/casa-chefe`).
+A demo fica publicada em `https://lgrsv.github.io/casa-chefe/` (Settings → Pages → branch `main`, pasta `/`).
 
 ### Opção B — arquivo local
 
