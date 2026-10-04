@@ -39,10 +39,12 @@
   dialog .row button { font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
   dialog .row button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
   dialog .warn { color: #d8473b; font-size: 12px; min-height: 1em; margin-top: 8px; }
+  dialog .warn.ok { color: #2fa36b; }
+  dialog label a { color: var(--accent); white-space: nowrap; }
 </style>
 <div class="app">
   <div class="banner" role="status">
-    <div><b id="modeTag">Demo</b> &nbsp;<span id="modeText">Estados simulados — clique num cômodo ou num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
+    <div><b id="modeTag">Demo</b> &nbsp;<span id="modeText">Estados simulados — toque 2× num cômodo ou 1× num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
     <div class="bannerctl">
       <label class="timectl" id="timectl"><span>Hora do dia</span><input id="hora" type="range" min="0" max="1439" step="5" aria-label="Hora simulada"><output id="horaOut">agora</output><button id="horaAgora" type="button">agora</button></label>
       <button class="habtn" id="haBtn" type="button">⚙️ Conectar ao HA</button>
@@ -55,14 +57,15 @@
   <form method="dialog" id="haForm">
     <h2>Conectar ao Home Assistant</h2>
     <p>Com isso a casa mostra os estados reais e os toques comandam os dispositivos. O token fica salvo só neste navegador.</p>
-    <label for="haUrl">Endereço do Home Assistant (https)</label>
-    <input id="haUrl" type="url" placeholder="https://homeassistant.xxxx.ts.net" autocomplete="url" required>
-    <label for="haToken">Token de acesso de longa duração</label>
+    <label for="haUrl">1. Endereço https do seu HA (o link do Nabu Casa ou do Tailscale)</label>
+    <input id="haUrl" type="text" inputmode="url" placeholder="xxxx.ui.nabu.casa ou homeassistant.xxxx.ts.net" autocomplete="url" spellcheck="false" required>
+    <label for="haToken">2. Crie um token de acesso de longa duração e cole aqui <a id="haTokLink" target="_blank" rel="noopener" hidden>Criar token no seu HA ↗</a></label>
     <input id="haToken" type="password" placeholder="Perfil → Segurança → Criar token" autocomplete="off">
-    <div class="warn" id="haWarn"></div>
+    <div class="warn" id="haWarn" aria-live="polite"></div>
     <div class="row">
       <button type="button" id="haDisconnect">Voltar para demo</button>
       <button type="button" id="haCancel">Cancelar</button>
+      <button type="button" id="haTest">Testar</button>
       <button type="submit" class="primary">Conectar</button>
     </div>
   </form>
@@ -86,7 +89,7 @@ mk('switch.led_piscina_interruptor_1', 'on', { friendly_name: 'LED piscina' }, 2
 mk('switch.piscina_interruptor_1', 'on', { friendly_name: 'Piscina' }, 180);
 mk('climate.ir_ac_cozinha_ac_cozinha', 'cool', { friendly_name: 'AC Cozinha', temperature: 23, current_temperature: 27, min_temp: 16, max_temp: 31, hvac_modes: ['off', 'heat_cool', 'cool', 'fan_only', 'dry'] }, 33);
 mk('media_player.m_s', 'playing', { friendly_name: 'M&S', media_title: 'Netflix', volume_level: 0.35 }, 8);
-mk('binary_sensor.0xa4c13846f2a0df88_occupancy', 'on', { friendly_name: 'Ocupação', device_class: 'occupancy' }, 3);
+mk('binary_sensor.0xa4c13846f2a0df88_occupancy', 'on', { friendly_name: 'Presença', device_class: 'occupancy' }, 3);
 mk('sensor.0xa4c13846f2a0df88_illuminance', '18', { friendly_name: 'Iluminância', unit_of_measurement: 'lx' }, 1);
 mk('person.sandro', 'home', { friendly_name: 'Sandro' }, 140);
 // Automações reais do HA (nomes do registro); last_triggered simulado
@@ -97,6 +100,12 @@ const autos = [['automation.led_e_sensor', 'LED e sensor', 3], ['automation.bota
 for (const [id, name, min] of autos) mk(id, id === 'automation.botao_quarto_2' ? 'off' : 'on', { friendly_name: name, last_triggered: min ? ago(min) : null, mode: 'single' }, 99999);
 
 const toastEl = document.getElementById('toast'); let toastT = 0;
+// texto de sensor para o toast, com as mesmas palavras do cartão ("Presença: alguém no quarto", "Sandro: em casa", "Iluminância: 18 lx")
+const sensorText = (s) => {
+  const a = s.attributes, id = s.entity_id;
+  const v = id.startsWith('binary_sensor.') ? (s.state === 'on' ? 'alguém no quarto' : 'ninguém') : id.startsWith('person.') ? ({ home: 'em casa', not_home: 'fora' }[s.state] || s.state) : `${s.state}${a.unit_of_measurement ? ' ' + a.unit_of_measurement : ''}`;
+  return `${a.friendly_name || id}: ${v}`;
+};
 const toast = (msg) => { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2600); };
 
 const card = document.getElementById('card');
@@ -136,6 +145,7 @@ card.addEventListener('hass-more-info', (e) => {
   const id = e.detail.entityId; const s = states[id]; if (!s) return;
   if (id.startsWith('climate.')) { s.state = s.state === 'off' ? 'cool' : 'off'; toast(`No Home Assistant isso abre o painel do ${s.attributes.friendly_name}. Na demo: ${s.state === 'off' ? 'desligado' : 'ligado (frio)'}.`); }
   else if (id.startsWith('media_player.')) { s.state = { playing: 'paused', paused: 'off', off: 'playing' }[s.state] || 'playing'; toast(`No Home Assistant isso abre o controle da TV. Na demo: ${s.state}.`); }
+  else toast(sensorText(s));   // sensores (presença, iluminância, pessoa): só mostra o estado
   push();
 });
 card.setConfig({ title: 'Casa 3D', labels: true, mode: 'auto', height: '100%' });
@@ -162,10 +172,13 @@ const lsSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.re
 const modeTag = document.getElementById('modeTag'), modeText = document.getElementById('modeText'), timectl = document.getElementById('timectl');
 const setBanner = (tag, html) => { modeTag.textContent = tag; modeText.innerHTML = html; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// endereço como o usuário colar ("xxxx.ui.nabu.casa", ".../lovelace/0", barra no fim) → só a origem; '' se não parece endereço
+const normUrl = (v) => { v = v.trim(); if (!v) return ''; try { const u = new URL(/^https?:\/\//i.test(v) ? v : 'https://' + v); return /[.:]/.test(u.host) ? u.origin : ''; } catch (e) { return ''; } };
+const wsUrlOf = (url) => url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/websocket';
 
 function connectLive(baseUrl, token) {
   const host = new URL(baseUrl).host;
-  const wsUrl = baseUrl.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/websocket';
+  const wsUrl = wsUrlOf(baseUrl);
   const liveStates = {}; let config = null, ws = null, nextId = 1, closed = false, retry = 0, retryT = 0, raf = 0;
   const pending = new Map();
   const status = (cls, msg) => setBanner('Ao vivo', `<span class="dot ${cls}"></span>${msg}`);
@@ -220,12 +233,30 @@ function connectLive(baseUrl, token) {
     stop() { closed = true; clearTimeout(retryT); if (ws) ws.close(); },
     moreInfo(id) {
       const s = liveStates[id]; if (!s) { toast(`Entidade ${id} não existe no seu Home Assistant.`); return; }
-      const name = s.attributes.friendly_name || id;
       if (id.startsWith('climate.')) callService('climate', 'set_hvac_mode', { entity_id: id, hvac_mode: s.state === 'off' ? 'cool' : 'off' });
       else if (id.startsWith('media_player.')) callService('media_player', 'media_play_pause', { entity_id: id });
-      else toast(`${name}: ${s.state}${s.attributes.unit_of_measurement ? ' ' + s.attributes.unit_of_measurement : ''}`);
+      else toast(sensorText(s));
     },
   };
+}
+
+// "Testar": só o aperto de mão do WebSocket (auth_required → auth → auth_ok/auth_invalid) + get_states para contar; não muda o modo atual
+function testHA(url, token) {
+  const longe = { ok: false, msg: `Não consegui chegar em ${new URL(url).host} — confira o endereço` };
+  return new Promise((resolve) => {
+    let ws = null;
+    const done = (r) => { clearTimeout(t); resolve(r); if (ws) ws.close(); };
+    const t = setTimeout(() => done(longe), 8000);
+    try { ws = new WebSocket(wsUrlOf(url)); } catch (e) { done(longe); return; }
+    ws.onclose = () => done(longe);
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === 'auth_required') ws.send(JSON.stringify({ type: 'auth', access_token: token }));
+      else if (m.type === 'auth_invalid') done({ ok: false, msg: 'Token recusado — gere outro' });
+      else if (m.type === 'auth_ok') ws.send(JSON.stringify({ id: 1, type: 'get_states' }));
+      else if (m.type === 'result') done({ ok: true, msg: `Funcionou: ${m.success && Array.isArray(m.result) ? m.result.length : '?'} entidades. Toque em Conectar.` });
+    };
+  });
 }
 
 function startLive(url, token) {
@@ -235,24 +266,37 @@ function startLive(url, token) {
 }
 function stopLive() {
   if (live) live.stop(); live = null; timectl.hidden = false;
-  setBanner('Demo', 'Estados simulados — clique num cômodo ou num bloco para alternar. Toque em ⚙️ para conectar ao seu Home Assistant.');
+  setBanner('Demo', 'Estados simulados — toque 2× num cômodo ou 1× num bloco para alternar. Toque em ⚙️ para conectar ao seu Home Assistant.');
   push();
 }
 
-const dlg = document.getElementById('haDlg'), urlIn = document.getElementById('haUrl'), tokIn = document.getElementById('haToken'), warn = document.getElementById('haWarn');
+const dlg = document.getElementById('haDlg'), urlIn = document.getElementById('haUrl'), tokIn = document.getElementById('haToken'), warn = document.getElementById('haWarn'), tokLink = document.getElementById('haTokLink');
+// endereço válido → link direto para a página de tokens do próprio HA
+const syncLink = () => { const u = normUrl(urlIn.value); tokLink.hidden = !u; if (u) tokLink.href = u + '/profile/security'; };
+urlIn.addEventListener('input', syncLink);
+const say = (msg, ok) => { warn.className = ok ? 'warn ok' : 'warn'; warn.textContent = msg; };
+// lê e confere o formulário (Testar e Conectar); null = já explicou o problema
+function readForm() {
+  const url = normUrl(urlIn.value), token = tokIn.value.trim() || lsGet(LS_TOKEN);
+  if (!url) { say('Confira o endereço (ex.: xxxx.ui.nabu.casa).'); return null; }
+  if (location.protocol === 'https:' && url.startsWith('http:')) { say('Este site é https: o endereço do HA também precisa ser https (ex.: o link do Tailscale Funnel).'); return null; }
+  if (!token) { say('Cole o token de acesso de longa duração.'); return null; }
+  return { url, token };
+}
 document.getElementById('haBtn').addEventListener('click', () => {
   urlIn.value = lsGet(LS_URL); tokIn.value = ''; tokIn.placeholder = lsGet(LS_TOKEN) ? 'Token salvo — deixe vazio para manter' : 'Perfil → Segurança → Criar token';
-  warn.textContent = ''; dlg.showModal();
+  say(''); syncLink(); dlg.showModal();
+});
+document.getElementById('haTest').addEventListener('click', async () => {
+  const f = readForm(); if (!f) return;
+  say('Testando…'); const r = await testHA(f.url, f.token); say(r.msg, r.ok);
 });
 document.getElementById('haCancel').addEventListener('click', () => dlg.close());
 document.getElementById('haDisconnect').addEventListener('click', () => { lsSet(LS_URL, ''); lsSet(LS_TOKEN, ''); dlg.close(); stopLive(); });
 document.getElementById('haForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  let url = urlIn.value.trim().replace(/\/+$/, ''); const token = tokIn.value.trim() || lsGet(LS_TOKEN);
-  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
-  if (location.protocol === 'https:' && url.startsWith('http:')) { warn.textContent = 'Este site é https: o endereço do HA também precisa ser https (ex.: o link do Tailscale Funnel).'; return; }
-  if (!token) { warn.textContent = 'Cole o token de acesso de longa duração.'; return; }
-  lsSet(LS_URL, url); lsSet(LS_TOKEN, token); dlg.close(); startLive(url, token);
+  const f = readForm(); if (!f) return;
+  lsSet(LS_URL, f.url); lsSet(LS_TOKEN, f.token); dlg.close(); startLive(f.url, f.token);
 });
 // Também aceita #ha=https://... no link (sem o token) para pré-preencher o endereço
 const hashUrl = new URLSearchParams(location.hash.slice(1)).get('ha');
