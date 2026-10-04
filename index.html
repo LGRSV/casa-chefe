@@ -202,7 +202,6 @@ const ICONS = {
   timer: '<circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M6 1.8h4"/>',
   pause: '<path d="M5.5 3.5v9M10.5 3.5v9" stroke-width="2"/>',
   sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>',
-  moon: '<path d="M13 9.6A5.2 5.2 0 0 1 6.4 3a5.4 5.4 0 1 0 6.6 6.6z"/>',
   cloudsun: '<circle cx="4.6" cy="4.6" r="2" /><path d="M4.6 1v1M4.6 8.2v1M1 4.6h1M8.2 4.6h1M1.9 1.9l.8.8M6.5 6.5l.8.8M1.9 7.3l.8-.8"/><path d="M5.6 13.4h5.9a2.5 2.5 0 0 0 .5-4.95 3.4 3.4 0 0 0-6.3-1.6A2.7 2.7 0 0 0 3 9.2a2.5 2.5 0 0 0 .3 5.0h.1"/>',
   cloud: '<path d="M4.4 13h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 9.1 2.7 2.7 0 0 0 4.4 13z"/>',
   fog: '<path d="M4 6.6h7.3a2.4 2.4 0 0 0 .5-4.75A3.2 3.2 0 0 0 5.7 .95 2.6 2.6 0 0 0 1.9 3.3 2.5 2.5 0 0 0 4 6.6z"/><path d="M2 9.4h12M2 12h12"/>',
@@ -5266,9 +5265,10 @@ export class Casa3DCard extends HTMLElement {
     const g = this._gov; if (!g.auto || g.rung >= 3) return;
     g.rung++; g.lastStep = now; g.slow = g.slowIdle = 0;
     if (g.rung === 1) {
-      for (const rt of this._items.values()) for (const { L } of rt.lights || []) if (L.castShadow) { L.castShadow = false; if (L.shadow.map) L.shadow.map.dispose(); }
+      let ch = !!this._scene.environment;   // no leve/min já não há ambiente nem sombras pontuais: nada a recompilar
+      for (const rt of this._items.values()) for (const { L } of rt.lights || []) if (L.castShadow) { L.castShadow = false; if (L.shadow.map) L.shadow.map.dispose(); ch = true; }
       this._scene.environment = null; this._envDay = this._envNight = null;
-      this._precompile();
+      if (ch) this._precompile();
     } else if (g.rung === 2) this._shrinkLights();
     else { g.idleMax = Math.min(g.idleMax, 1); g.idleScale = Math.min(g.idleScale, 1); g.moveMin = Math.max(0.3, g.moveMin - 0.05); }
     console.info(`[casa3d-card] governador: degrau ${g.rung} — ${this.getQuality().lights} luzes reais`);
@@ -5289,7 +5289,7 @@ export class Casa3DCard extends HTMLElement {
       rt.lights = kept;
     }
     console.info(`[casa3d-card] PC lento: ${n} luzes reais a menos`);
-    this._precompile();
+    if (n) this._precompile();
   }
   // estado do governador (testes/demo)
   getQuality() {
@@ -5413,9 +5413,9 @@ export class Casa3DCard extends HTMLElement {
     const now = performance.now();
     dirty = this._govFrame(now, dirty);
     if (this._busy) return;   // o governador acabou de pedir recompilação (_shrinkLights)
-    // Só animação ociosa (água/TV): ~10 q/s (25 com a bomba, 5 no min) e nada com a aba ou o cartão fora da tela
+    // Só animação ociosa (água/TV): ~20 q/s (30 com a bomba; leve 10, min 5) e nada com a aba ou o cartão fora da tela
     const visible = !(typeof document !== 'undefined' && document.hidden) && this._onScreen !== false;
-    if (dirty || (ambient && visible && now - (this._lastIdle || 0) > (this._waterFast ? 40 : this._min ? 200 : 100))) {
+    if (dirty || (ambient && visible && now - (this._lastIdle || 0) > (this._waterFast ? (this._lite ? 40 : 30) : this._min ? 195 : this._lite ? 95 : 45))) {
       if (!dirty) this._lastIdle = now;
       this._renderer.render(this._scene, this._camera);
     }
