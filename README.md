@@ -7,6 +7,26 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária seleciona (2º toque alterna); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.6.0 — Vista de cima por cômodo e gestos melhores no celular
+
+- **Abre na Vista de cima**: a planta inteira sem telhado, levemente inclinada, vista do quintal
+  para a casa (cabe em paisagem e em retrato). **☰ Opções › Vista de cima** liga/desliga; **Recentrar**
+  volta para ela; **Telhado** ou **Pessoa** saem dela (ao sair da Pessoa, volta para a planta).
+- **Navegável**: 1º toque aproxima a área (**Casa** / **Área externa**), 2º enquadra o cômodo reto de
+  cima; dentro dele, tocar no aparelho seleciona como sempre. **‹ Voltar**, Esc ou Backspace sobem
+  um nível (com o menu aberto, o Esc só fecha o menu). No mouse, a área/cômodo sob o cursor realça.
+- **Painel do cômodo à esquerda** (no celular, folha baixa que deixa a planta à vista): na área, os
+  cômodos com "N de M ligados"; no cômodo, os aparelhos com estado e liga/desliga, as **automações do
+  HA com o nome dele** (ex.: "Botão quarto 1" → Quarto) e **Entrar aqui** (Pessoa). Nos dois níveis,
+  **Ligar tudo** (luzes e interruptores) e **Desligar tudo** (também o ar e a TV — ligar esses sem
+  escolher modo seria surpresa).
+- **Painel lateral mais estreito** (260–320 px, abas só com texto); na Vista de cima ele recolhe sozinho
+  e volta como estava ao sair. `panel: true` agora vale para quando você sai da planta.
+- **Gestos no celular**: 1 dedo gira com sensibilidade pela largura da tela e trava o eixo (horizontal
+  só gira, vertical só inclina, diagonal os dois), com inércia ao soltar; 2 dedos como num mapa —
+  pinça aproxima no ponto entre os dedos, torção gira, arrasto paralelo move —, cada gesto só depois do
+  seu limiar. Zoom e inclinação passam do limite com resistência e voltam ao soltar. Mouse como antes.
+
 ## Novidades da v1.5.1 — menos toque sem querer, funções à vista
 
 - **Toque seleciona, 2º toque executa**: tocar num cômodo, luminária ou aparelho na maquete (ou num
@@ -124,7 +144,7 @@ mode: auto            # auto = segue sun.sun | day | night
 night_vision: true    # à noite, luz de lua + ambiente frio: a casa inteira fica legível
 labels: true          # nomes dos cômodos flutuando
 height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
-panel: true           # painel lateral aberto ao iniciar (false = recolhido)
+panel: true           # painel lateral aberto ao sair da Vista de cima (false = recolhido)
 roof: false           # começa com o telhado visível (Opções › Telhado alterna)
 telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
