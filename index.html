@@ -77,7 +77,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.4.0';
+export const VERSION = '1.5.0';
 
 // Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
 // qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
@@ -170,6 +170,14 @@ const ICONS = {
   film: '<rect x="2" y="3" width="12" height="10" rx="1.2"/><path d="M5 3v10M11 3v10M2 6h3M2 10h3M11 6h3M11 10h3"/>',
   power: '<path d="M8 2.5v5.5"/><path d="M4.6 4.6a4.8 4.8 0 1 0 6.8 0"/>',
   panel: '<rect x="1.5" y="2.5" width="13" height="11" rx="1.4"/><path d="M9.5 2.5v11M11 6h2M11 8.5h2"/>',
+  // menu de opções (v1.5)
+  menu: '<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>',
+  tag: '<path d="M2 2.5h5.3l6.2 6.2-4.8 4.8L2.5 7.3z"/><circle cx="5" cy="5.3" r="1" fill="currentColor" stroke="none"/>',
+  roof: '<path d="M1.5 8.5 8 3l6.5 5.5"/><path d="M3.5 7v6.5h9V7"/><path d="M11 3.2v2.3"/>',
+  target: '<circle cx="8" cy="8" r="5.2"/><circle cx="8" cy="8" r="1.6"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>',
+  pin: '<path d="M8 14.5s4.6-4.4 4.6-8a4.6 4.6 0 0 0-9.2 0c0 3.6 4.6 8 4.6 8z"/><circle cx="8" cy="6.5" r="1.7"/>',
+  chevl: '<path d="M10 3 5 8l5 5"/>',
+  chevr: '<path d="M6 3l5 5-5 5"/>',
   play: '<path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/>',
   motion: '<circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/><path d="M4.6 4.6a4.8 4.8 0 0 0 0 6.8M11.4 4.6a4.8 4.8 0 0 1 0 6.8M2.4 2.4a8 8 0 0 0 0 11.2M13.6 2.4a8 8 0 0 1 0 11.2"/>',
   lux: '<circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>',
@@ -1012,7 +1020,8 @@ class Walker {
     const t = e.composedPath ? e.composedPath()[0] : e.target;
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;   // digitando em outro campo da página
     const c = e.code;
-    if (c === 'Escape') { if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }
+    if (t && t.closest && t.closest('.menu')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu
+    if (c === 'Escape') { if (this.card._menu && !this.card._menu.hidden) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha o menu
     if (c === 'Enter' || c === 'KeyF') {   // interagir: abre/fecha a porta mais perto e à frente (E já é "girar")
       if (t && t !== this.card._canvas && t !== document.body && t !== document.documentElement) return;   // Enter em botões/links da página segue normal
       if (down && !e.repeat) this.card._doorInteract();
@@ -2669,13 +2678,43 @@ canvas:active { cursor: grabbing; }
 .panel { background: rgba(10, 14, 26, .72); border: 1px solid rgba(255, 255, 255, .09); border-radius: 10px;
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .title { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
-.title b { font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.title b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
 .title .sub { color: #9aa6bd; font-size: 12px; font-variant-numeric: tabular-nums; }
 .title .clock { color: #e6edf7; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 .title .clock .per { color: #ffd48a; font-weight: 700; }
 .title .clock .suntimes { color: #9aa6bd; font-weight: 500; }
-.btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.seg { display: inline-flex; padding: 3px; gap: 2px; }
+.hud > .lcol { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; pointer-events: none; }   /* coluna esquerda: título + clima */
+.lcol > * { pointer-events: auto; }
+.btns { display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; align-items: center; flex: none; }
+/* Menu de opções (v1.5): um botão ☰ no topo abre a lista suspensa por seções; nasce do botão (canto superior direito) */
+.menubtn { display: inline-flex; align-items: center; gap: 7px; }
+.menubtn svg { width: 16px; height: 16px; flex: none; }
+.menubtn[aria-expanded="true"] { background: rgba(255, 196, 107, .2); color: #ffd48a; border-color: rgba(255, 196, 107, .45); }
+.menu { position: absolute; right: 10px; top: 56px; z-index: 8; width: min(272px, calc(100% - 20px)); max-height: calc(100% - 66px); overflow: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 4px 6px 6px;
+  border-radius: 14px; background: linear-gradient(180deg, rgba(38, 47, 74, .9), rgba(22, 29, 48, .92)); border: 1px solid rgba(255, 255, 255, .14);   /* material mais leve que a coluna */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 1px 0 rgba(255, 255, 255, .1) inset; backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  transform-origin: top right; animation: menuIn .18s cubic-bezier(.2, .8, .2, 1); scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+.menu[hidden] { display: none; }
+@keyframes menuIn { from { opacity: 0; transform: scale(.96); } }   /* sem overshoot: nasce do botão */
+.menubtn, .menu .mi, .menu .mseg button { transition: transform .1s ease-out, background .15s; }
+.menubtn:active, .menu .mi:active, .menu .mseg button:active { transform: scale(.97); }   /* retorno já no toque */
+.menu .msec { padding: 4px 0 6px; } .menu .msec + .msec { border-top: 1px solid rgba(255, 255, 255, .07); }
+.menu .mh { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: #8390a8; font-weight: 700; padding: 7px 8px 5px; }
+.menu .mi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 7px 8px; border-radius: 9px; text-align: left; font-size: 12.5px; color: #d5dcea; }
+.menu .mi svg { width: 16px; height: 16px; flex: none; color: #8f9bb3; transition: color .2s; }
+.menu .mi .ml { flex: 1; min-width: 0; } .menu .mi .ml small { display: block; font-weight: 500; font-size: 10.5px; color: #7f8ba3; margin-top: 1px; }
+.menu .mi:hover, .menu .mi[aria-pressed]:hover { background: rgba(255, 255, 255, .07); }
+.menu .mi[aria-pressed="true"] { background: transparent; color: #f4f7fc; }
+.menu .mi[aria-pressed="true"] svg { color: #ffc46b; }
+.menu .mi:disabled { cursor: default; } .menu .mi:disabled:hover { background: transparent; }
+/* toggles: interruptor desenhado no próprio item (estado vem do aria-pressed, como antes) */
+.menu .mi[aria-pressed]::after { content: ""; flex: none; width: 30px; height: 18px; box-sizing: border-box; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .14);
+  background: radial-gradient(circle at 8px 50%, #aab3c5 5.5px, transparent 6px), #2b3245; transition: background .2s, box-shadow .2s; }
+.menu .mi[aria-pressed="true"]::after { border-color: #ffc46b; background: radial-gradient(circle at 20px 50%, #2a1a00 5.5px, transparent 6px), linear-gradient(90deg, #ffab3f, #ffd27d); box-shadow: 0 0 10px -2px rgba(255, 184, 90, .7); }
+.menu .mi .go { flex: none; color: #6b768f; font-size: 15px; line-height: 1; }
+.menu .mseg { display: flex; gap: 2px; margin: 0 2px 4px; padding: 3px; border-radius: 10px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .08); }
+.menu .mseg button { flex: 1; padding: 7px 6px; font-size: 12px; border-radius: 7px; color: #a9b4ca; }
+.menu .mseg button[aria-pressed="true"] { background: rgba(255, 196, 107, .2); color: #ffd48a; box-shadow: inset 0 0 0 1px rgba(255, 196, 107, .35); }
 button { appearance: none; border: 0; background: transparent; color: #d5dcea; font: inherit; font-weight: 600; font-size: 12px;
   padding: 6px 10px; border-radius: 7px; cursor: pointer; letter-spacing: .01em; }
 button:hover { background: rgba(255, 255, 255, .08); }
@@ -2707,56 +2746,64 @@ canvas.walk.pick { cursor: pointer; }
 .pegghost svg { width: 40px; height: 40px; } .pegghost.ok { opacity: 1; color: #ffd48a; } .pegghost[hidden] { display: none; }
 .pegtip { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; padding: 5px 9px; font-size: 12px; font-weight: 600; color: #ffd48a; white-space: nowrap; }
 .pegtip[hidden] { display: none; }
-.goto { position: absolute; right: 10px; top: 64px; z-index: 6; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 8px 10px 10px; overscroll-behavior: contain; box-sizing: border-box; }
+.goto { position: absolute; right: 10px; top: var(--side-top, 58px); z-index: 6; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 8px 10px 10px; overscroll-behavior: contain; box-sizing: border-box; }
 .goto[hidden] { display: none; }
+.wrap.side .goto { right: calc(var(--side-w, 340px) + 20px); width: min(340px, calc(100% - var(--side-w, 340px) - 30px)); }   /* painel lateral aberto: a lista fica à esquerda dele */
 .goto .gh { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #8f9bb3; font-weight: 700; padding: 2px 2px 6px; }
 .goto .gt { font-size: 11px; color: #9aa6bd; font-weight: 700; margin: 8px 2px 4px; }
 .goto .grow { display: flex; flex-wrap: wrap; gap: 5px; }
 .goto .grow button { background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
 .goto .grow button:hover { background: rgba(255, 196, 107, .18); color: #ffd48a; }
 .fade { position: absolute; inset: 0; background: #06090f; opacity: 0; pointer-events: none; z-index: 5; }
-@media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 40px; } .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
+@media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 40px; } .goto, .wrap.side .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
 @media (max-width: 640px) { .joy { width: 104px; height: 104px; left: 14px; bottom: 14px; } .walkhint { bottom: 130px; } }
-/* Painel inferior (dock) — vidro escuro + âmbar; luz acesa brilha quente, clima frio azulado */
-.dock, .reopen { --amber: #ffc46b; --amber2: #ffd48a; --ice: #67d3ff; --ink: #eef2f8; --mute: #9aa6bd; --line: rgba(255, 255, 255, .08); --ease: cubic-bezier(.2, .8, .2, 1); }
-.dock { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: 10px; width: min(1180px, calc(100% - 20px)); max-height: min(48%, 392px); display: flex; flex-direction: column; overflow: hidden; z-index: 3;
-  border-radius: 18px; border: 1px solid rgba(255, 255, 255, .11); background: linear-gradient(180deg, rgba(22, 29, 49, .92), rgba(9, 13, 25, .95));
-  box-shadow: 0 20px 56px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .08) inset; backdrop-filter: blur(14px) saturate(1.25); -webkit-backdrop-filter: blur(14px) saturate(1.25);
-  animation: dockIn .34s var(--ease) backwards; }
+/* Painel lateral (v1.5) — coluna de vidro escuro + âmbar à direita; luz acesa brilha quente, clima frio azulado.
+   --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo dos botões, ou do título se ele invadir a faixa) */
+.dock, .reopen, .scrim { --amber: #ffc46b; --amber2: #ffd48a; --ice: #67d3ff; --ink: #eef2f8; --mute: #9aa6bd; --line: rgba(255, 255, 255, .08); --ease: cubic-bezier(.2, .8, .2, 1); }
+.dock { position: absolute; top: var(--side-top, 58px); right: 10px; bottom: 10px; width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
+  border-radius: 18px; border: 1px solid rgba(255, 255, 255, .1); background: linear-gradient(180deg, rgba(18, 24, 42, .95), rgba(7, 10, 20, .97));   /* vidro escuro e pesado */
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .07) inset; backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  animation: dockIn .3s var(--ease) backwards; }
 .dock[hidden] { display: none; }
 .dock.closing { animation: dockOut .2s ease-in forwards; pointer-events: none; }
-@keyframes dockOut { to { opacity: 0; transform: translateY(24px) scale(.985); } }
-.dock::before { content: ""; display: none; flex: none; width: 38px; height: 4px; margin: 7px auto 0; border-radius: 4px; background: rgba(255, 255, 255, .2); }
-@keyframes dockIn { from { opacity: 0; transform: translateY(22px) scale(.985); } }
+@keyframes dockIn { from { opacity: 0; transform: translateX(32px); } }
+@keyframes dockOut { to { opacity: 0; transform: translateX(calc(100% + 16px)); } }   /* sai pelo mesmo lado por onde entrou */
+.dock::before { content: ""; display: none; position: absolute; left: 5px; top: 50%; width: 4px; height: 40px; margin-top: -20px; border-radius: 4px; background: rgba(255, 255, 255, .2); pointer-events: none; }
 @keyframes paneIn { from { opacity: 0; transform: translateY(8px); } }
 @keyframes tileIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 @keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
 @keyframes flashPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 212, 138, .8); } 100% { box-shadow: 0 0 0 14px rgba(255, 212, 138, 0); } }
-.tabs { touch-action: none; display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line); flex: none; align-items: center; }
-.tabs button[role="tab"] { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; font-size: 12.5px; border-radius: 999px; color: #a9b4ca; transition: background .22s, color .22s, box-shadow .22s; }
-.tabs button[role="tab"] svg { width: 14px; height: 14px; opacity: .8; }
+/* cabeçalho da coluna: contador de luzes + recolher (→); abaixo, as abas em segmento de largura igual */
+.phead { display: flex; align-items: center; gap: 8px; padding: 10px 10px 8px 12px; flex: none; }
+.phead .spacer { flex: 1; }
+.phead .count { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: #b4bfd4; font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.phead .count svg { width: 14px; height: 14px; color: #6b768f; transition: color .3s, filter .3s; }
+.phead .count.lit svg { color: var(--amber); filter: drop-shadow(0 0 5px var(--amber)); }
+.phead .count b { color: var(--ink); font-weight: 700; }
+.phead .collapse { width: 34px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(255, 255, 255, .06); flex: none; }
+.phead .collapse:hover { background: rgba(255, 196, 107, .18); color: var(--amber2); }
+.tabs { display: flex; gap: 3px; margin: 0 10px 10px; padding: 3px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); flex: none; }
+.tabs button[role="tab"] { flex: 1; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 6px; font-size: 12px; border-radius: 9px; color: #a9b4ca; transition: background .22s, color .22s, box-shadow .22s; }
+.tabs button[role="tab"] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tabs button[role="tab"] svg { width: 14px; height: 14px; opacity: .8; flex: none; }
 .tabs button[role="tab"]:hover { color: #e6edf7; }
 .tabs button[aria-selected="true"] { background: linear-gradient(180deg, rgba(255, 196, 107, .26), rgba(255, 196, 107, .12)); color: var(--amber2); box-shadow: inset 0 0 0 1px rgba(255, 196, 107, .38); }
-.tabs .spacer { flex: 1; }
-.tabs .count { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; margin-right: 4px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: #b4bfd4; font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tabs .count svg { width: 14px; height: 14px; color: #6b768f; transition: color .3s, filter .3s; }
-.tabs .count.lit svg { color: var(--amber); filter: drop-shadow(0 0 5px var(--amber)); }
-.tabs .count b { color: var(--ink); font-weight: 700; }
-.tabs .collapse { width: 32px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(255, 255, 255, .05); }
-.pane { overflow: auto; padding: 12px 12px 14px; display: none; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+.pane { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px 14px; display: none; touch-action: pan-y; overscroll-behavior: contain;
+  -webkit-mask-image: linear-gradient(transparent, #000 12px); mask-image: linear-gradient(transparent, #000 12px);   /* degradê na borda de cima em vez de linha de 1 px */ scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
 .pane.active { display: block; animation: paneIn .28s var(--ease); }
-.zonebar { display: flex; gap: 6px; margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.zonebar::-webkit-scrollbar { display: none; }
-.zonebar button { flex: none; padding: 5px 12px; border-radius: 999px; font-size: 11.5px; color: #a9b4ca; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+/* filtros por cômodo: quebram em linhas dentro da coluna (nada escondido rolando de lado) */
+.zonebar { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 12px; }
+.zonebar button { flex: none; padding: 5px 11px; border-radius: 999px; font-size: 11.5px; color: #a9b4ca; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
 .zonebar button[aria-pressed="true"] { background: rgba(255, 196, 107, .18); color: var(--amber2); border-color: rgba(255, 196, 107, .4); }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 7px; }   /* 2 colunas na coluna de 380 px; 1 quando estreita */
 .zone { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 8px 2px 0; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #9aa6bd; font-weight: 700; }
 .zone:first-child, .tiles.single .zone { margin-top: 0; }
 .zone::after { content: ""; order: 2; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, .12), transparent); }
 .zone .zn { order: 3; letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 11px; color: #7f8ba3; font-variant-numeric: tabular-nums; }
 .zone.some .zn { color: var(--amber2); }
 .zone[hidden], .tile[hidden] { display: none; }
-.tile { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-height: 92px; padding: 10px 11px 11px; border-radius: 15px; text-align: left; color: #d5dcea;
+/* bloco compacto (ícone à esquerda, nome e estado à direita) — cabe duas colunas na lateral */
+.tile { position: relative; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 9px; min-height: 64px; padding: 9px 9px 9px 10px; border-radius: 14px; text-align: left; color: #d5dcea;
   background: linear-gradient(180deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .08);
   transition: background .3s, border-color .3s, box-shadow .3s, transform .14s var(--ease), opacity .3s; }
 .tile > * { position: relative; }
@@ -2764,12 +2811,13 @@ canvas.walk.pick { cursor: pointer; }
 .tile:hover { background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .05)); border-color: rgba(255, 255, 255, .16); }
 .tile:active { transform: scale(.975); }
 .tile:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.tile .top { display: flex; align-items: center; justify-content: space-between; }
+.tile .top { display: contents; }
+.tile > span:not(.top) { min-width: 0; }
 .tile .eyebrow { display: none; }
-.tile .ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: rgba(255, 255, 255, .06); color: #79849e; transition: background .35s, color .35s, box-shadow .35s; }
+.tile .ico { width: 32px; height: 32px; border-radius: 11px; display: grid; place-items: center; background: rgba(255, 255, 255, .06); color: #79849e; transition: background .35s, color .35s, box-shadow .35s; }
 .tile .ico svg { width: 19px; height: 19px; }
-.tile b { display: block; font-size: 13px; font-weight: 700; line-height: 1.2; color: var(--ink); }
-.tile small { display: block; margin-top: 3px; font-size: 11px; line-height: 1.3; color: var(--mute); }
+.tile b { display: block; font-size: 12.5px; font-weight: 700; line-height: 1.2; color: var(--ink); padding-right: 22px; }
+.tile small { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.3; color: var(--mute); }
 .tile small .st { color: #b3bed3; font-weight: 600; }
 .tile small .tm { display: block; color: #8b97af; } .tile small .sep { display: none; }
 .tile .lvl { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, .06); opacity: 0; transition: opacity .3s; }
@@ -2786,13 +2834,15 @@ canvas.walk.pick { cursor: pointer; }
 .tile[data-kind="sensor"] small .st { font-size: 12px; }
 .tile.unavailable { opacity: .45; filter: grayscale(.7); }
 .tile.flash { box-shadow: 0 0 0 3px rgba(255, 212, 138, .85), 0 0 26px rgba(255, 212, 138, .45); border-color: var(--amber2); }
-.tile .more { width: 28px; height: 28px; padding: 0; border-radius: 9px; background: rgba(255, 255, 255, .06); color: #aeb8cc; font-size: 15px; line-height: 28px; text-align: center; letter-spacing: .04em; cursor: pointer; opacity: .8; transition: background .2s, opacity .2s; }
+.tile .more { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; padding: 0; border-radius: 9px; background: rgba(255, 255, 255, .06); color: #aeb8cc; font-size: 15px; line-height: 26px; text-align: center; letter-spacing: .04em; cursor: pointer; opacity: .8; transition: background .2s, opacity .2s; }
 .tile .more:hover, .tile .more:focus-visible { background: rgba(255, 255, 255, .18); opacity: 1; }
 .tile .more:focus-visible { outline: 2px solid var(--amber); }
-.tiles.routines { grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); }
-.tile.routine { min-height: 104px; justify-content: flex-start; gap: 10px; }
+.tile .more::after { content: ""; position: absolute; inset: -4px; }   /* área de toque maior */
+.tiles.routines { grid-template-columns: minmax(0, 1fr); }
+.tile.routine { min-height: 62px; }
+.tile.routine b { padding-right: 0; }
 .tile.routine .ico { background: rgba(255, 196, 107, .14); color: var(--amber2); box-shadow: 0 0 0 1px rgba(255, 196, 107, .2) inset; }
-.tile.routine small { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tile.routine small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tile.routine:hover { background: linear-gradient(180deg, rgba(255, 196, 107, .16), rgba(255, 196, 107, .06)); border-color: rgba(255, 196, 107, .4); transform: translateY(-1px); }
 .tile.routine:active { transform: scale(.975); }
 /* folha de controles do aparelho: fica colada no fim da área rolável */
@@ -2820,7 +2870,7 @@ canvas.walk.pick { cursor: pointer; }
 .step { display: inline-flex; align-items: center; gap: 6px; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); }
 .step button { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); font-size: 18px; line-height: 1; }
 .step button:hover { background: rgba(103, 211, 255, .22); color: #aee8ff; }
-.step output { min-width: 50px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; color: #aee8ff; }
+.step output { min-width: 50px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; letter-spacing: -.01em; color: #aee8ff; }
 .mbtn { width: 36px; height: 32px; padding: 0; border-radius: 10px; background: rgba(255, 255, 255, .07); display: inline-grid; place-items: center; font-size: 16px; }
 .mbtn:hover { background: rgba(255, 196, 107, .2); }
 input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
@@ -2840,7 +2890,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .sect::before { content: ""; width: 3px; height: 12px; border-radius: 2px; background: var(--amber); box-shadow: 0 0 8px rgba(255, 196, 107, .6); }
 .sect small { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; color: #7f8ba3; }
 .tiles + .sect { margin-top: 18px; }
-.autos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px 10px; }
+.autos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .auto { display: grid; grid-template-columns: 34px 1fr auto auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 13px; background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .07); transition: background .25s, border-color .25s; }
 .auto:hover { border-color: rgba(255, 255, 255, .15); }
 .auto.on { border-color: rgba(255, 196, 107, .22); }
@@ -2852,7 +2902,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .auto .run { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .07); display: inline-grid; place-items: center; transition: background .2s, color .2s; }
 .auto .run:hover { background: rgba(255, 196, 107, .25); color: var(--amber2); }
 .autos .empty { color: var(--mute); font-size: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(255, 255, 255, .14); grid-column: 1 / -1; }
-.feed { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px 10px; }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 .feed li { display: grid; grid-template-columns: 28px 1fr auto; gap: 11px; align-items: center; padding: 9px 12px; border-radius: 12px; background: rgba(255, 255, 255, .035); border: 1px solid rgba(255, 255, 255, .06); font-size: 12.5px; }
 .feed .d { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: rgba(255, 255, 255, .05); color: #69748d; }
 .feed .d svg { width: 15px; height: 15px; }
@@ -2860,66 +2910,74 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .feed li.on { border-color: rgba(255, 255, 255, .1); }
 .feed b { font-weight: 700; color: var(--ink); } .feed time { color: var(--mute); font-variant-numeric: tabular-nums; font-size: 11px; text-align: right; white-space: nowrap; }
 .feed .empty { color: var(--mute); padding: 14px 12px; font-size: 12px; grid-column: 1 / -1; display: block; border-style: dashed; }
-.reopen { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 13px; color: var(--amber2); z-index: 3;
-  background: linear-gradient(180deg, rgba(32, 40, 66, .92), rgba(12, 16, 30, .94)); border: 1px solid rgba(255, 196, 107, .4); box-shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 0 22px -6px rgba(255, 196, 107, .45); animation: reopenIn .32s var(--ease) backwards; }
-@keyframes reopenIn { from { opacity: 0; transform: translateX(-50%) translateY(14px); } }
+/* aba de reabrir presa à borda direita: seta, "Painel" na vertical e o nº de luzes acesas */
+.reopen { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 7px 12px 8px; z-index: 3;
+  border-radius: 14px 0 0 14px; border: 1px solid rgba(255, 196, 107, .4); border-right: 0; font-size: 12px; color: var(--amber2); letter-spacing: .04em;
+  background: linear-gradient(180deg, rgba(32, 40, 66, .92), rgba(12, 16, 30, .94)); box-shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 0 22px -6px rgba(255, 196, 107, .45); animation: reopenIn .3s var(--ease) backwards; }
+.reopen .rl { writing-mode: vertical-rl; line-height: 1; }
+.reopen svg { width: 14px; height: 14px; }
+@keyframes reopenIn { from { opacity: 0; transform: translateY(-50%) translateX(14px); } }
 .reopen:hover { background: linear-gradient(180deg, rgba(48, 58, 92, .94), rgba(18, 24, 42, .95)); }
-.reopen .rn { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--amber); color: #2a1a00; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.reopen .rn { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--amber); color: #2a1a00; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .reopen .rn:empty { display: none; }
 .reopen[hidden] { display: none; }
-/* Clima ao vivo — canto inferior direito, some quando o painel de automações abre por cima */
-.weather { position: absolute; right: 10px; bottom: 10px; width: 168px; box-sizing: border-box; padding: 10px 12px; z-index: 3;
-  display: flex; flex-direction: column; gap: 4px; transition: opacity .25s, transform .25s; }
+/* véu da gaveta (só no celular): escurece a casa à esquerda; tocar nele fecha */
+.scrim { display: none; position: absolute; left: 0; right: 0; bottom: 0; top: var(--side-top, 58px); z-index: 3; background: rgba(4, 7, 14, .42); animation: scrimIn .25s ease-out; }
+.scrim.closing { animation: scrimOut .2s ease-in forwards; }
+@keyframes scrimIn { from { opacity: 0; } } @keyframes scrimOut { to { opacity: 0; } }
+/* Clima ao vivo (v1.5): embaixo do cartão do título, no canto superior esquerdo — o único canto livre em todos os modos
+   (direita = painel lateral/aba, embaixo à esquerda = joystick da Pessoa, embaixo no meio = aviso de comandos) */
+.weather { position: relative; width: 168px; box-sizing: border-box; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
 .weather[hidden] { display: none; }
-.weather.out { opacity: 0; transform: translateY(6px); pointer-events: none; }
 .weather .wtop { display: flex; align-items: center; gap: 8px; }
 .weather .wicon { width: 30px; height: 30px; color: #ffc46b; flex: none; display: flex; }
 .weather .wicon svg { width: 30px; height: 30px; }
-.weather .wtemp { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.weather .wtemp { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .weather .wtemp sup { font-size: 15px; font-weight: 600; opacity: .8; }
 .weather .wcond { font-size: 12px; color: #c9d2e3; line-height: 1.25; }
 .weather .wcity { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #8f9bb3; font-weight: 700; }
 .weather .wmeta { display: flex; justify-content: space-between; font-size: 11px; color: #9aa6bd; font-variant-numeric: tabular-nums; margin-top: 2px; }
 .weather .wupd { font-size: 10px; color: #6b768f; text-align: right; }
 @media (max-width: 640px) {
-  .weather { width: 140px; padding: 8px 10px; }
-  .weather .wtemp { font-size: 22px; } .weather .wicon, .weather .wicon svg { width: 24px; height: 24px; }
+  /* clima compacto: ícone, temperatura e condição numa faixa só */
+  .weather { width: auto; max-width: 190px; padding: 6px 10px; flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; }
+  .weather .wtemp { font-size: 18px; } .weather .wtemp sup { font-size: 11px; } .weather .wicon, .weather .wicon svg { width: 20px; height: 20px; }
+  .weather .wcity, .weather .wmeta, .weather .wupd { display: none; } .weather .wcond { font-size: 11.5px; }
 }
 @media (max-width: 640px) {
-  .dock { width: auto; margin: 0; height: 50%; max-height: none; left: 6px; right: 6px; bottom: 6px; border-radius: 20px; }
+  /* gaveta: entra pela direita cobrindo a maior parte da tela, altura toda abaixo do cabeçalho */
+  .dock { right: 0; bottom: 0; border-radius: 20px 0 0 20px; border-right: 0; animation-name: drawerIn; }
+  .dock.closing { animation-name: drawerOut; }
+  @keyframes drawerIn { from { transform: translateX(100%); } }
+  @keyframes drawerOut { to { transform: translateX(100%); } }
   .dock::before { display: block; }
-  .tabs { padding: 5px 8px 8px; gap: 0; }
-  .tabs .count { padding: 4px 8px; margin-right: 2px; } .tabs .collapse { width: 30px; }
-  .tabs button[role="tab"] { padding: 7px 9px; font-size: 12px; } .tabs button[role="tab"] svg { display: none; } .tabs .count .lbl { display: none; }
-  .pane { padding: 10px 10px 14px; }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-  .tile { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 9px; min-height: 62px; padding: 8px 8px 8px 9px; border-radius: 14px; }
-  .tile .top { display: contents; }
-  .tile .ico { width: 32px; height: 32px; } .tile > span:not(.top) { min-width: 0; } .tile .more { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; line-height: 26px; }
-  .tile .more::after { content: ""; position: absolute; inset: -4px; }
-  .tile b { font-size: 12.5px; padding-right: 22px; } .tile small { font-size: 10.5px; }
-  .tile.routine b { padding-right: 0; } .tile.routine small { -webkit-line-clamp: 2; }
-  .tiles.routines { grid-template-columns: minmax(0, 1fr); }
-  .tile.routine { min-height: 62px; grid-template-columns: auto minmax(0, 1fr); }
-  .autos, .feed { grid-template-columns: minmax(0, 1fr); }
+  .phead { padding: 8px 8px 6px 16px; } .tabs { margin: 0 8px 8px 14px; } .pane { padding: 10px 10px 14px 14px; }
+  .tabs button[role="tab"] svg { display: none; }
+  .scrim:not([hidden]) { display: block; }
   .detail { padding: 11px 12px; gap: 10px; } .detail .rng { flex-basis: 100%; }
-  .reopen { bottom: 12px; }
-  .hud.top { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }   /* sem wrap: a linha teria a largura do maior item */
-
-  .title { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 0; padding: 6px 10px; }
+  /* cabeçalho numa linha: título (encolhe) à esquerda, bonequinho e menu à direita */
+  .hud.top { flex-wrap: nowrap; gap: 8px; }
+  .hud > .lcol { flex: 1 1 auto; }
+  .title { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 0; padding: 6px 10px; max-width: 100%; box-sizing: border-box; }
   .title b { font-size: 14px; }
-  .btns { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-  .btns::-webkit-scrollbar { display: none; }
-  .btns > * { flex: none; }
   .btn { padding: 7px 10px; }
+  .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl { display: none; }
+  .menu { left: 10px; right: 10px; width: auto; }
   .hint { display: none; }
 }
-/* celular em retrato: os botões quebram em duas linhas em vez de rolar escondidos */
-@media (max-width: 480px) {
-  .btns { flex-wrap: wrap; overflow: visible; gap: 6px; }
-  .btn { padding: 6px 9px; font-size: 11.5px; } .seg button { padding: 5px 8px; font-size: 11.5px; }
+@media (prefers-reduced-motion: reduce) { .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb { animation: none !important; transition: none !important; transform: none !important; }
+  .dock, .reopen, .scrim, .menu { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
+@keyframes fadeIn { from { opacity: 0; } }
+/* menos transparência: superfícies quase sólidas, sem blur */
+@media (prefers-reduced-transparency: reduce) {
+  .panel, .dock, .menu, .joy { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .panel { background: rgba(12, 17, 30, .97); } .dock { background: #0c1222; } .menu { background: #1b2338; } .scrim { background: rgba(4, 7, 14, .6); }
 }
-@media (prefers-reduced-motion: reduce) { .dock, .reopen, .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .detail input[type="range"]::-webkit-slider-thumb { animation: none !important; transition: none !important; } }
+/* mais contraste: fundo sólido e borda clara */
+@media (prefers-contrast: more) {
+  .panel, .dock, .menu { backdrop-filter: none; -webkit-backdrop-filter: none; background: #060a14; border-color: rgba(255, 255, 255, .7); }
+  .tile, .zonebar button, .menu .mseg, .tabs { border-color: rgba(255, 255, 255, .5); } .title .sub, .tile small, .menu .mh, .menu .mi .ml small { color: #c9d2e3; }
+}
 `;
 
 export class Casa3DCard extends HTMLElement {
@@ -2979,7 +3037,7 @@ export class Casa3DCard extends HTMLElement {
     if (!this._built) this._build();
     this._start();
   }
-  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); if (this._walkOn) this._setWalk(false); }   // sai da Pessoa: solta o teclado da página
+  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); if (this._walkOn) this._setWalk(false); this._toggleMenu(false); }   // sai da Pessoa: solta o teclado da página
 
   // ---- Construção do DOM ----
   _build() {
@@ -2991,48 +3049,88 @@ export class Casa3DCard extends HTMLElement {
     this._canvas = canvas;
     canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && this._mk) { this._hoverDest = null; this._mkHide(); } });   // sai do quadro: some o anel do destino
 
-    const top = document.createElement('div'); top.className = 'hud top'; wrap.appendChild(top);
-    const title = document.createElement('div'); title.className = 'panel title';
+    const top = document.createElement('div'); top.className = 'hud top'; wrap.appendChild(top); this._hudTop = top;
+    const lcol = document.createElement('div'); lcol.className = 'lcol'; top.appendChild(lcol); this._lcol = lcol;   // título + clima (v1.5)
+    const title = document.createElement('div'); title.className = 'panel title'; this._titleCard = title;
     this._titleEl = document.createElement('b'); this._titleEl.textContent = this._config.title || 'Casa 3D';
     this._clockEl = document.createElement('span'); this._clockEl.className = 'clock'; this._clockEl.textContent = '—';
     this._subEl = document.createElement('span'); this._subEl.className = 'sub'; this._subEl.textContent = '—';
-    title.append(this._titleEl, this._clockEl, this._subEl); top.appendChild(title);
+    title.append(this._titleEl, this._clockEl, this._subEl); lcol.appendChild(title);
+    this._wrap = wrap;
 
-    const btns = document.createElement('div'); btns.className = 'btns'; top.appendChild(btns);
-    const seg = document.createElement('div'); seg.className = 'panel seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Iluminação ambiente');
+    // Topo (v1.5): "Ir para…" (só na Pessoa) + bonequinho + UM botão de menu; as opções ficam na lista suspensa por seções.
+    // As referências (this._modeBtns, _nvBtn, _labelsBtn, _roofBtn, _walkBtn, _panelBtn, _gotoBtn) continuam as mesmas: só mudaram de lugar.
+    const btns = document.createElement('div'); btns.className = 'btns'; top.appendChild(btns); this._btnsEl = btns;
+    const menu = document.createElement('div'); menu.className = 'menu'; menu.id = 'casa3d-menu'; menu.hidden = true;
+    menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', 'Opções'); this._menu = menu;
+    const sec = (label) => {
+      const s = document.createElement('div'); s.className = 'msec'; s.setAttribute('role', 'group'); s.setAttribute('aria-label', label);
+      const h = document.createElement('div'); h.className = 'mh'; h.textContent = label; h.setAttribute('aria-hidden', 'true'); s.appendChild(h); menu.appendChild(s); return s;
+    };
+    // item do menu: ícone + rótulo (+ nota); `toggle` = mostra o interruptor (estado no aria-pressed, como os botões de antes)
+    const item = (parent, icon, label, { note, toggle, go } = {}) => {
+      const b = document.createElement('button'); b.className = 'mi'; b.innerHTML = `${iconSvg(icon)}<span class="ml"></span>`;
+      const ml = b.querySelector('.ml'); ml.textContent = label;
+      if (note) { const sm = document.createElement('small'); sm.textContent = note; ml.appendChild(sm); }
+      if (toggle) b.setAttribute('aria-pressed', 'false');
+      if (go) { const g = document.createElement('span'); g.className = 'go'; g.setAttribute('aria-hidden', 'true'); g.textContent = '›'; b.appendChild(g); }
+      b.dataset.label = label; parent.appendChild(b); return b;
+    };
+    // Ambiente: Auto/Dia/Noite (segmento) + Visão noturna
+    const sAmb = sec('Ambiente');
+    const seg = document.createElement('div'); seg.className = 'mseg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Iluminação ambiente');
     this._modeBtns = {};
     for (const [m, lbl] of [['auto', 'Auto'], ['day', 'Dia'], ['night', 'Noite']]) {
       const b = document.createElement('button'); b.textContent = lbl; b.dataset.mode = m;
+      b.title = m === 'auto' ? 'Segue o sol de verdade' : m === 'day' ? 'Força o dia' : 'Força a noite';
       b.addEventListener('click', () => { this._mode = m; this._applyMode(); });
       seg.appendChild(b); this._modeBtns[m] = b;
     }
-    btns.appendChild(seg);
-    this._nvBtn = document.createElement('button'); this._nvBtn.className = 'panel btn'; this._nvBtn.textContent = 'Visão noturna';
+    sAmb.appendChild(seg);
+    this._nvBtn = item(sAmb, 'moon', 'Visão noturna', { note: 'à noite, casa inteira visível', toggle: true });
     this._nvBtn.title = 'À noite, deixa a casa inteira visível (luz de lua)';
     this._nvBtn.addEventListener('click', () => { this._nightVision = !this._nightVision; this._applyMode(); });
-    btns.appendChild(this._nvBtn);
-    this._labelsBtn = document.createElement('button'); this._labelsBtn.className = 'panel btn'; this._labelsBtn.textContent = 'Rótulos';
+    // Vista: Rótulos, Telhado, Recentrar
+    const sVis = sec('Vista');
+    this._labelsBtn = item(sVis, 'tag', 'Rótulos', { toggle: true });
     this._labelsBtn.addEventListener('click', () => this._setLabels(!this._labelsOn));
-    btns.appendChild(this._labelsBtn);
-    const reset = document.createElement('button'); reset.className = 'panel btn'; reset.textContent = 'Recentrar';
-    reset.addEventListener('click', () => { if (this._walkOn) this._setWalk(false); this._resetView(); });
-    btns.appendChild(reset);
+    this._roofBtn = item(sVis, 'roof', 'Telhado', { toggle: true });
+    this._roofBtn.addEventListener('click', () => this._setRoof(!this._roofOn));
+    const reset = item(sVis, 'target', 'Recentrar', { go: true }); this._resetBtn = reset;
+    reset.addEventListener('click', () => { this._toggleMenu(false); if (this._walkOn) this._setWalk(false); this._resetView(); });
+    // Navegação: Pessoa, Ir para…
+    const sNav = sec('Navegação');
     // Visão de pessoa (v1.4): andar pela casa na altura dos olhos; o bonequinho entra direto num cômodo
-    this._walkBtn = document.createElement('button'); this._walkBtn.className = 'panel btn'; this._walkBtn.textContent = 'Pessoa';
+    this._walkBtn = item(sNav, 'person', 'Pessoa', { note: 'andar na altura dos olhos', toggle: true });
     this._walkBtn.title = 'Ande pela casa na altura dos olhos: clique no piso, setas/WASD ou joystick; arraste para olhar';
-    this._walkBtn.setAttribute('aria-pressed', 'false');
-    this._walkBtn.addEventListener('click', () => this._setWalk(!this._walkOn));
-    btns.appendChild(this._walkBtn);
+    this._walkBtn.addEventListener('click', () => { this._toggleMenu(false); this._setWalk(!this._walkOn); });   // muda o modo: o menu sai da frente
+    this._gotoMi = item(sNav, 'pin', 'Ir para…', { note: 'lista de cômodos', go: true });
+    this._gotoMi.addEventListener('click', () => { this._toggleMenu(false); this._toggleGoto(true); });
+    // Painel: mostrar/ocultar a coluna lateral
+    const sPan = sec('Painel');
+    this._panelBtn = item(sPan, 'panel', 'Painel lateral', { note: 'cômodos, automações, atividade', toggle: true });
+    this._panelBtn.addEventListener('click', () => { this._toggleMenu(false); this._setPanel(!this._panelOpen); });
+
+    // fora do menu: atalho "Ir para…" (só na Pessoa) e o bonequinho (é arrastado até a maquete)
+    this._gotoBtn = document.createElement('button'); this._gotoBtn.className = 'panel btn'; this._gotoBtn.textContent = 'Ir para…'; this._gotoBtn.hidden = true;
+    this._gotoBtn.title = 'Vai direto a um cômodo'; this._gotoBtn.setAttribute('aria-pressed', 'false');
+    this._gotoBtn.addEventListener('click', () => this._toggleGoto());
+    btns.appendChild(this._gotoBtn);
     const PERSON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.2" r="3"/><path d="M12 9.6c-2.9 0-4.6 1.5-4.8 4l-.2 3.2c0 .6.4 1 .9 1h.9l.4 4.2c0 .5.4.8.8.8h4c.4 0 .8-.3.8-.8l.4-4.2h.9c.5 0 .9-.4.9-1l-.2-3.2c-.2-2.5-1.9-4-4.8-4z"/></svg>';
     this._pegBtn = document.createElement('button'); this._pegBtn.className = 'panel btn peg'; this._pegBtn.innerHTML = PERSON;
     this._pegBtn.title = 'Arraste até um cômodo e solte para entrar nele (visão de Pessoa) · toque: lista de cômodos';
     this._pegBtn.setAttribute('aria-label', 'Bonequinho: arraste até um cômodo para entrar nele; Enter abre a lista de cômodos'); this._pegBtn.setAttribute('aria-pressed', 'false');
     btns.appendChild(this._pegBtn); this._pegBind(this._pegBtn);
-    this._gotoBtn = document.createElement('button'); this._gotoBtn.className = 'panel btn'; this._gotoBtn.textContent = 'Ir para…'; this._gotoBtn.hidden = true;
-    this._gotoBtn.title = 'Vai direto a um cômodo'; this._gotoBtn.setAttribute('aria-pressed', 'false');
-    this._gotoBtn.addEventListener('click', () => this._toggleGoto());
-    btns.appendChild(this._gotoBtn);
-    this._wrap = wrap;
+    this._menuBtn = document.createElement('button'); this._menuBtn.className = 'panel btn menubtn';
+    this._menuBtn.innerHTML = `${iconSvg('menu')}<span class="lbl">Opções</span>`;
+    this._menuBtn.setAttribute('aria-label', 'Opções'); this._menuBtn.title = 'Opções: ambiente, vista, navegação e painel';
+    this._menuBtn.setAttribute('aria-haspopup', 'dialog'); this._menuBtn.setAttribute('aria-expanded', 'false'); this._menuBtn.setAttribute('aria-controls', menu.id);
+    this._menuBtn.addEventListener('click', (e) => this._toggleMenu(null, e.detail === 0));   // detail 0 = veio do teclado → foco no 1º item
+    this._menuBtn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && this._menu.hidden) { e.preventDefault(); this._toggleMenu(true, true); } });
+    btns.appendChild(this._menuBtn);
+    wrap.appendChild(menu);
+    this._menuBind();
+
     this._pegGhost = document.createElement('div'); this._pegGhost.className = 'pegghost'; this._pegGhost.innerHTML = PERSON; this._pegGhost.hidden = true; wrap.appendChild(this._pegGhost);
     this._pegTip = document.createElement('div'); this._pegTip.className = 'panel pegtip'; this._pegTip.hidden = true; wrap.appendChild(this._pegTip);
     this._gotoPanel = document.createElement('div'); this._gotoPanel.className = 'panel goto'; this._gotoPanel.hidden = true; this._gotoPanel.setAttribute('role', 'dialog'); this._gotoPanel.setAttribute('aria-label', 'Ir para um cômodo'); wrap.appendChild(this._gotoPanel);
@@ -3040,12 +3138,6 @@ export class Casa3DCard extends HTMLElement {
     const joy = document.createElement('div'); joy.className = 'joy'; joy.hidden = true; joy.setAttribute('role', 'application'); joy.setAttribute('aria-label', 'Andar');
     const knob = document.createElement('div'); knob.className = 'knob'; joy.appendChild(knob); wrap.appendChild(joy); this._joy = joy;
     this._walkHint = document.createElement('div'); this._walkHint.className = 'panel walkhint'; wrap.appendChild(this._walkHint);
-    this._roofBtn = document.createElement('button'); this._roofBtn.className = 'panel btn'; this._roofBtn.textContent = 'Telhado';
-    this._roofBtn.addEventListener('click', () => this._setRoof(!this._roofOn));
-    btns.appendChild(this._roofBtn);
-    this._panelBtn = document.createElement('button'); this._panelBtn.className = 'panel btn'; this._panelBtn.textContent = 'Painel';
-    this._panelBtn.addEventListener('click', () => this._setPanel(!this._panelOpen));
-    btns.appendChild(this._panelBtn);
 
     this._hint = document.createElement('div'); this._hint.className = 'hint';
     this._hint.textContent = 'Arraste para girar · roda/pinça para zoom · clique num cômodo para acender';
@@ -3063,7 +3155,7 @@ export class Casa3DCard extends HTMLElement {
     }
 
     this._buildPanel(wrap);
-    if (this._ro) this._ro.observe(this._dock);
+    if (this._ro) { this._ro.observe(this._dock); this._ro.observe(this._titleCard); this._ro.observe(this._btnsEl); }   // título/botões mudam de altura → reposiciona coluna e menu
     this._built = true;
     this._setLabels(!!this._config.labels);
     this._applyMode();
@@ -4229,9 +4321,54 @@ export class Casa3DCard extends HTMLElement {
     const box = this._gotoPanel; if (!box) return;
     const open = force != null ? force : box.hidden;
     if (open && !box.dataset.built) { this._buildGoto(); box.dataset.built = '1'; }
+    if (open) { this._toggleMenu(false); if (this._panelOpen && this._sideOverlay) this._setPanel(false); }   // no celular a gaveta cobriria a lista
     box.hidden = !open; this._gotoBtn.setAttribute('aria-pressed', open ? 'true' : 'false'); this._pegBtn.setAttribute('aria-pressed', open && !this._walkOn ? 'true' : 'false');
   }
   _closeGoto() { if (this._gotoPanel && !this._gotoPanel.hidden) this._toggleGoto(false); }
+  // Menu de opções (v1.5): abre/fecha no botão; fecha com Esc, clique fora e depois de ações de um disparo. ↑/↓/Home/End andam entre os itens.
+  _menuBind() {
+    this._menuOut = (e) => { const p = e.composedPath(); if (!p.includes(this._menu) && !p.includes(this._menuBtn)) this._toggleMenu(false); };
+    this._menuEsc = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this._toggleMenu(false); this._menuBtn.focus(); } };
+    this._menu.addEventListener('keydown', (e) => {
+      const its = [...this._menu.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent);
+      const i = its.indexOf(this.shadowRoot.activeElement);
+      const j = e.key === 'ArrowDown' ? i + 1 : e.key === 'ArrowUp' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? its.length - 1 : null;
+      if (j == null || !its.length) return;
+      e.preventDefault(); its[(j + its.length) % its.length].focus();
+    });
+  }
+  _toggleMenu(open, kbd) {
+    const m = this._menu; if (!m) return;
+    open = open != null ? !!open : m.hidden;
+    if (open === !m.hidden) return;
+    m.hidden = !open; this._menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      this._closeGoto(); this._placeMenu();
+      document.addEventListener('pointerdown', this._menuOut, true); document.addEventListener('keydown', this._menuEsc, true);
+      if (kbd) { const f = m.querySelector('button:not(:disabled)'); if (f) f.focus(); }
+    } else { document.removeEventListener('pointerdown', this._menuOut, true); document.removeEventListener('keydown', this._menuEsc, true); }
+  }
+  // o menu desce do botão; se o título invadir a faixa dele (telas estreitas), desce abaixo do título
+  _placeMenu() {
+    const m = this._menu; if (!m || m.hidden) return;
+    const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
+    const mw = this._narrow ? wr.width - 20 : Math.min(272, wr.width - 20);
+    const top = Math.round((tr.right > wr.right - 10 - mw - 6 ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 6);
+    m.style.top = `${top}px`; m.style.maxHeight = `${Math.max(160, wr.height - top - 10)}px`;
+  }
+  // mede o topo e posiciona a coluna lateral: largura (--side-w) e topo (--side-top) logo abaixo dos botões — ou do título,
+  // se ele invadir a faixa da coluna; no celular (gaveta por cima) abaixo do cabeçalho inteiro
+  _layoutHud(w) {
+    if (!this._titleCard || !this._wrap) return;
+    const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
+    this._narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;   // mesmo corte do CSS
+    const sw = Math.round(this._narrow ? Math.min(w * 0.88, 360) : clamp(w * 0.34, 300, 380));
+    this._sideOverlay = this._narrow || sw + 20 > w * 0.6;   // coluna larga demais para dividir a tela: fica por cima, sem reenquadrar
+    const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
+    const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
+    this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
+    this._placeMenu();
+  }
   _setWalk(on) {
     on = !!on; if (on === !!this._walkOn || !this._orbit) return;
     const o = this._orbit, cam = this._camera, cv = this._canvas;
@@ -4239,7 +4376,7 @@ export class Casa3DCard extends HTMLElement {
       this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, touched: o.touched, roof: !!this._roofOn };
       // na visão de Pessoa o Telhado liga sozinho (forro por dentro, sem céu sobre os cômodos); ao sair volta como estava
       if (this._config.telhado_pessoa !== false && !this._roofOn) this._setRoof(true);
-      if (this._panelOpen) this._setPanel(false);   // o painel cobriria o joystick
+      if (this._panelOpen) this._setPanel(false);   // vista inteira para andar (no celular a gaveta cobriria o joystick); volta ao sair
       o.enabled = false; o.touched = true;
       if (!this._walk) { this._walk = new Walker(this, cam, cv); this._walk.reset(6.1, 17.6); }
       this._walkOn = true; this._walk.enable();
@@ -4326,7 +4463,7 @@ export class Casa3DCard extends HTMLElement {
     }
   }
 
-  // ---- Painel inferior: cômodos (blocos), rotinas, atividade ----
+  // ---- Painel lateral: cômodos (blocos), rotinas, atividade ----
   _svc(domain, service, entity, data) {
     const payload = Object.assign({ entity_id: entity }, data || {});
     if (this._hass && this._hass.callService) this._hass.callService(domain, service, payload);
@@ -4352,20 +4489,95 @@ export class Casa3DCard extends HTMLElement {
   }
   _setPanel(open) {
     this._panelOpen = !!open;
-    clearTimeout(this._dockT); this._dock.classList.remove('closing');
-    if (!open && !this._dock.hidden && !this._reduced && this._wrap && this._wrap.isConnected) {   // recolhe deslizando (~0,2 s); o estado já vale na hora
-      this._dock.classList.add('closing'); this._dockT = setTimeout(() => { this._dock.classList.remove('closing'); this._dock.hidden = !this._panelOpen; }, 200);
-    } else this._dock.hidden = !open;
+    const d = this._dock, sc = this._scrim;
+    cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sprX = 0;
+    clearTimeout(this._dockT); d.classList.remove('closing'); if (sc) sc.classList.remove('closing');
+    if (!open && !d.hidden && !this._reduced && this._wrap && this._wrap.isConnected) {   // recolhe deslizando para a direita (~0,2 s); o estado já vale na hora
+      d.classList.add('closing'); if (sc && !sc.hidden) sc.classList.add('closing');
+      this._dockT = setTimeout(() => {
+        d.classList.remove('closing'); d.hidden = !this._panelOpen; d.style.transform = '';
+        if (sc) { sc.classList.remove('closing'); sc.hidden = !this._panelOpen; sc.style.opacity = ''; }
+      }, 200);
+    } else { d.hidden = !open; d.style.transform = ''; if (sc) { sc.hidden = !open; sc.style.opacity = ''; } }
+    if (open) { d.style.transform = ''; if (sc) sc.style.opacity = ''; if (this._sideOverlay) this._closeGoto(); }   // gaveta do celular por cima: a lista "Ir para…" sai
     this._reopen.hidden = !!open;
-    if (this._weatherEl) this._weatherEl.classList.toggle('out', !!open);
+    if (this._wrap) this._wrap.classList.toggle('side', !!open);   // .goto passa para a esquerda da coluna
     this._panelBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
     if (open) this._renderPanel();
     requestAnimationFrame(() => this._resize());
   }
+  // Gaveta (v1.5): no toque, arrastar a coluna para a direita acompanha o dedo 1:1 (limiar de 10 px antes de assumir o gesto);
+  // ao soltar, abre ou fecha pela posição projetada com a velocidade do dedo e assenta numa mola que herda essa velocidade.
+  // Agarrar no meio da mola interrompe e segue daqui; puxar além do aberto (para a esquerda) tem resistência progressiva.
+  _swipeBind(dock) {
+    let g = null;
+    const W = () => dock.offsetWidth + 16;   // deslocamento de "fechado" (sai inteira pela direita, como entrou)
+    const rubber = (x, dim) => x * dim * 0.55 / (dim + 0.55 * Math.abs(x));
+    dock.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch' || g || e.target.closest('input[type="range"]')) return;   // o brilho (range) arrasta de lado
+      const moving = !!this._sprRaf; cancelAnimationFrame(this._sprRaf); this._sprRaf = 0;
+      g = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x0: this._sprX || 0, live: moving, hist: [] };
+      if (moving) try { dock.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    dock.addEventListener('pointermove', (e) => {
+      if (!g || e.pointerId !== g.id) return;
+      const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+      if (!g.live) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { g = null; return; }   // gesto vertical: é rolagem da lista
+        if (Math.abs(dx) < 10) return;
+        g.live = true; g.sx += Math.sign(dx) * 10; try { dock.setPointerCapture(e.pointerId); } catch (_) {}   // assume o gesto: segue o dedo descontando os 10 px do limiar (sem pulo)
+      }
+      const x = g.x0 + e.clientX - g.sx;
+      this._sideX(x < 0 ? -rubber(-x, W()) : x);
+      g.hist.push([e.timeStamp, this._sprX]); if (g.hist.length > 6) g.hist.shift();
+    });
+    const end = (e) => {
+      if (!g || e.pointerId !== g.id) return;
+      const s = g; g = null; try { dock.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (!s.live) return;
+      this._swiped = performance.now();   // o "click" que o navegador ainda manda ao soltar não liga o bloco
+      const h = s.hist, a = h[0], b = h[h.length - 1];
+      const v = e.type === 'pointerup' && a && b[0] - a[0] > 0 ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;   // px/s
+      const proj = this._sprX + (v / 1000) * 0.998 / (1 - 0.998);   // projeção do momento (desaceleração 0,998)
+      const close = proj > W() / 2;
+      if (this._reduced) { if (close) this._setPanel(false); else this._sideX(0); return; }
+      this._sideSpring(close ? W() : 0, v, () => { if (close) this._setPanel(false); });
+    };
+    dock.addEventListener('pointerup', end); dock.addEventListener('pointercancel', end);
+    dock.addEventListener('click', (e) => { if (performance.now() - (this._swiped || 0) < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
+  }
+  // posição da coluna (0 = aberta, + = para a direita); o véu clareia junto
+  _sideX(x) {
+    this._sprX = x; this._dock.style.transform = x ? `translateX(${x}px)` : '';
+    if (this._scrim) this._scrim.style.opacity = x > 0 ? String(clamp(1 - x / (this._dock.offsetWidth + 16), 0, 1)) : '';
+  }
+  // mola feita à mão (amortecimento 0,8, resposta 0,3 s), partindo da posição e da velocidade atuais
+  _sideSpring(to, v, done) {
+    const w = 2 * Math.PI / 0.3, k = w * w, c = 2 * 0.8 * w;
+    let x = this._sprX || 0, last = 0;
+    const tick = (t) => {
+      const dt = last ? Math.min((t - last) / 1000, 0.1) : 1 / 60; last = t;
+      for (let i = 0, n = Math.ceil(dt * 240); i < n; i++) { v += (-k * (x - to) - c * v) * (dt / n); x += v * (dt / n); }   // Euler semi-implícito
+      if (Math.abs(x - to) < 0.5 && Math.abs(v) < 8) { this._sprRaf = 0; this._sideX(to); if (done) done(); return; }
+      this._sideX(x); this._sprRaf = requestAnimationFrame(tick);
+    };
+    cancelAnimationFrame(this._sprRaf); this._sprRaf = requestAnimationFrame(tick);
+  }
   _buildPanel(wrap) {
     this._wrap = wrap;
-    const dock = document.createElement('div'); dock.className = 'panel dock'; dock.hidden = true; wrap.appendChild(dock); this._dock = dock;
-    const tabs = document.createElement('div'); tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist'); dock.appendChild(tabs);
+    const dock = document.createElement('div'); dock.className = 'panel dock'; dock.hidden = true; dock.setAttribute('role', 'region'); dock.setAttribute('aria-label', 'Painel da casa');
+    // véu da gaveta (celular): fica atrás da coluna; tocar nele recolhe
+    this._scrim = document.createElement('div'); this._scrim.className = 'scrim'; this._scrim.hidden = true; this._scrim.setAttribute('aria-hidden', 'true');
+    this._scrim.addEventListener('click', () => this._setPanel(false)); wrap.appendChild(this._scrim);
+    wrap.appendChild(dock); this._dock = dock;
+    // cabeçalho: contador de luzes + recolher (→)
+    const head = document.createElement('div'); head.className = 'phead'; dock.appendChild(head); this._phead = head;
+    this._countEl = document.createElement('span'); this._countEl.className = 'count'; this._countEl.setAttribute('role', 'status'); head.appendChild(this._countEl);
+    const spacer = document.createElement('div'); spacer.className = 'spacer'; head.appendChild(spacer);
+    const col = document.createElement('button'); col.className = 'collapse'; col.title = 'Recolher painel'; col.setAttribute('aria-label', 'Recolher painel');
+    col.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg>';
+    col.addEventListener('click', () => this._setPanel(false)); head.appendChild(col);
+    const tabs = document.createElement('div'); tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Seções do painel'); dock.appendChild(tabs);
     this._panes = {};
     const panes = [];
     const TABS = [['ctl', 'Cômodos', 'home'], ['scn', 'Automações', 'auto'], ['act', 'Atividade', 'timer']];
@@ -4380,37 +4592,42 @@ export class Casa3DCard extends HTMLElement {
       const pane = document.createElement('div'); pane.className = 'pane'; pane.dataset.pane = id; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-label', label); panes.push(pane);
       this._panes[id] = { btn: b, pane };
     }
-    let drag = null;   // no celular: arrastar a barra de abas para baixo recolhe o painel
-    tabs.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch' && !e.target.closest('button')) drag = { y: e.clientY, id: e.pointerId }; });
-    tabs.addEventListener('pointermove', (e) => { if (drag && e.pointerId === drag.id && e.clientY - drag.y > 48) { drag = null; this._setPanel(false); } });
-    const endDrag = () => { drag = null; }; tabs.addEventListener('pointerup', endDrag); tabs.addEventListener('pointercancel', endDrag);
-    const spacer = document.createElement('div'); spacer.className = 'spacer'; tabs.appendChild(spacer);
-    this._countEl = document.createElement('span'); this._countEl.className = 'count'; this._countEl.setAttribute('role', 'status'); tabs.appendChild(this._countEl);
-    const col = document.createElement('button'); col.className = 'collapse'; col.title = 'Recolher painel'; col.setAttribute('aria-label', 'Recolher painel');
-    col.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg>';
-    col.addEventListener('click', () => this._setPanel(false)); tabs.appendChild(col);
     for (const pane of panes) dock.appendChild(pane);
-    this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.innerHTML = '<span>Painel ▴</span><span class="rn" title="luzes acesas"></span>'; this._reopen.hidden = true;
+    this._swipeBind(dock);
+    this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.title = 'Abrir o painel'; this._reopen.setAttribute('aria-label', 'Abrir o painel');
+    this._reopen.innerHTML = `${iconSvg('chevl')}<span class="rl">Painel</span><span class="rn" title="luzes acesas"></span>`; this._reopen.hidden = true;
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
-    this._buildWeather(wrap);
+    this._buildWeather(this._lcol || wrap);
 
-    // Cômodos: blocos agrupados por área, com filtro
+    // Cômodos (v1.5): blocos agrupados pelos cômodos reais da planta (ZONES/PLACES), com filtro
     this._tiles = {};
-    const zbar = document.createElement('div'); zbar.className = 'zonebar'; zbar.setAttribute('role', 'group'); zbar.setAttribute('aria-label', 'Filtrar por área'); this._panes.ctl.pane.appendChild(zbar); this._zbar = zbar;
+    const zbar = document.createElement('div'); zbar.className = 'zonebar'; zbar.setAttribute('role', 'group'); zbar.setAttribute('aria-label', 'Filtrar por cômodo'); this._panes.ctl.pane.appendChild(zbar); this._zbar = zbar;
     const grid = document.createElement('div'); grid.className = 'tiles'; this._panes.ctl.pane.appendChild(grid); this._grid = grid;
     this._detail = document.createElement('div'); this._detail.className = 'detail'; this._detail.hidden = true;
-    const ROOMS = [['Quarto', ['quarto', 'led_quarto', 'tv', 'presenca', 'lux']], ['Sala / Cozinha', ['sala', 'balcao', 'ac']], ['Externa', ['externa', 'banheiro', 'garagem']], ['Piscina', ['led_piscina', 'bomba_piscina']], ['Casa', ['pessoa']]];
+    // [cabeçalho do grupo (= filtro / eyebrow), rótulo curto do filtro, aparelhos]. A luz externa cobre a varanda + as arandelas do
+    // muro/jardim; Quarto Casal não tem aparelho (sem grupo vazio). Pessoa (em casa/fora) fica em "Casa".
+    const ROOMS = [
+      ['Quarto', 'Quarto', ['quarto', 'led_quarto', 'tv', 'presenca', 'lux']],
+      ['Sala / Cozinha', 'Sala', ['sala', 'ac']],
+      ['Balcão', 'Balcão', ['balcao']],
+      ['Varanda / Jardim', 'Varanda', ['externa']],
+      ['Banheiro / Dispensa', 'Banheiro', ['banheiro']],
+      ['Garagem', 'Garagem', ['garagem']],
+      ['Piscina', 'Piscina', ['led_piscina', 'bomba_piscina']],
+      ['Casa', 'Casa', ['pessoa']],
+    ];
     this._zones = []; this._zone = '';
     let ti = 0;
-    for (const [title, keys] of ROOMS) {
+    for (const [title, , keys] of ROOMS) {
       const zh = document.createElement('div'); zh.className = 'zone'; zh.dataset.room = title; zh.setAttribute('role', 'heading'); zh.setAttribute('aria-level', '3');
       const zt = document.createElement('span'); zt.className = 'zt'; zt.textContent = title; const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); grid.appendChild(zh);
       const z = { title, keys, zh, zn }; this._zones.push(z);
       for (const k of keys) grid.appendChild(this._makeTile(ITEMS.find((i) => i.key === k), title, ti++));
     }
     grid.appendChild(this._detail);
-    for (const [val, label] of [['', 'Todos'], ...ROOMS.map((r) => [r[0], r[0]])]) {
+    for (const [val, label] of [['', 'Todos'], ...ROOMS.map((r) => [r[0], r[1]])]) {
       const c = document.createElement('button'); c.textContent = label; c.dataset.zone = val; c.setAttribute('aria-pressed', val === '' ? 'true' : 'false');
+      if (val && val !== label) { c.title = val; c.setAttribute('aria-label', val); }
       c.addEventListener('click', () => this._setZone(val)); zbar.appendChild(c);
     }
     this._timers = {};
@@ -4473,7 +4690,7 @@ export class Casa3DCard extends HTMLElement {
   _showTab(id) {
     for (const [k, t] of Object.entries(this._panes)) { t.btn.setAttribute('aria-selected', k === id ? 'true' : 'false'); t.btn.tabIndex = k === id ? 0 : -1; t.pane.classList.toggle('active', k === id); }
   }
-  // filtro por área (Todos · Quarto · Sala / Cozinha …): esconde cabeçalhos e blocos das outras áreas
+  // filtro por cômodo (Todos · Quarto · Sala · Balcão …): esconde cabeçalhos e blocos dos outros cômodos
   _setZone(z) {
     this._zone = z || '';
     for (const c of this._zbar.children) c.setAttribute('aria-pressed', c.dataset.zone === this._zone ? 'true' : 'false');
@@ -4683,11 +4900,12 @@ export class Casa3DCard extends HTMLElement {
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, this._lite ? 1.25 : 2, Math.sqrt((this._lite ? 1.4e6 : 2.4e6) / (w * h))));
     this._renderer.setPixelRatio(dpr);
     this._renderer.setSize(w, h, false);
-    // Com o painel aberto, a cena é enquadrada na área visível acima dele
-    const P = this._panelOpen && this._dock && !this._dock.hidden ? Math.min(this._dock.offsetHeight + 12, h * 0.6) : 0;
-    const vh = Math.max(120, h - P);
-    this._camera.aspect = w / vh; if (this._walkOn) this._camera.fov = this._walkFov();
-    if (P > 0) this._camera.setViewOffset(w, vh, 0, 0, w, h); else this._camera.clearViewOffset();
+    this._layoutHud(w);
+    // Com o painel lateral aberto (desktop/tablet), a cena é enquadrada na área à esquerda dele; a gaveta do celular fica por cima
+    const P = this._panelOpen && this._dock && !this._dock.hidden && !this._sideOverlay ? this._sideW + 20 : 0;
+    const vw = Math.max(160, w - P);
+    this._camera.aspect = vw / h; if (this._walkOn) this._camera.fov = this._walkFov();
+    if (P > 0) this._camera.setViewOffset(vw, h, 0, 0, w, h); else this._camera.clearViewOffset();
     this._camera.updateProjectionMatrix();
     if (!this._orbit.touched) this._resetView();
     this._orbit.dirty = true;
