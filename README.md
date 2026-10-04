@@ -7,6 +7,11 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.7.2 — folha do celular mais firme
+
+- No celular e no tablet em pé o cartão não rola mais sozinho quando o painel destaca um aparelho, nem com Tab ou leitor de tela: se o item focado está escondido, a folha sobe até a cheia e mostra ele (toque normal não mexe na folha).
+- O ‹ do cômodo e o voltar do topo dizem e fazem a mesma coisa; no tablet em pé a folha flutua com os quatro cantos; o resumo do que está ligado volta a ser anunciado pelo leitor de tela; os grupos contam só aparelhos ("N de M ligados", sem sensores).
+
 ## Novidades da v1.7.1 — sem piscadas pretas
 
 - A tela não pisca mais preto ao tocar num cômodo, abrir/fechar o painel, mexer a folha do celular, entrar na Pessoa ou mudar o tamanho da janela: o canvas só muda de tamanho quando o tamanho muda de verdade e, nesse caso, é redesenhado na hora. De quebra, arrastar a folha ficou mais leve (antes o canvas era refeito a cada passo).
