@@ -2651,7 +2651,7 @@ function roomGaragemJardim(ctx) {
 // ---------------------------------------------------------------------------
 const CSS = `
 :host { display: block; position: relative; height: var(--casa3d-height, calc(100vh - 100px)); min-height: 360px;
-  border-radius: var(--ha-card-border-radius, 12px); overflow: hidden; background: #0a0f1e;
+  border-radius: var(--ha-card-border-radius, 12px); overflow: hidden; overflow: clip; background: #0a0f1e;   /* clip: foco e scrollIntoView não rolam o cartão */
   font: 13px/1.35 var(--primary-font-family, -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif); color: #e6edf7; }
 .wrap { position: absolute; inset: 0; }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab; }
@@ -2777,6 +2777,7 @@ canvas.walk.pick { cursor: pointer; }
 .phead .count b { color: var(--ink); font-weight: 700; }
 .phead .count:not(.lit):not(.any) { color: #7f8ba3; }   /* "Tudo desligado" em cinza */
 .phead .count:hover { border-color: rgba(255, 196, 107, .4); }
+.phead .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* só leitor de tela */
 .phead .collapse { width: 34px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(255, 255, 255, .06); flex: none; }
 .phead .collapse:hover { background: rgba(255, 196, 107, .18); color: var(--amber2); }
 .tabs { display: flex; gap: 3px; margin: 0 10px 10px; padding: 3px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); flex: none; }
@@ -2941,7 +2942,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .wrap.sheet .dock.closing { animation-name: drawerOut; }
 @keyframes drawerIn { from { transform: translateY(100%); } }
 @keyframes drawerOut { to { transform: translateY(100%); } }
-.wrap.sheet .dock:not([data-snap="full"]) .pane { overflow: hidden; touch-action: none; }
+.wrap.sheet .dock:not([data-snap="full"]) .pane { overflow: clip; touch-action: none; }   /* clip: nem o foco nem o _flashRow rolam a lista escondida */
 .wrap.sheet .dock[data-snap="full"] .pane.top { touch-action: pan-down; }   /* no topo: subir rola a lista, descer é da folha */
 .wrap.sheet .grab { display: block; position: absolute; left: 50%; top: 0; width: 64px; height: 22px; margin-left: -32px; padding: 0; z-index: 1; background: none; }
 .wrap.sheet .grab::before { content: ""; position: absolute; left: 14px; right: 14px; top: 6px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .22); }
@@ -2952,7 +2953,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .wrap.sheet .reopen .rl { writing-mode: horizontal-tb; } .wrap.sheet .reopen svg { transform: rotate(90deg); }   /* a aba de reabrir fica onde a folha mora: embaixo */
 .wrap.sheet .phead { padding: 14px 10px 6px 14px; } .wrap.sheet .tabs, .wrap.sheet .rhead { margin: 0 10px 8px; } .wrap.sheet .pane { padding: 10px 10px calc(14px + env(safe-area-inset-bottom)); }
 @media (min-width: 641px) {   /* tablet em pé: folha flutuante, blocos em 4 colunas */
-  .wrap.sheet .dock { left: 12px; right: 12px; bottom: 12px; max-height: calc(100% - var(--side-top, 58px) - 12px); border-radius: 22px; border-width: 1px; }
+  .wrap.sheet .dock { left: 12px; right: 12px; bottom: 12px; max-height: calc(100% - var(--side-top, 58px) - 12px); border-radius: 22px; border-width: 1px; --sab: 0px; }
   .wrap.sheet .reopen { bottom: 12px; border-radius: 999px; border-bottom: 1px solid rgba(255, 196, 107, .4); padding-bottom: 9px; }
   .wrap.sheet .tiles:not(.routines) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -4652,14 +4653,13 @@ export class Casa3DCard extends HTMLElement {
       this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
       if (r) {
         this._rTitle.textContent = r.label; this._showTab('ctl');
-        const bl = this._topView && !this._backBtn.hidden ? this._backBtn.getAttribute('aria-label') : 'Todos os cômodos';   // o mesmo voltar do topo
-        this._rBack.setAttribute('aria-label', bl); this._rBack.title = bl;
         const autos = this._roomAutos(r), f = this._rFoot; f.replaceChildren();
         if (autos.length) { const h = document.createElement('div'), al = document.createElement('div'); h.className = 'sect'; h.textContent = 'Automações'; al.className = 'autos'; for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); f.append(h, al); }
         f.appendChild(this._rEnter);
       }
       this._setZone(r ? this._zone : this._onKeys().length ? 'on' : '');   // blocos: só os do cômodo · de volta ao geral: "Ligados" se houver
     }
+    if (r) { const bl = this._topView && !this._backBtn.hidden ? this._backBtn.getAttribute('aria-label') : 'Todos os cômodos'; this._rBack.setAttribute('aria-label', bl); this._rBack.title = bl; }   // o mesmo voltar do topo (o 2º toque muda ele sem trocar de cômodo)
     this._roomHl(r);
     if (r && !this._panelOpen && !(this._walkOn && this._sideOverlay)) this._setPanel(true);
     else { this._renderPanel(); if (r || ch) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
@@ -4785,7 +4785,8 @@ export class Casa3DCard extends HTMLElement {
   }
   // posição da coluna (0 = aberta, + = para a direita; na folha, para baixo)
   _sideX(x) {
-    this._sprX = x; this._dock.style.transform = x ? `translate${this._sheet ? 'Y' : 'X'}(${x}px)` : '';
+    this._sprX = x; const s = this._dock.style; s.transform = x ? `translate${this._sheet ? 'Y' : 'X'}(${x}px)` : '';
+    s.clipPath = this._sheet && !this._narrow ? `inset(0 0 ${Math.max(0, x)}px round 22px)` : '';   // folha flutuante (tablet): o que desce some no vão de 12 px, com os cantos de baixo
   }
   // alturas da folha como deslocamento para baixo: cheia (tudo), média (até metade do cartão), espiada (só a 1ª linha), fechada
   _snaps() {
@@ -4796,6 +4797,7 @@ export class Casa3DCard extends HTMLElement {
   // leva a folha a uma altura com a mola (ou direto, sem animação); a câmera reenquadra quando ela assenta
   _snapTo(n, v = 0) {
     const d = this._dock; if (!this._sheet || !this._panelOpen || d.hidden) return;
+    if (n !== 'full') for (const t of Object.values(this._panes)) t.pane.scrollTop = 0;   // fora da cheia a lista volta ao topo (o clip guardaria o deslocamento e ele voltaria num salto)
     d.dataset.snap = n; this._grab.setAttribute('aria-expanded', n !== 'peek' ? 'true' : 'false');
     if (this._reduced) { this._sideX(this._snaps()[n]); this._resize(); return; }
     this._sideSpring(() => this._snaps()[n], v, () => this._resize(true));   // alvo medido a cada quadro: o conteúdo pode mudar de altura no caminho
@@ -4825,6 +4827,7 @@ export class Casa3DCard extends HTMLElement {
     const head = document.createElement('div'); head.className = 'phead'; dock.appendChild(head); this._phead = head;
     head.addEventListener('click', (e) => { if (this._sheet && !e.target.closest('button')) flip(); });
     this._countEl = document.createElement('button'); this._countEl.className = 'count'; head.appendChild(this._countEl);
+    this._countSr = document.createElement('span'); this._countSr.className = 'sr'; this._countSr.setAttribute('role', 'status'); head.appendChild(this._countSr);   // leitor de tela: anuncia o que ligou/desligou
     this._countEl.addEventListener('click', () => {
       if (this._topView && this._nav.level) this._navTo(0); else this._showRoom(null);
       this._showTab('ctl'); this._setZone('on'); this._snapTo('half');
@@ -4858,6 +4861,12 @@ export class Casa3DCard extends HTMLElement {
     }
     for (const pane of panes) dock.appendChild(pane);
     this._swipeBind(dock);
+    dock.addEventListener('pointerdown', () => { this._tapT = performance.now(); });   // hora do último toque/clique (o foco que vem dele não sobe a folha)
+    dock.addEventListener('focusin', (e) => {   // Tab/leitor de tela abaixo da dobra: a folha sobe até a cheia (como no iOS); o foco de um toque não mexe nela
+      if (!this._sheet || dock.dataset.snap === 'full' || performance.now() - (this._tapT || 0) < 1500 || e.target.closest('.grab, .phead, .rhead')) return;
+      this._snapTo('full'); const t = e.target, p = t.closest('.pane');
+      if (p) requestAnimationFrame(() => { const r = t.getBoundingClientRect(), q = p.getBoundingClientRect(); if (r.bottom > q.bottom) p.scrollTop += r.bottom - q.bottom + 12; });   // o navegador rola antes do focusin, com a lista ainda presa: rola agora
+    });
     this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.title = 'Abrir o painel'; this._reopen.setAttribute('aria-label', 'Abrir o painel');
     this._reopen.innerHTML = `${iconSvg('chevl')}<span class="rl">Painel</span><span class="rn" title="luzes acesas"></span>`; this._reopen.hidden = true;
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
@@ -5100,8 +5109,8 @@ export class Casa3DCard extends HTMLElement {
       if (st && st.attrs && st.attrs.brightness != null && (t.it.dim || t.it.rgb)) t.tile.style.setProperty('--lvl', `${Math.round(st.attrs.brightness / 2.55)}%`);
     }
     for (const z of this._zones || []) {
-      const act = z.keys.filter((k) => this._state[k] && this._state[k].on).length;
-      z.zn.textContent = `${act} de ${z.keys.length} ativos`; z.zh.classList.toggle('some', act > 0);
+      const ks = z.keys.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'sensor'), act = ks.filter((k) => this._state[k] && this._state[k].on).length;
+      z.zn.textContent = ks.length ? `${act} de ${ks.length} ligados` : ''; z.zh.classList.toggle('some', act > 0);   // sensor e pessoa não contam (Casa fica sem número)
     }
     // resumo do que está ligado ("4 luzes · Ar · TV", +N depois de 3 itens) e o filtro "Ligados · N"
     const onK = this._onKeys(), n = onK.filter((k) => ITEMS.find((i) => i.key === k).kind === 'light').length;
@@ -5111,7 +5120,7 @@ export class Casa3DCard extends HTMLElement {
       const txt = parts.length ? parts.slice(0, 3).join(' · ') + (parts.length > 3 ? ` +${parts.length - 3}` : '') : 'Tudo desligado';
       if (this._cN !== txt) {
         this._cN = txt; this._countEl.innerHTML = `${iconSvg('bulb')}<span>${txt}</span>`;
-        this._countEl.setAttribute('aria-label', `Mostrar o que está ligado: ${txt.replace(/<\/?b>/g, '')}`);
+        const plain = txt.replace(/<\/?b>/g, ''); this._countEl.setAttribute('aria-label', `Mostrar o que está ligado: ${plain}`); this._countSr.textContent = plain;
         this._zbar.firstChild.textContent = `Ligados · ${onK.length}`;
       }
       this._countEl.classList.toggle('lit', n > 0); this._countEl.classList.toggle('any', onK.length > 0);
