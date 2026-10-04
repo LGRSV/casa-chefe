@@ -2684,11 +2684,11 @@ canvas:active { cursor: grabbing; }
 .title b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
 .title .sub { color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .title .clock { color: var(--ink); font-weight: 600; }
-.title .clock .per { color: #ffd48a; }
+.title .clock .per { color: var(--on); }
 /* Clima (v1.5.1): só ícone + temperatura, à direita do nome; os detalhes ficam no topo do menu ☰ */
 .title .cline { display: flex; align-items: center; gap: 12px; }
 .title .wx { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
-.title .wx svg { width: 15px; height: 15px; color: #ffc46b; } .title .wx[hidden] { display: none; }
+.title .wx svg { width: 15px; height: 15px; color: var(--on); } .title .wx[hidden] { display: none; }
 .menu .mwx .wd { padding: 0 8px 4px; font-size: 12px; color: var(--ink); } .menu .mwx .wd small { display: block; font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
 .hud > .lcol { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; pointer-events: none; }   /* coluna esquerda: título */
 .lcol > * { pointer-events: auto; }
@@ -2737,14 +2737,13 @@ button[aria-pressed="true"] { background: var(--on-bg); color: var(--on); }
   background: radial-gradient(circle, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04)); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .joy[hidden] { display: none; }
 .joy .knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; pointer-events: none;
-  background: rgba(255, 196, 107, .38); border: 1px solid rgba(255, 212, 138, .8); box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
+  background: var(--on-line); border: 1px solid var(--on); box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
 .walkhint { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); z-index: 4; padding: 7px 12px; font-size: 12px; color: var(--ink); max-width: calc(100% - 32px);
   text-align: center; pointer-events: none; opacity: 0; transition: opacity .6s; }
 .walkhint.show { opacity: 1; }
 canvas.walk { cursor: crosshair; }
 canvas.walk.pick { cursor: pointer; }
-.peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ffc46b; touch-action: none; cursor: grab; padding: 8px 10px; }
-.peg .lbl { color: #ffd48a; }
+.peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--on); touch-action: none; cursor: grab; padding: 8px 10px; }   /* o bonequinho continua âmbar (o mesmo --on) */
 /* dica de primeiro acesso apontando para o bonequinho (some quando ele é usado ou ao fechar) */
 .pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 36px 9px 12px; font-size: 12px; line-height: 1.35; color: var(--ink); background: rgba(44, 44, 48, .96); }
 .pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: inherit; border: solid var(--line); border-width: 1px 0 0 1px; transform: rotate(45deg); }
@@ -2754,10 +2753,10 @@ canvas.walk.pick { cursor: pointer; }
 .wrap.side .pegdica:not(.lado) { display: none; }   /* celular com a folha aberta: ela cobriria a faixa da cena */
 .peg[hidden], .btns > button[hidden] { display: none; }
 .peg[aria-pressed="true"] { background: var(--on-bg); }
-.pegghost { position: absolute; left: 0; top: 0; width: 44px; height: 44px; z-index: 7; pointer-events: none; display: grid; place-items: center; color: #ffc46b;
+.pegghost { position: absolute; left: 0; top: 0; width: 44px; height: 44px; z-index: 7; pointer-events: none; display: grid; place-items: center; color: var(--on);
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .55)); opacity: .85; }
-.pegghost svg { width: 40px; height: 40px; } .pegghost.ok { opacity: 1; color: #ffd48a; } .pegghost[hidden] { display: none; }
-.pegtip { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; padding: 5px 9px; font-size: 12px; font-weight: 600; color: #ffd48a; white-space: nowrap; }
+.pegghost svg { width: 40px; height: 40px; } .pegghost.ok { opacity: 1; } .pegghost[hidden] { display: none; }
+.pegtip { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; padding: 5px 9px; font-size: 12px; font-weight: 600; color: var(--on); white-space: nowrap; }
 .pegtip[hidden] { display: none; }
 .goto { position: absolute; right: 10px; top: var(--side-top, 58px); z-index: 6; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 8px 10px 10px; overscroll-behavior: contain; box-sizing: border-box; }
 .goto[hidden] { display: none; }
@@ -2851,7 +2850,7 @@ canvas.walk.pick { cursor: pointer; }
 .tile.unavailable { background: transparent; border-style: dashed; border-color: var(--line-2); } .tile.unavailable b { color: var(--ink-2); }
 .tile.unavailable .ico { background: transparent; color: var(--ink-3); box-shadow: none; } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
 .tile.flash { box-shadow: 0 0 0 3px var(--focus); }   /* "olha aqui" */
-.tile .more { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; padding: 0; border-radius: 9px; background: transparent; color: var(--ink-3); font-size: 15px; line-height: 26px; text-align: center; letter-spacing: .04em; cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }
+.tile .more { position: absolute; top: 4px; right: 4px; z-index: 1; width: 26px; height: 26px; padding: 0; border-radius: 9px; background: transparent; color: var(--ink-3); font-size: 15px; line-height: 26px; text-align: center; letter-spacing: .04em; cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }   /* z-index: por cima do nome, que senão pega o toque */
 .tile:hover .more, .tile:focus-within .more { opacity: 1; } @media (hover: none) { .tile .more { opacity: 1; } }   /* "⋯" só aparece quando serve (no toque, só os pontos) */
 .tile .more:hover, .tile .more:focus-visible { background: var(--fill-2); color: var(--ink); opacity: 1; }
 .tile .more:focus-visible { outline: 2px solid var(--focus); }
@@ -2859,7 +2858,7 @@ canvas.walk.pick { cursor: pointer; }
 .tiles.routines { grid-template-columns: minmax(0, 1fr); }
 .tile.routine { min-height: 62px; }
 .tile.routine .ico { background: var(--fill-2); color: var(--ink-2); }
-.tile.routine small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tile.routine small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }   /* descrição em até 2 linhas (o .tile small é de 1) */
 .tile.routine:hover { background: var(--off-bg); border-color: var(--line-2); transform: translateY(-1px); }
 .tile.routine:active { transform: scale(.975); }
 /* folha de controles do aparelho: fica colada no fim da área rolável */
@@ -4367,7 +4366,7 @@ export class Casa3DCard extends HTMLElement {
     const sp = at ? this._dropSpot(r, at[0], at[1]) : this._roomSpot(r);
     this._enterAt(sp, this._roomYaw(r, sp.x, sp.z)); return true;
   }
-  // realce âmbar dos retângulos [x0, z0, x1, z1] do cômodo sob o bonequinho (desenhado por cima, sem teste de profundidade)
+  // realce azul (seleção) dos retângulos [x0, z0, x1, z1] do cômodo sob o bonequinho (desenhado por cima, sem teste de profundidade)
   _hlShow(rects) {
     const g = this._hl; if (!g) return;
     if (rects) {
@@ -4686,7 +4685,7 @@ export class Casa3DCard extends HTMLElement {
     else { this._renderPanel(); if (r || ch) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
     if (key) this._flashRow(key);
   }
-  // realce âmbar do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
+  // realce azul do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
   _roomHl(r) { this._hlShow(r && !this._walkOn ? r.rects.map(([x, z, w, d]) => [x, z, x + w, z + d]) : null); this._orbit.dirty = true; }
   _onHover(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
@@ -4695,7 +4694,7 @@ export class Casa3DCard extends HTMLElement {
       const key = r ? (b ? 'b:' + b.id : 'r:' + r.id) : '';
       this._canvas.classList.toggle('pick', !!r);
       if (key !== this._hoverKey) {
-        this._hoverKey = key; if (r) this._hlShow((b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d])); else this._roomHl(this._room);   // saiu: volta o âmbar do selecionado
+        this._hoverKey = key; if (r) this._hlShow((b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d])); else this._roomHl(this._room);   // saiu: volta o realce do selecionado
         this._orbit.dirty = true;
       }
       return;
@@ -4791,7 +4790,7 @@ export class Casa3DCard extends HTMLElement {
       const h = s.hist, a = h[0], b = h[h.length - 1];
       const v = e.type === 'pointerup' && a && b[0] - a[0] > 0 ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;   // px/s
       const proj = this._sprX + (v / 1000) * 0.998 / (1 - 0.998);   // projeção do momento (desaceleração 0,998)
-      if (this._sheet) {   // detente mais perto da projeção; fechar só a partir da espiada (senão para nela, com o cômodo e o âmbar)
+      if (this._sheet) {   // detente mais perto da projeção; fechar só a partir da espiada (senão para nela, com o cômodo e o realce)
         const S = this._snaps(); let to = Object.keys(S).reduce((a, k) => (Math.abs(S[k] - proj) < Math.abs(S[a] - proj) ? k : a), 'full');
         if (to === 'shut' && s.snap !== 'peek') to = 'peek';
         if (to !== 'shut') { this._snapTo(to, v); return; }
