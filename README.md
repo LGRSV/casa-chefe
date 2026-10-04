@@ -7,6 +7,12 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.6.2 — polimento de design
+
+- Luz do dia neutra (tone mapping Neutral) com cores vivas e paredes brancas quentes; noite de verdade, com a casa escura e as luzes acesas em destaque, sem passar por tons encardidos.
+- Rótulos dos cômodos em pílulas de vidro com tamanho fixo na tela, sem sobreposição (os que colidem esmaecem) e escondidos no nível cômodo.
+- Título em 2 linhas (nome + clima; hora e luzes acesas); cena enquadrada entre o cabeçalho e o painel; no celular, folha de baixo; blocos sem halo; dica do bonequinho também no desktop.
+
 ## Novidades da v1.6.1 — o cômodo tocado aparece no painel lateral
 
 - **Painel por cômodo**: tocar num cômodo (maquete ou Vista de cima) abre o painel lateral nele — nome, "N de M ligados", **Ligar/Desligar tudo**, os blocos dos aparelhos, as automações do HA dele, **Entrar aqui** e **‹ Todos os cômodos** (volta às abas); tocar num aparelho faz o mesmo e destaca o bloco dele.
