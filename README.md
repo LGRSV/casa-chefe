@@ -7,6 +7,14 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.7.0 — painel inteligente (celular, tablet e desktop)
+
+- **Cada tela com o seu encaixe**: no celular e no tablet em pé o painel é uma folha que sobe de baixo, com 3 alturas — **espiada** (faixa de 72 px com o resumo), **meia** e **cheia**; arraste para mudar. No tablet deitado e no desktop continua a coluna lateral. A escolha segue o tamanho do próprio cartão e girar o aparelho mantém cômodo, aba e estado.
+- **Painel na altura do conteúdo**: sem vidro vazio cobrindo a planta; a cena se enquadra no espaço livre.
+- **O que está ligado primeiro**: o cabeçalho resume ("4 luzes · Bomba · Ar +1") e tocar nele mostra só os ligados. O filtro **Ligados · N / Todos** substitui os 9 chips de cômodo (a planta já é o filtro).
+- **Cômodo numa linha**: voltar, nome com "N de M ligados" e sensores, e uma ação só (Ligar tudo ou Desligar tudo). O primeiro toque na Vista de cima já abre o cômodo; "Quarto ›" nos grupos leva ao cômodo.
+- Alvos de toque de 44 px no celular; na demo, o celular passa a desenhar na largura real da tela.
+
 ## Novidades da v1.6.3 — roda bem em qualquer máquina
 
 - **Qualidade automática** (`quality: auto`, o novo padrão): o cartão detecta a placa de vídeo e escolhe sozinho — `alta` com GPU dedicada, `media` com vídeo integrado, `leve` no celular/tablet, `min` sem GPU. `alta`/`media`/`leve`/`min` na configuração continuam valendo.
