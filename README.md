@@ -7,6 +7,35 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Clicar no cô
 na luminária ou no chip alterna a entidade. Substitui o `picture-elements` com PNGs
 da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.5.0 — painel lateral, cômodos reais e menu de opções
+
+- **Painel lateral**: o painel saiu de baixo e virou uma coluna de vidro escuro à direita (abaixo
+  dos botões do topo, até o pé do cartão). Recolhe pela seta **→** deslizando para a direita e volta
+  pela aba **Painel** presa à borda direita, que mostra quantas luzes estão acesas. Com ele aberto a
+  câmera enquadra a casa **à esquerda** da coluna (nada fica escondido atrás dele). No **celular**
+  vira uma gaveta que entra pela direita cobrindo quase a tela toda (abaixo do cabeçalho): fecha
+  pela seta, **tocando no véu** à esquerda ou **arrastando para a direita** — a gaveta acompanha o
+  dedo, e ao soltar decide abrir/fechar pela velocidade do gesto (um arremesso curto já fecha),
+  assentando numa mola; dá para agarrar no meio do movimento. Com `prefers-reduced-motion` o
+  deslize vira um fade curto.
+- **Blocos agrupados pelos cômodos reais da planta**: Quarto · Sala / Cozinha · Balcão ·
+  Varanda / Jardim (a luz externa cobre a varanda e as arandelas do muro/jardim) · Banheiro /
+  Dispensa · Garagem · Piscina · Casa (pessoa). Os filtros do topo do painel seguem os mesmos
+  cômodos, e cada grupo mostra "N de M ativos". Os blocos ficam compactos, em duas colunas.
+- **Menu de opções**: os botões do topo viraram um único botão **☰ Opções** com uma lista
+  suspensa por seções — **Ambiente** (Auto/Dia/Noite e Visão noturna), **Vista** (Rótulos,
+  Telhado, Recentrar), **Navegação** (Pessoa, Ir para…) e **Painel** (mostrar/ocultar). Os
+  liga/desliga mostram um interruptor com o estado. Fecha com Esc, clicando fora ou depois de
+  Recentrar / Ir para… / Pessoa / Painel; pelo teclado o foco vai ao 1º item e ↑/↓ andam entre eles.
+  O **bonequinho** continua fora do menu, ao lado do botão (é arrastado até a maquete), e no modo
+  Pessoa o atalho **Ir para…** aparece no topo.
+- **Clima** foi para baixo do cartão do título (canto superior esquerdo) — o único canto livre em
+  todos os modos: à direita fica o painel, embaixo à esquerda o joystick da Pessoa. Agora fica
+  sempre visível.
+- Acessibilidade: além de `prefers-reduced-motion`, o cartão respeita
+  `prefers-reduced-transparency` (superfícies quase sólidas, sem desfoque) e
+  `prefers-contrast: more` (fundo sólido e bordas claras).
+
 ## Novidades da v1.4.0 — visão de Pessoa, portas que abrem e painel novo
 
 Trazido da [Igreja 3D](https://github.com/LGRSV/igreja-3d-v1) e adaptado à planta da casa:
@@ -76,11 +105,11 @@ mode: auto            # auto = segue sun.sun | day | night
 night_vision: true    # à noite, luz de lua + ambiente frio: a casa inteira fica legível
 labels: true          # nomes dos cômodos flutuando
 height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
-panel: true           # painel inferior aberto ao iniciar (false = recolhido)
-roof: false           # começa com o telhado visível (botão "Telhado" alterna)
+panel: true           # painel lateral aberto ao iniciar (false = recolhido)
+roof: false           # começa com o telhado visível (Opções › Telhado alterna)
 telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
-weather: true         # widget de clima ao vivo no canto inferior direito (Open-Meteo, sem chave)
+weather: true         # widget de clima ao vivo embaixo do título (Open-Meteo, sem chave)
 weather_city: 'Palmas, TO'   # nome mostrado no widget
 car_color: '#f3f3f0'  # cor do up! TSI na garagem (branco)
 timezone: America/Sao_Paulo      # relógio do cartão (horário de Brasília)
@@ -116,10 +145,10 @@ quiser trocar alguma coisa.
 - **Sombras reais**: a luz do quarto não vaza para o quarto ao lado — as paredes
   bloqueiam. Sombras só recalculam quando um estado muda, então o custo em
   repouso é baixo.
-- **Dia/noite**: em `auto` segue o `sun.sun`; os botões Dia/Noite forçam.
+- **Dia/noite**: em `auto` segue o `sun.sun`; Dia/Noite (no menu Opções) forçam.
 - **Visão noturna**: à noite, uma luz de lua com sombras e um ambiente azulado mantêm a
   casa inteira visível; as luzes acesas continuam se destacando em tom quente. Desligue
-  no botão (ou `night_vision: false`) para o visual escuro dramático.
+  em Opções › Visão noturna (ou `night_vision: false`) para o visual escuro dramático.
 - **Água**: shader próprio (ondas animadas, reflexo do céu com Fresnel, brilho do sol,
   cor por profundidade, espuma na borda, cáusticas no fundo). Os LEDs ficam na parede da
   piscina e a luz esmaece pela água.
@@ -129,27 +158,32 @@ quiser trocar alguma coisa.
   pela data e pela latitude/longitude). O sol gira ao longo do dia, a sombra acompanha,
   amanhecer e entardecer ficam alaranjados, e a noite entra sozinha. `orientation` diz
   para onde a frente da casa aponta, para o sol nascer do lado certo.
-- **Telhado**: botão que cobre a casa com telhado de telha cerâmica (e forro), para a vista
+- **Telhado**: opção do menu que cobre a casa com telhado de telha cerâmica (e forro), para a vista
   externa; desligado, volta a vista de casinha de boneca.
 - **Rua**: calçada, meio-fio e asfalto na frente do lote, só para dar contexto.
-- **Clima ao vivo**: widget no canto inferior direito com temperatura, condição, sensação
+- **Clima ao vivo**: widget embaixo do título (canto superior esquerdo) com temperatura, condição, sensação
   térmica e vento — dados reais da [Open-Meteo](https://open-meteo.com/) (gratuita, sem
   chave), atualizados a cada 15 min. Usa `latitude`/`longitude` do YAML (padrão: Palmas-TO).
-  Some quando o painel de automações abre por cima e volta quando fecha. Desative com
+  No celular fica compacto (ícone, temperatura e condição). Desative com
   `weather: false`, ou troque a cidade mudando as coordenadas + `weather_city`.
   **Não funciona dentro do preview do Claude Artifact** (o sandbox do artifact bloqueia
   requisições de rede a domínios externos) — funciona normalmente no GitHub Pages e no
   Home Assistant, que rodam num navegador comum sem essa restrição.
 
-## Painel inferior (Cômodos · Automações · Atividade)
+## Painel lateral (Cômodos · Automações · Atividade)
 
-Barra na parte de baixo do cartão (recolhe pelo ˅ e volta pelo botão "Painel"). A câmera
-enquadra a casa na área que sobra acima dela.
+Coluna à direita do cartão (largura ~34% da tela, entre 300 e 380 px), com o contador de luzes
+acesas no topo e as três abas logo abaixo (← → trocam de aba pelo teclado). Recolhe pela seta →
+(ou Opções › Painel lateral) e volta pela aba **Painel** na borda direita. A câmera enquadra a casa
+na área que sobra à esquerda. No celular é uma gaveta por cima da cena: fecha pela seta, tocando
+no véu ou arrastando para a direita. Ao entrar na visão de Pessoa o painel recolhe e volta ao sair.
 
-- **Cômodos**: grade de blocos quadrados, cada um com o cômodo, o dispositivo, o estado e há
-  quanto tempo mudou; tocar alterna a entidade. O **⋯** abre a faixa de controles: brilho e
+- **Cômodos**: blocos agrupados pelos cômodos reais (Quarto, Sala / Cozinha, Balcão, Varanda /
+  Jardim, Banheiro / Dispensa, Garagem, Piscina, Casa), com filtro por cômodo e "N de M ativos";
+  cada bloco mostra o dispositivo, o estado e há quanto tempo mudou; tocar alterna a entidade. O **⋯** abre a faixa de controles: brilho e
   cores do LED do quarto, modo e temperatura do ar-condicionado, tocar/pausar e volume da TV,
-  e um **temporizador** ("desligar em 15/30/60 min") para qualquer luz/interruptor — ele roda
+  e um **temporizador** ("desligar em 15/30/60 min") para qualquer luz/interruptor (a faixa fica
+  presa ao pé da coluna) — ele roda
   no cartão, então só vale enquanto o painel estiver aberto (num tablet de parede, sempre).
   Há blocos só de leitura para o radar de **presença**, a **iluminância** e a **pessoa**
   (em casa/fora); tocar neles abre o painel padrão do HA.
