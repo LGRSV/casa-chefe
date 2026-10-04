@@ -3221,7 +3221,7 @@ export class Casa3DCard extends HTMLElement {
     const gsh = new THREE.Shape();
     gsh.moveTo(-40, 40); gsh.lineTo(53, 40); gsh.lineTo(53, -56); gsh.lineTo(-40, -56); gsh.closePath();
     gsh.holes.push(this._poolShape());
-    this._groundMat = new THREE.MeshBasicMaterial({ color: 0x8a8c74 });
+    this._groundMat = new THREE.MeshBasicMaterial({ color: 0xc9ced6 });
     const ground = new THREE.Mesh(new THREE.ShapeGeometry(gsh), this._groundMat);
     ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
@@ -5000,7 +5000,7 @@ export class Casa3DCard extends HTMLElement {
     const dusk = this._mode === 'auto' ? clamp(1 - Math.abs(elev) / 9, 0, 1) * 0.95 : 0;
     this._skyDusk.material.opacity = dusk;
     this._skyDay.material.opacity = (1 - nl) * (1 - dusk * 0.85);
-    this._groundMat.color.setHex(0x8a8c74).lerp(new THREE.Color(0x151a24), L(nl, nl * 0.75, nv));   // chão chapado: escurece à noite (menos com a Visão noturna)
+    this._groundMat.color.setHex(0xc9ced6).lerp(new THREE.Color(0x151a24), L(nl, nl * 0.75, nv));   // chão chapado cinza-claro neutro (sem cara de grama): escurece à noite (menos com a Visão noturna)
     this._hemi.color.lerp(new THREE.Color(0xffb27a), dusk * 0.5 * (1 - nl));
     this._scene.fog.color.setHex(0xd6e4f2).lerp(new THREE.Color(0xf0a070), dusk * 0.6).lerp(new THREE.Color(0x0a0f1e), nl);
     if (this._envDay) {
