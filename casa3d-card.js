@@ -117,7 +117,6 @@ const ICONS = {
   timer: '<circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M6 1.8h4"/>',
   pause: '<path d="M5.5 3.5v9M10.5 3.5v9" stroke-width="2"/>',
   sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>',
-  moon: '<path d="M13 9.6A5.2 5.2 0 0 1 6.4 3a5.4 5.4 0 1 0 6.6 6.6z"/>',
   cloudsun: '<circle cx="4.6" cy="4.6" r="2" /><path d="M4.6 1v1M4.6 8.2v1M1 4.6h1M8.2 4.6h1M1.9 1.9l.8.8M6.5 6.5l.8.8M1.9 7.3l.8-.8"/><path d="M5.6 13.4h5.9a2.5 2.5 0 0 0 .5-4.95 3.4 3.4 0 0 0-6.3-1.6A2.7 2.7 0 0 0 3 9.2a2.5 2.5 0 0 0 .3 5.0h.1"/>',
   cloud: '<path d="M4.4 13h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 9.1 2.7 2.7 0 0 0 4.4 13z"/>',
   fog: '<path d="M4 6.6h7.3a2.4 2.4 0 0 0 .5-4.75A3.2 3.2 0 0 0 5.7 .95 2.6 2.6 0 0 0 1.9 3.3 2.5 2.5 0 0 0 4 6.6z"/><path d="M2 9.4h12M2 12h12"/>',
@@ -2743,7 +2742,7 @@ canvas.walk.pick { cursor: pointer; }
 /* Painel lateral (v1.5) — coluna de vidro escuro + âmbar à direita; luz acesa brilha quente, clima frio azulado.
    --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo dos botões, ou do título se ele invadir a faixa) */
 .dock, .reopen { --amber: #ffc46b; --amber2: #ffd48a; --ice: #67d3ff; --ink: #eef2f8; --mute: #9aa6bd; --line: rgba(255, 255, 255, .08); --ease: cubic-bezier(.2, .8, .2, 1); }
-.dock { position: absolute; top: var(--side-top, 58px); right: 10px; bottom: 10px; width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
+.dock { position: absolute; top: var(--side-top, 58px); right: 10px; bottom: auto; max-height: calc(100% - var(--side-top, 58px) - 10px); width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
   border-radius: 18px; border: 1px solid rgba(255, 255, 255, .1); background: linear-gradient(180deg, rgba(18, 24, 42, .95), rgba(7, 10, 20, .97));   /* vidro escuro e pesado */
   box-shadow: 0 28px 70px rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .07) inset; backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25);
   animation: dockIn .3s var(--ease) backwards; }
@@ -2751,7 +2750,7 @@ canvas.walk.pick { cursor: pointer; }
 .dock.closing { animation: dockOut .2s ease-in forwards; pointer-events: none; }
 @keyframes dockIn { from { opacity: 0; transform: translateX(32px); } }
 @keyframes dockOut { to { opacity: 0; transform: translateX(calc(100% + 16px)); } }   /* sai pelo mesmo lado por onde entrou */
-.dock::before { content: ""; display: none; position: absolute; left: 5px; top: 50%; width: 4px; height: 40px; margin-top: -20px; border-radius: 4px; background: rgba(255, 255, 255, .2); pointer-events: none; }
+.grab { display: none; }   /* alça da folha (só na folha de baixo) */
 @keyframes paneIn { from { opacity: 0; transform: translateY(8px); } }
 @keyframes tileIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 @keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
@@ -2759,10 +2758,12 @@ canvas.walk.pick { cursor: pointer; }
 /* cabeçalho da coluna: contador de luzes + recolher (→); abaixo, as abas em segmento de largura igual */
 .phead { display: flex; align-items: center; gap: 8px; padding: 10px 10px 8px 12px; flex: none; }
 .phead .spacer { flex: 1; }
-.phead .count { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: #b4bfd4; font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.phead .count { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 5px 11px 5px 9px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: #b4bfd4; font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .phead .count svg { width: 14px; height: 14px; color: #6b768f; transition: color .3s, filter .3s; }
 .phead .count.lit svg { color: var(--amber); filter: drop-shadow(0 0 5px var(--amber)); }
 .phead .count b { color: var(--ink); font-weight: 700; }
+.phead .count:not(.lit):not(.any) { color: #7f8ba3; }   /* "Tudo desligado" em cinza */
+.phead .count:hover { border-color: rgba(255, 196, 107, .4); }
 .phead .collapse { width: 34px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(255, 255, 255, .06); flex: none; }
 .phead .collapse:hover { background: rgba(255, 196, 107, .18); color: var(--amber2); }
 .tabs { display: flex; gap: 3px; margin: 0 10px 10px; padding: 3px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); flex: none; }
@@ -2771,17 +2772,22 @@ canvas.walk.pick { cursor: pointer; }
 .tabs button[role="tab"] svg { display: none; }   /* coluna estreita (v1.6): só o texto */
 .tabs button[role="tab"]:hover { color: #e6edf7; }
 .tabs button[aria-selected="true"] { background: linear-gradient(180deg, rgba(255, 196, 107, .26), rgba(255, 196, 107, .12)); color: var(--amber2); box-shadow: inset 0 0 0 1px rgba(255, 196, 107, .38); }
-.pane { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px 14px; display: none; touch-action: pan-y; overscroll-behavior: contain;
+.pane { flex: 0 1 auto; min-height: 0; overflow: auto; padding: 12px 12px 14px; display: none; touch-action: pan-y; overscroll-behavior: contain;
   -webkit-mask-image: linear-gradient(transparent, #000 12px); mask-image: linear-gradient(transparent, #000 12px);   /* degradê na borda de cima em vez de linha de 1 px */ scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
 .pane.active { display: block; animation: paneIn .28s var(--ease); }
-/* filtros por cômodo: quebram em linhas dentro da coluna (nada escondido rolando de lado) */
-.zonebar { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 12px; }
-.zonebar button { flex: none; padding: 5px 11px; border-radius: 999px; font-size: 11.5px; color: #a9b4ca; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
-.zonebar button[aria-pressed="true"] { background: rgba(255, 196, 107, .18); color: var(--amber2); border-color: rgba(255, 196, 107, .4); }
+/* Ligados · Todos: segmento no estilo das abas (a planta é o filtro por cômodo) */
+.zonebar { display: flex; gap: 3px; margin: 0 0 12px; padding: 3px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.zonebar button { flex: 1; padding: 6px; font-size: 12px; border-radius: 9px; color: #a9b4ca; font-variant-numeric: tabular-nums; transition: background .22s, color .22s; }
+.zonebar button[aria-pressed="true"] { background: linear-gradient(180deg, rgba(255, 196, 107, .26), rgba(255, 196, 107, .12)); color: var(--amber2); box-shadow: inset 0 0 0 1px rgba(255, 196, 107, .38); }
+.zempty { margin: 4px 2px 8px; font-size: 12.5px; color: var(--mute); } .zempty[hidden] { display: none; }
+.zempty button { padding: 6px 4px; color: var(--amber2); font-weight: 600; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 7px; }   /* 2 colunas na coluna de 320 px; 1 quando estreita */
 .zone { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 8px 2px 0; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #9aa6bd; font-weight: 700; }
-.zone:first-child, .tiles.single .zone { margin-top: 0; }
+.zone:first-child { margin-top: 0; }
 .zone::after { content: ""; order: 2; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, .12), transparent); }
+.zone button { display: inline-flex; align-items: center; gap: 4px; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
+.zone button i { font-style: normal; font-size: 13px; letter-spacing: 0; color: #6b768f; }   /* "›": leva ao cômodo */
+.zone button:not(:disabled):hover, .zone button:not(:disabled):hover i { color: var(--amber2); } .zone button:disabled { cursor: default; }
 .zone .zn { order: 3; letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 11px; color: #7f8ba3; font-variant-numeric: tabular-nums; }
 .zone.some .zn { color: var(--amber2); }
 .zone[hidden], .tile[hidden] { display: none; }
@@ -2905,27 +2911,47 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
    Ligar/Desligar tudo; embaixo dos blocos, as automações do cômodo e "Entrar aqui" */
 .rhead { flex: none; margin: 0 10px 10px; }
 .dock:not(.room) .rhead, .dock:not(.room) .rfoot, .dock.room .tabs, .dock.room .zonebar, .dock.room .zone { display: none; }
-.rhead .rback { padding: 4px 6px; margin-left: -6px; font-size: 12px; color: #9aa6bd; } .rhead .rback:hover { color: var(--amber2); }
-.rhead .rtitle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin: 2px 2px 8px; } .rhead .rtitle b { font-size: 16px; letter-spacing: -.01em; color: var(--ink); }
-.rhead .rtitle small { color: var(--mute); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-.rhead .all { display: flex; gap: 6px; } .rhead .all[hidden] { display: none; }
-.rhead .all button { flex: 1; padding: 8px 6px; border-radius: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); transition: transform .1s ease-out, background .2s; }
+.dock.room .rhead { display: flex; align-items: center; gap: 6px; }   /* [‹] [nome + N de M] [uma ação] */
+.rhead .rback { flex: none; width: 34px; height: 34px; margin-left: -4px; padding: 0; border-radius: 999px; font-size: 20px; line-height: 1; color: #9aa6bd; } .rhead .rback:hover { color: var(--amber2); background: rgba(255, 255, 255, .06); }
+.rhead .rtitle { flex: 1; min-width: 0; } .rhead .rtitle b { display: block; font-size: 16px; letter-spacing: -.01em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhead .rtitle small { display: block; margin-top: 1px; color: var(--mute); font-size: 11.5px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhead .all { display: flex; flex: none; } .rhead .all[hidden], .rhead .all button[hidden] { display: none; }
+.rhead .all button { padding: 8px 12px; white-space: nowrap; border-radius: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); transition: transform .1s ease-out, background .2s; }
 .rhead .all button:first-child { background: rgba(255, 196, 107, .18); color: #ffd48a; border-color: rgba(255, 196, 107, .4); }
 .rfoot { margin-top: 14px; } .rfoot .autos { margin-bottom: 12px; }
 .rfoot .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 9px; border-radius: 12px; background: rgba(255, 196, 107, .18); color: #ffd48a; border: 1px solid rgba(255, 196, 107, .4); transition: transform .1s ease-out; }
 .rfoot .enter svg { width: 16px; height: 16px; }
 .rhead .all button:active, .rfoot .enter:active { transform: scale(.97); }   /* retorno já no toque */
+/* folha de baixo (celular e tablet em pé, ver _layoutHud): altura do conteúdo e três alturas — espiada, média, cheia — por translateY.
+   Fora da cheia a lista não rola: o dedo em qualquer ponto move a folha; na cheia, puxar com a lista no topo desce a folha */
+.wrap.sheet .dock { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: calc(100% - var(--side-top, 58px)); border-radius: 20px 20px 0 0; border-width: 1px 0 0; animation-name: drawerIn; touch-action: none; --sab: env(safe-area-inset-bottom, 0px); }
+.wrap.sheet .dock.closing { animation-name: drawerOut; }
+@keyframes drawerIn { from { transform: translateY(100%); } }
+@keyframes drawerOut { to { transform: translateY(100%); } }
+.wrap.sheet .dock:not([data-snap="full"]) .pane { overflow: hidden; touch-action: none; }
+.wrap.sheet .dock[data-snap="full"] .pane.top { touch-action: pan-down; }   /* no topo: subir rola a lista, descer é da folha */
+.wrap.sheet .grab { display: block; position: absolute; left: 50%; top: 0; width: 64px; height: 22px; margin-left: -32px; padding: 0; z-index: 1; background: none; }
+.wrap.sheet .grab::before { content: ""; position: absolute; left: 14px; right: 14px; top: 6px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .22); }
+.wrap.sheet .grab::after { content: ""; position: absolute; inset: 0 0 -22px; }   /* alvo de 44 px */
+.wrap.sheet .phead .collapse svg { transform: rotate(90deg); }
+.wrap.sheet .dock.room .phead { display: none; } .wrap.sheet .dock.room .rhead { margin-top: 16px; }   /* no cômodo a 1ª linha é a dele */
+.wrap.sheet .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-right: 1px solid rgba(255, 196, 107, .4); border-bottom: 0; animation-name: fadeIn; }
+.wrap.sheet .reopen .rl { writing-mode: horizontal-tb; } .wrap.sheet .reopen svg { transform: rotate(90deg); }   /* a aba de reabrir fica onde a folha mora: embaixo */
+.wrap.sheet .phead { padding: 14px 10px 6px 14px; } .wrap.sheet .tabs, .wrap.sheet .rhead { margin: 0 10px 8px; } .wrap.sheet .pane { padding: 10px 10px calc(14px + env(safe-area-inset-bottom)); }
+@media (min-width: 641px) {   /* tablet em pé: folha flutuante, blocos em 4 colunas */
+  .wrap.sheet .dock { left: 12px; right: 12px; bottom: 12px; max-height: calc(100% - var(--side-top, 58px) - 12px); border-radius: 22px; border-width: 1px; }
+  .wrap.sheet .reopen { bottom: 12px; border-radius: 999px; border-bottom: 1px solid rgba(255, 196, 107, .4); padding-bottom: 9px; }
+  .wrap.sheet .tiles:not(.routines) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* toque: alvos de 44 px sem mudar o desenho */
+@media (pointer: coarse) {
+  .phead .collapse { width: 44px; height: 44px; } .phead .count { min-height: 36px; }
+  .tabs button[role="tab"], .zonebar button { min-height: 40px; }
+  .rhead .rback, .rhead .all button, .rfoot .enter { min-height: 44px; } .rhead .rback { width: 44px; }
+  .zone button { min-height: 44px; margin: -12px 0; }
+  .tile .more::after { inset: -10px; }
+}
 @media (max-width: 640px) {
-  /* folha de baixo com meia altura: o mapa (e o cômodo tocado) continua à vista em cima, sem véu; desce pela alça/cabeçalho */
-  .dock { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: min(58%, 480px); border-radius: 20px 20px 0 0; border-width: 1px 0 0; animation-name: drawerIn; }
-  .dock.closing { animation-name: drawerOut; }
-  @keyframes drawerIn { from { transform: translateY(100%); } }
-  @keyframes drawerOut { to { transform: translateY(100%); } }
-  .dock::before { display: block; left: 50%; top: 6px; width: 36px; height: 4px; margin: 0 0 0 -18px; }
-  .phead, .tabs, .rhead { touch-action: none; } .phead .collapse svg { transform: rotate(90deg); }
-  .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-right: 1px solid rgba(255, 196, 107, .4); border-bottom: 0; animation-name: fadeIn; }
-  .reopen .rl { writing-mode: horizontal-tb; } .reopen svg { transform: rotate(90deg); }   /* a aba de reabrir fica onde a folha mora: embaixo */
-  .phead { padding: 14px 10px 6px 14px; } .tabs, .rhead { margin: 0 10px 8px; } .pane { padding: 10px 10px calc(14px + env(safe-area-inset-bottom)); }
   .detail { padding: 11px 12px; gap: 10px; } .detail .rng { flex-basis: 100%; }
   /* cabeçalho numa linha: título (encolhe) à esquerda, bonequinho e menu à direita */
   .hud.top { flex-wrap: nowrap; gap: 8px; }
@@ -3081,9 +3107,9 @@ export class Casa3DCard extends HTMLElement {
     this._walkBtn.addEventListener('click', () => { this._toggleMenu(false); this._setWalk(!this._walkOn); });   // muda o modo: o menu sai da frente
     this._gotoMi = item(sNav, 'pin', 'Ir para…', { note: 'lista de cômodos', go: true });
     this._gotoMi.addEventListener('click', () => { this._toggleMenu(false); this._toggleGoto(true); });
-    // Painel: mostrar/ocultar a coluna lateral
+    // Painel: mostrar/ocultar a coluna (ou a folha de baixo)
     const sPan = sec('Painel');
-    this._panelBtn = item(sPan, 'panel', 'Painel lateral', { note: 'cômodos, automações, atividade', toggle: true });
+    this._panelBtn = item(sPan, 'panel', 'Painel', { note: 'cômodos, automações, atividade', toggle: true });
     this._panelBtn.addEventListener('click', () => { this._toggleMenu(false); this._setPanel(!this._panelOpen); });
 
     // fora do menu: atalho "Ir para…" (só na Pessoa) e o bonequinho (é arrastado até a maquete)
@@ -3155,10 +3181,10 @@ export class Casa3DCard extends HTMLElement {
     this._built = true;
     this._setLabels(!!this._config.labels);
     this._applyMode();
-    this._setPanel(this._config.panel !== false && !this._narrow);   // no celular a gaveta cobriria a planta: abre ao tocar num cômodo
     this._setRoof(!!this._config.roof);
     if (this._hass) this._syncFromHass();
     else this._applyDemoDefaults();
+    this._setPanel(this._config.panel !== false, 'peek');   // depois dos estados ("Ligados" se houver algo ligado); folha: abre na espiada, no lugar da pílula
     this._setTopView(true);   // v1.6: abre na Vista de cima (planta inteira); o telhado volta ao sair dela
   }
 
@@ -3640,6 +3666,7 @@ export class Casa3DCard extends HTMLElement {
       // Semente do histórico: última mudança de cada entidade, conforme o HA reporta
       for (const it of ITEMS) { const st = this._state[it.key]; if (st && !st.unavailable && this._lastChanged[it.key]) this._pushActivity(it.key, st.state, new Date(this._lastChanged[it.key]).getTime(), true); }
       this._activitySeeded = true;
+      if (this._panelOpen && !this._room) this._setZone(this._onKeys().length ? 'on' : '');   // 1º retrato do HA chegou com o painel aberto: "Ligados" se houver
     }
     this._renderPanel();
     this._timeAt = 0;
@@ -4363,8 +4390,14 @@ export class Casa3DCard extends HTMLElement {
     if (!this._titleCard || !this._wrap) return;
     const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
     this._narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;   // mesmo corte do CSS
-    const sw = Math.round(this._narrow ? Math.min(w * 0.88, 360) : clamp(w * 0.26, 260, 320));   // v1.6: coluna mais estreita
-    this._sideOverlay = this._narrow || sw + 20 > w * 0.6;   // coluna larga demais para dividir a tela: fica por cima, sem reenquadrar
+    const sheet = this._narrow || (w < 1024 && this.clientHeight > w * 1.1);   // folha de baixo: celular e tablet em pé (tamanho do cartão, não da janela)
+    if (sheet !== this._sheet) {   // girou o tablet: troca folha ↔ coluna sem herdar o deslocamento do outro eixo
+      this._sheet = sheet; this._wrap.classList.toggle('sheet', sheet);
+      cancelAnimationFrame(this._sprRaf); this._sprRaf = 0;
+      if (this._dock) { this._dock.dataset.snap = this._room ? 'half' : 'peek'; this._sideX(sheet && this._panelOpen ? this._snaps()[this._dock.dataset.snap] : 0); }
+    }
+    const sw = Math.round(clamp(w * 0.26, 260, 320));   // v1.6: coluna mais estreita
+    this._sideOverlay = sheet || sw + 20 > w * 0.6;   // folha, ou coluna larga demais para dividir a tela: fica por cima, sem reenquadrar
     const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
     const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
     this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
@@ -4383,7 +4416,7 @@ export class Casa3DCard extends HTMLElement {
     const o = this._orbit, cam = this._camera, cv = this._canvas;
     if (on) {
       const top = this._topView ? this._topSaved || {} : null; if (top) { this._topSaved = null; this._setTopView(false, true); }   // sai da planta sem religar o telhado; volta a ela ao sair
-      this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, touched: o.touched, roof: !!this._roofOn, top };
+      this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, snap: this._dock.dataset.snap, touched: o.touched, roof: !!this._roofOn, top };
       // na visão de Pessoa o Telhado liga sozinho (forro por dentro, sem céu sobre os cômodos); ao sair volta como estava
       if (this._config.telhado_pessoa !== false && !this._roofOn) this._setRoof(true);
       if (this._panelOpen) this._setPanel(false);   // vista inteira para andar (no celular a gaveta cobriria o joystick); volta ao sair
@@ -4403,7 +4436,7 @@ export class Casa3DCard extends HTMLElement {
       // volta voando da altura dos olhos até onde a câmera estava antes
       o.sph.setFromVector3(cam.position.clone().sub(o.target)); o.goal.copy(o.sph);
       this._flyCam(sv.pos, sv.target, 3.2);
-      o.touched = sv.touched; if (sv.panel) this._setPanel(true);
+      o.touched = sv.touched; if (sv.panel) this._setPanel(true, sv.snap);
       if (this._config.telhado_pessoa !== false && !!this._roofOn !== sv.roof) this._setRoof(sv.roof);
       if (sv.top) { this._setTopView(true); this._topSaved = sv.top; }
     }
@@ -4455,7 +4488,8 @@ export class Casa3DCard extends HTMLElement {
   _topClick(e) {
     const n = this._nav, r = this._topRoom(e);
     if (n.level === 2 && (!r || r === n.room)) return false;
-    if (r) { if (n.level === 0 || r.block !== n.block) this._navTo(1, r.block); else this._navTo(2, r.block, r); }
+    if (r) { if (n.level === 0 || r.block !== n.block) { this._navTo(1, r.block); this._showRoom(r); } else this._navTo(2, r.block, r); }   // 1º toque: aproxima a área e já abre o cômodo
+    else this._showRoom(null);   // vazio da planta: painel volta ao geral
     return true;
   }
   // aparelhos do cômodo: o grupo do painel lateral com o nome dele ("Varanda / Jardim" serve à Varanda e ao Jardim) + luminárias dentro dele
@@ -4536,20 +4570,23 @@ export class Casa3DCard extends HTMLElement {
   // menos na Pessoa com a coluna por cima da vista (celular): a gaveta cobriria o joystick no meio do passeio; o cômodo fica pronto
   // e a aba "Painel" da borda passa a mostrar o nome dele.
   _showRoom(r, key) {
-    r = r || null; const d = this._dock;
-    if (r !== this._room) {
+    r = r || null; const d = this._dock, ch = r !== this._room;
+    if (ch) {
       this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null;
       this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
       if (r) {
         this._rTitle.textContent = r.label; this._showTab('ctl');
+        const bl = this._topView && !this._backBtn.hidden ? this._backBtn.getAttribute('aria-label') : 'Todos os cômodos';   // o mesmo voltar do topo
+        this._rBack.setAttribute('aria-label', bl); this._rBack.title = bl;
         const autos = this._roomAutos(r), f = this._rFoot; f.replaceChildren();
         if (autos.length) { const h = document.createElement('div'), al = document.createElement('div'); h.className = 'sect'; h.textContent = 'Automações'; al.className = 'autos'; for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); f.append(h, al); }
         f.appendChild(this._rEnter);
       }
-      this._setZone(this._zone);   // blocos: só os do cômodo (ou de volta ao filtro da visão geral)
+      this._setZone(r ? this._zone : this._onKeys().length ? 'on' : '');   // blocos: só os do cômodo · de volta ao geral: "Ligados" se houver
     }
     this._roomHl(r);
-    if (r && !this._panelOpen && !(this._walkOn && this._sideOverlay)) this._setPanel(true); else this._renderPanel();
+    if (r && !this._panelOpen && !(this._walkOn && this._sideOverlay)) this._setPanel(true);
+    else { this._renderPanel(); if (r || ch) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
     if (key) this._flashRow(key);
   }
   // realce âmbar do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
@@ -4561,7 +4598,7 @@ export class Casa3DCard extends HTMLElement {
       const key = r ? (b ? 'b:' + b.id : 'r:' + r.id) : '';
       this._canvas.classList.toggle('pick', !!r);
       if (key !== this._hoverKey) {
-        this._hoverKey = key; this._hlShow(r ? (b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d]) : null);
+        this._hoverKey = key; if (r) this._hlShow((b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d])); else this._roomHl(this._room);   // saiu: volta o âmbar do selecionado
         this._orbit.dirty = true;
       }
       return;
@@ -4603,7 +4640,7 @@ export class Casa3DCard extends HTMLElement {
     const t = this._timers[key]; if (!t) return '';
     const m = Math.max(1, Math.round((t.at - now) / 60000)); return ` · desliga em ${m} min`;
   }
-  _setPanel(open) {
+  _setPanel(open, snap = 'half') {
     this._panelOpen = !!open;
     const d = this._dock;
     cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sprX = 0;
@@ -4616,22 +4653,24 @@ export class Casa3DCard extends HTMLElement {
     this._reopen.hidden = !!open;
     if (this._wrap) this._wrap.classList.toggle('side', !!open);   // .goto passa para a esquerda da coluna
     this._panelBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
-    if (open) this._renderPanel();
+    if (open) { this._setZone(this._onKeys().length ? 'on' : ''); this._renderPanel(); }   // abre em "Ligados" se houver algo ligado
+    if (open && this._sheet) { d.dataset.snap = snap; this._grab.setAttribute('aria-expanded', snap !== 'peek' ? 'true' : 'false'); this._sideX(this._snaps()[snap]); }   // a folha entra já na altura dela
     requestAnimationFrame(() => this._resize());
   }
   // Gaveta (v1.5): no toque, arrastar a coluna para a direita acompanha o dedo 1:1 (limiar de 10 px antes de assumir o gesto);
   // ao soltar, abre ou fecha pela posição projetada com a velocidade do dedo e assenta numa mola que herda essa velocidade.
   // Agarrar no meio da mola interrompe e segue daqui; puxar além do aberto (para a esquerda) tem resistência progressiva.
+  // Folha de baixo: o mesmo gesto no eixo Y, com três alturas (espiada, média, cheia) em vez de aberta/fechada (ver _snaps)
   _swipeBind(dock) {
     let g = null;
-    const W = () => (this._narrow ? dock.offsetHeight : dock.offsetWidth) + 16;   // deslocamento de "fechado" (sai inteira por onde entrou: direita, ou baixo no celular)
-    const P = (e) => (this._narrow ? [e.clientY, e.clientX] : [e.clientX, e.clientY]);   // [eixo do gesto, transversal]
+    const W = () => (this._sheet ? this._snaps().shut : dock.offsetWidth + 16);   // deslocamento de "fechado" (sai inteira por onde entrou: direita, ou baixo na folha)
+    const P = (e) => (this._sheet ? [e.clientY, e.clientX] : [e.clientX, e.clientY]);   // [eixo do gesto, transversal]
     const rubber = (x, dim) => x * dim * 0.55 / (dim + 0.55 * Math.abs(x));
     dock.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch' || g || e.target.closest('input[type="range"]')) return;   // o brilho (range) arrasta de lado
-      if (this._narrow && e.target.closest('.pane')) return;   // folha do celular: desce pela alça/cabeçalho; na lista o dedo rola
+      const pane = this._sheet && e.target.closest('.pane');   // folha: fora da cheia o dedo em qualquer ponto move a folha; na cheia a lista rola
       const moving = !!this._sprRaf; cancelAnimationFrame(this._sprRaf); this._sprRaf = 0;
-      const [sx, sy] = P(e); g = { id: e.pointerId, sx, sy, x0: this._sprX || 0, live: moving, hist: [] };
+      const [sx, sy] = P(e); g = { id: e.pointerId, sx, sy, x0: this._sprX || 0, live: moving, hist: [], snap: dock.dataset.snap, pane: dock.dataset.snap === 'full' && pane };
       if (moving) try { dock.setPointerCapture(e.pointerId); } catch (_) {}
     });
     dock.addEventListener('pointermove', (e) => {
@@ -4639,21 +4678,28 @@ export class Casa3DCard extends HTMLElement {
       const [px, py] = P(e), dx = px - g.sx, dy = py - g.sy;
       if (!g.live) {
         if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { g = null; return; }   // gesto transversal: é rolagem da lista
+        if (g.pane && !(g.pane.scrollTop <= 0 && dx > 0)) { if (Math.abs(dx) > 10) g = null; return; }   // na cheia só puxar para baixo com a lista no topo desce a folha
         if (Math.abs(dx) < 10) return;
         g.live = true; g.sx += Math.sign(dx) * 10; try { dock.setPointerCapture(e.pointerId); } catch (_) {}   // assume o gesto: segue o dedo descontando os 10 px do limiar (sem pulo)
       }
+      this._dragging = true;
       const x = g.x0 + px - g.sx;
       this._sideX(x < 0 ? -rubber(-x, W()) : x);
       g.hist.push([e.timeStamp, this._sprX]); if (g.hist.length > 6) g.hist.shift();
     });
     const end = (e) => {
       if (!g || e.pointerId !== g.id) return;
-      const s = g; g = null; try { dock.releasePointerCapture(e.pointerId); } catch (_) {}
+      const s = g; g = null; this._dragging = false; try { dock.releasePointerCapture(e.pointerId); } catch (_) {}
       if (!s.live) return;
       this._swiped = performance.now();   // o "click" que o navegador ainda manda ao soltar não liga o bloco
       const h = s.hist, a = h[0], b = h[h.length - 1];
       const v = e.type === 'pointerup' && a && b[0] - a[0] > 0 ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;   // px/s
       const proj = this._sprX + (v / 1000) * 0.998 / (1 - 0.998);   // projeção do momento (desaceleração 0,998)
+      if (this._sheet) {   // detente mais perto da projeção; fechar só a partir da espiada (senão para nela, com o cômodo e o âmbar)
+        const S = this._snaps(); let to = Object.keys(S).reduce((a, k) => (Math.abs(S[k] - proj) < Math.abs(S[a] - proj) ? k : a), 'full');
+        if (to === 'shut' && s.snap !== 'peek') to = 'peek';
+        if (to !== 'shut') { this._snapTo(to, v); return; }
+      }
       const close = proj > W() / 2;
       if (this._reduced) { if (close) this._setPanel(false); else this._sideX(0); return; }
       this._sideSpring(close ? W() : 0, v, () => { if (close) this._setPanel(false); });
@@ -4661,16 +4707,30 @@ export class Casa3DCard extends HTMLElement {
     dock.addEventListener('pointerup', end); dock.addEventListener('pointercancel', end);
     dock.addEventListener('click', (e) => { if (performance.now() - (this._swiped || 0) < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
   }
-  // posição da coluna (0 = aberta, + = para a direita; no celular, para baixo)
+  // posição da coluna (0 = aberta, + = para a direita; na folha, para baixo)
   _sideX(x) {
-    this._sprX = x; this._dock.style.transform = x ? `translate${this._narrow ? 'Y' : 'X'}(${x}px)` : '';
+    this._sprX = x; this._dock.style.transform = x ? `translate${this._sheet ? 'Y' : 'X'}(${x}px)` : '';
+  }
+  // alturas da folha como deslocamento para baixo: cheia (tudo), média (até metade do cartão), espiada (só a 1ª linha), fechada
+  _snaps() {
+    const d = this._dock, H = d.offsetHeight, el = this._room ? this._rTitle.parentNode.parentNode : this._phead;   // 1ª linha: a do cômodo ou o resumo
+    const pk = el.getBoundingClientRect().bottom - d.getBoundingClientRect().top + (parseFloat(window.getComputedStyle(d).getPropertyValue('--sab')) || 0);
+    return { full: 0, half: Math.max(0, H - Math.round(this.clientHeight * 0.5)), peek: Math.max(0, H - pk), shut: H + 16 };
+  }
+  // leva a folha a uma altura com a mola (ou direto, sem animação); a câmera reenquadra quando ela assenta
+  _snapTo(n, v = 0) {
+    const d = this._dock; if (!this._sheet || !this._panelOpen || d.hidden) return;
+    d.dataset.snap = n; this._grab.setAttribute('aria-expanded', n !== 'peek' ? 'true' : 'false');
+    if (this._reduced) { this._sideX(this._snaps()[n]); this._resize(); return; }
+    this._sideSpring(() => this._snaps()[n], v, () => this._resize(true));   // alvo medido a cada quadro: o conteúdo pode mudar de altura no caminho
   }
   // mola feita à mão (amortecimento 0,8, resposta 0,3 s), partindo da posição e da velocidade atuais
-  _sideSpring(to, v, done) {
+  _sideSpring(goal, v, done) {
     const w = 2 * Math.PI / 0.3, k = w * w, c = 2 * 0.8 * w;
-    let x = this._sprX || 0, last = 0;
+    const G = this._sprGoal = typeof goal === 'function' ? goal : () => goal;   // alvo (o _resize enquadra a câmera já nele)
+    let x = this._sprX || 0, last = 0, to;
     const tick = (t) => {
-      const dt = last ? Math.min((t - last) / 1000, 0.1) : 1 / 60; last = t;
+      const dt = last ? Math.min((t - last) / 1000, 0.1) : 1 / 60; last = t; to = G();
       for (let i = 0, n = Math.ceil(dt * 240); i < n; i++) { v += (-k * (x - to) - c * v) * (dt / n); x += v * (dt / n); }   // Euler semi-implícito
       if (Math.abs(x - to) < 0.5 && Math.abs(v) < 8) { this._sprRaf = 0; this._sideX(to); if (done) done(); return; }
       this._sideX(x); this._sprRaf = requestAnimationFrame(tick);
@@ -4681,17 +4741,26 @@ export class Casa3DCard extends HTMLElement {
     this._wrap = wrap;
     const dock = document.createElement('div'); dock.className = 'panel dock'; dock.hidden = true; dock.setAttribute('role', 'region'); dock.setAttribute('aria-label', 'Painel da casa');
     wrap.appendChild(dock); this._dock = dock;
-    // cabeçalho: contador de luzes + recolher (→)
+    // folha de baixo: alça (toque alterna espiada ↔ média)
+    this._grab = document.createElement('button'); this._grab.className = 'grab'; this._grab.setAttribute('aria-label', 'Expandir painel'); this._grab.setAttribute('aria-expanded', 'false'); dock.appendChild(this._grab);
+    const flip = () => this._snapTo(this._dock.dataset.snap === 'peek' ? 'half' : 'peek');
+    this._grab.addEventListener('click', flip);
+    // cabeçalho: resumo do que está ligado (toque → "Ligados") + recolher (→)
     const head = document.createElement('div'); head.className = 'phead'; dock.appendChild(head); this._phead = head;
-    this._countEl = document.createElement('span'); this._countEl.className = 'count'; this._countEl.setAttribute('role', 'status'); head.appendChild(this._countEl);
+    head.addEventListener('click', (e) => { if (this._sheet && !e.target.closest('button')) flip(); });
+    this._countEl = document.createElement('button'); this._countEl.className = 'count'; head.appendChild(this._countEl);
+    this._countEl.addEventListener('click', () => {
+      if (this._topView && this._nav.level) this._navTo(0); else this._showRoom(null);
+      this._showTab('ctl'); this._setZone('on'); this._snapTo('half');
+    });
     const spacer = document.createElement('div'); spacer.className = 'spacer'; head.appendChild(spacer);
     const col = document.createElement('button'); col.className = 'collapse'; col.title = 'Recolher painel'; col.setAttribute('aria-label', 'Recolher painel');
     col.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg>';
-    col.addEventListener('click', () => this._setPanel(false)); head.appendChild(col);
-    // cômodo tocado (v1.6.1, ver _showRoom): "‹ Todos os cômodos", nome + "N de M ligados", Ligar/Desligar tudo
+    col.addEventListener('click', () => { if (this._sheet && this._dock.dataset.snap !== 'peek') this._snapTo('peek'); else this._setPanel(false); }); head.appendChild(col);   // folha: desce até a espiada; dela, fecha
+    // cômodo tocado (ver _showRoom), numa linha: [‹ o mesmo voltar do topo] [nome + "N de M ligados"] [Ligar ou Desligar tudo]
     const rh = document.createElement('div'); rh.className = 'rhead'; dock.appendChild(rh);
-    rh.innerHTML = '<button class="rback">‹ Todos os cômodos</button><div class="rtitle" role="status"><b></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>';
-    rh.firstChild.addEventListener('click', () => this._showRoom(null));
+    rh.innerHTML = '<button class="rback" aria-label="Todos os cômodos">‹</button><div class="rtitle" role="status"><b></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>';
+    this._rBack = rh.firstChild; this._rBack.addEventListener('click', () => (this._topView ? this._navBack() : this._showRoom(null)));
     this._rTitle = rh.querySelector('b'); this._rCount = rh.querySelector('small'); this._rAll = rh.querySelector('.all');
     this._rAll.firstChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), true));
     this._rAll.lastChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), false));
@@ -4707,7 +4776,8 @@ export class Casa3DCard extends HTMLElement {
         e.preventDefault(); const nx = TABS[(i + d + TABS.length) % TABS.length][0]; this._showTab(nx); this._panes[nx].btn.focus();
       });
       tabs.appendChild(b);
-      const pane = document.createElement('div'); pane.className = 'pane'; pane.dataset.pane = id; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-label', label); panes.push(pane);
+      const pane = document.createElement('div'); pane.className = 'pane top'; pane.dataset.pane = id; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-label', label); panes.push(pane);
+      pane.addEventListener('scroll', () => pane.classList.toggle('top', pane.scrollTop <= 0), { passive: true });   // folha cheia: no topo, puxar desce a folha
       this._panes[id] = { btn: b, pane };
     }
     for (const pane of panes) dock.appendChild(pane);
@@ -4717,28 +4787,36 @@ export class Casa3DCard extends HTMLElement {
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
     this._buildWeather();
 
-    // Cômodos (v1.5): blocos agrupados pelos cômodos reais da planta (ZONES/PLACES), com filtro
+    // Cômodos (v1.5): blocos agrupados pelos cômodos reais da planta (ZONES/PLACES); filtro "Ligados · Todos" (a planta filtra por cômodo)
     this._tiles = {};
-    const zbar = document.createElement('div'); zbar.className = 'zonebar'; zbar.setAttribute('role', 'group'); zbar.setAttribute('aria-label', 'Filtrar por cômodo'); this._panes.ctl.pane.appendChild(zbar); this._zbar = zbar;
+    const zbar = document.createElement('div'); zbar.className = 'zonebar'; zbar.setAttribute('role', 'group'); zbar.setAttribute('aria-label', 'Mostrar'); this._panes.ctl.pane.appendChild(zbar); this._zbar = zbar;
+    for (const [val, label] of [['on', 'Ligados'], ['', 'Todos']]) {
+      const c = document.createElement('button'); c.textContent = label; c.dataset.zone = val; c.setAttribute('aria-pressed', 'false');
+      c.addEventListener('click', () => this._setZone(val)); zbar.appendChild(c);
+    }
+    this._zEmpty = document.createElement('div'); this._zEmpty.className = 'zempty'; this._zEmpty.hidden = true; this._zEmpty.textContent = 'Tudo desligado · ';
+    const all = document.createElement('button'); all.textContent = 'Ver todos'; all.addEventListener('click', () => this._setZone('')); this._zEmpty.appendChild(all); this._panes.ctl.pane.appendChild(this._zEmpty);
     const grid = document.createElement('div'); grid.className = 'tiles'; this._panes.ctl.pane.appendChild(grid); this._grid = grid;
     this._detail = document.createElement('div'); this._detail.className = 'detail'; this._detail.hidden = true;
-    // [cabeçalho do grupo (= filtro / eyebrow), rótulo curto do filtro, aparelhos]. A luz externa cobre a varanda + as arandelas do
+    // [cabeçalho do grupo (botão "Quarto ›": leva ao cômodo), aparelhos]. A luz externa cobre a varanda + as arandelas do
     // muro/jardim; Quarto Casal não tem aparelho (sem grupo vazio). Pessoa (em casa/fora) fica em "Casa".
     const ROOMS = [
-      ['Quarto', 'Quarto', ['quarto', 'led_quarto', 'tv', 'presenca', 'lux']],
-      ['Sala / Cozinha', 'Sala', ['sala', 'ac']],
-      ['Balcão', 'Balcão', ['balcao']],
-      ['Varanda / Jardim', 'Varanda', ['externa']],
-      ['Banheiro / Dispensa', 'Banheiro', ['banheiro']],
-      ['Garagem', 'Garagem', ['garagem']],
-      ['Piscina', 'Piscina', ['led_piscina', 'bomba_piscina']],
-      ['Casa', 'Casa', ['pessoa']],
+      ['Quarto', ['quarto', 'led_quarto', 'tv', 'presenca', 'lux']],
+      ['Sala / Cozinha', ['sala', 'ac']],
+      ['Balcão', ['balcao']],
+      ['Varanda / Jardim', ['externa']],
+      ['Banheiro / Dispensa', ['banheiro']],
+      ['Garagem', ['garagem']],
+      ['Piscina', ['led_piscina', 'bomba_piscina']],
+      ['Casa', ['pessoa']],
     ];
-    this._zones = []; this._zone = '';
+    this._zones = []; this._zone = ''; this._onKeep = new Set();
     let ti = 0;
-    for (const [title, , keys] of ROOMS) {
+    for (const [title, keys] of ROOMS) {
       const zh = document.createElement('div'); zh.className = 'zone'; zh.dataset.room = title; zh.setAttribute('role', 'heading'); zh.setAttribute('aria-level', '3');
-      const zt = document.createElement('span'); zt.className = 'zt'; zt.textContent = title; const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); grid.appendChild(zh);
+      const zt = document.createElement('button'); zt.className = 'zt'; zt.textContent = title; const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); grid.appendChild(zh);
+      const zr = this._roomsAll().find((q) => title === q.label || title.split(' / ').includes(q.label));   // sem cômodo na planta (Casa): só o título
+      if (zr) { zt.insertAdjacentHTML('beforeend', '<i aria-hidden="true">›</i>'); zt.title = `Abrir ${zr.label}`; zt.addEventListener('click', () => (this._topView ? this._navTo(2, zr.block, zr) : this._showRoom(zr))); } else zt.disabled = true;
       const z = { title, keys, zh, zn }; this._zones.push(z);
       for (const k of keys) grid.appendChild(this._makeTile(ITEMS.find((i) => i.key === k), title, ti++));
     }
@@ -4746,11 +4824,6 @@ export class Casa3DCard extends HTMLElement {
     this._rFoot = document.createElement('div'); this._rFoot.className = 'rfoot'; this._panes.ctl.pane.appendChild(this._rFoot);   // automações do cômodo + Entrar aqui
     this._rEnter = document.createElement('button'); this._rEnter.className = 'enter'; this._rEnter.innerHTML = `${iconSvg('person')}<span>Entrar aqui</span>`;
     this._rEnter.title = 'Entra neste cômodo na visão de Pessoa'; this._rEnter.addEventListener('click', () => this._enterRoom(this._room));
-    for (const [val, label] of [['', 'Todos'], ...ROOMS.map((r) => [r[0], r[1]])]) {
-      const c = document.createElement('button'); c.textContent = label; c.dataset.zone = val; c.setAttribute('aria-pressed', val === '' ? 'true' : 'false');
-      if (val && val !== label) { c.title = val; c.setAttribute('aria-label', val); }
-      c.addEventListener('click', () => this._setZone(val)); zbar.appendChild(c);
-    }
     this._timers = {};
     // Automações: rotinas rápidas do cartão + automações do HA (descobertas sozinhas)
     const h1 = document.createElement('div'); h1.className = 'sect'; h1.textContent = 'Rotinas rápidas'; this._panes.scn.pane.appendChild(h1);
@@ -4808,14 +4881,21 @@ export class Casa3DCard extends HTMLElement {
   _showTab(id) {
     for (const [k, t] of Object.entries(this._panes)) { t.btn.setAttribute('aria-selected', k === id ? 'true' : 'false'); t.btn.tabIndex = k === id ? 0 : -1; t.pane.classList.toggle('active', k === id); }
   }
-  // filtro por cômodo (Todos · Quarto · Sala · Balcão …): esconde cabeçalhos e blocos dos outros cômodos; com um cômodo tocado, só os dele
+  // filtro "Ligados · Todos". Ligados é uma FOTO do momento da escolha: o que liga entra na hora, o que desliga fica embaixo do dedo
+  // até trocar de filtro, de cômodo ou recolher. Com um cômodo tocado, só os aparelhos dele (sensor vira leitura na linha de estado)
   _setZone(z) {
-    this._zone = z || ''; const ks = this._room && this._roomKeys(this._room);
+    this._zone = z || ''; if (this._zone === 'on') this._onKeep = new Set(this._onKeys());
     for (const c of this._zbar.children) c.setAttribute('aria-pressed', c.dataset.zone === this._zone ? 'true' : 'false');
-    for (const zz of this._zones) zz.zh.hidden = !!this._zone && zz.title !== this._zone;
-    for (const [k, t] of Object.entries(this._tiles)) t.tile.hidden = ks ? !ks.includes(k) : !!this._zone && t.room !== this._zone;
-    this._grid.classList.toggle('single', !!this._zone); this._panes.ctl.pane.scrollTop = 0;
+    this._zoneHide(); this._panes.ctl.pane.scrollTop = 0;
   }
+  _zoneHide() {
+    const ks = this._room && this._roomKeys(this._room), on = !ks && this._zone === 'on', keep = this._onKeep;
+    for (const zz of this._zones) zz.zh.hidden = on && !zz.keys.some((k) => keep.has(k));
+    for (const [k, t] of Object.entries(this._tiles)) t.tile.hidden = ks ? !ks.includes(k) || t.it.kind === 'sensor' : on && !keep.has(k);
+    this._zEmpty.hidden = !(on && !keep.size);
+  }
+  // aparelhos ligados agora (sensor e pessoa não contam)
+  _onKeys() { return ITEMS.filter((i) => i.kind !== 'sensor' && this._state[i.key] && this._state[i.key].on).map((i) => i.key); }
   _hasDetail(it) { return it.kind !== 'sensor'; }
   _makeTile(it, room, idx = 0) {
     const tile = document.createElement('button'); tile.className = 'tile'; tile.dataset.key = it.key; tile.dataset.kind = it.kind; tile.setAttribute('aria-pressed', 'false');
@@ -4839,6 +4919,8 @@ export class Casa3DCard extends HTMLElement {
       top.appendChild(more);
     }
     tile.addEventListener('click', () => this._toggleItem(it.key));
+    tile.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') this._roomHl(this._roomsAll().find((q) => this._roomKeys(q).includes(it.key))); });   // mouse no bloco: realça o cômodo dele
+    tile.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') this._roomHl(this._room); });
     this._tiles[it.key] = t; return tile;
   }
   // liga/desliga o aparelho (bloco do painel)
@@ -4907,7 +4989,7 @@ export class Casa3DCard extends HTMLElement {
     d.onkeydown = (e) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); d.hidden = true; this._detailKey = null; const t = this._tiles[key]; const mo = t && t.tile.querySelector('.more'); if (mo) mo.focus(); } };
     const close = document.createElement('button'); close.className = 'close'; close.textContent = '×'; close.setAttribute('aria-label', 'Fechar');
     close.addEventListener('click', () => { d.hidden = true; this._detailKey = null; }); head.appendChild(close);
-    this._showTab('ctl'); this._renderPanel();
+    this._showTab('ctl'); this._renderPanel(); this._snapTo('full');   // folha: os controles pedem a altura cheia (a lista rola)
     d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   _stateText(it, st) {
@@ -4923,8 +5005,10 @@ export class Casa3DCard extends HTMLElement {
     if (!this._tiles) return;
     if (this._room) {   // cabeçalho do cômodo: "N de M ligados" (sensor não conta); sem aparelho, só o aviso
       const ks = this._roomKeys(this._room), ctl = ks.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'sensor');
-      this._rCount.textContent = !ks.length ? 'Nenhum aparelho neste cômodo' : ctl.length ? `${ctl.filter((k) => this._state[k] && this._state[k].on).length} de ${ctl.length} ligados` : '';
-      this._rAll.hidden = !ctl.length;
+      const on = ctl.filter((k) => this._state[k] && this._state[k].on).length;
+      const sens = ks.filter((k) => !ctl.includes(k)).map((k) => (k === 'presenca' ? (this._state[k] && this._state[k].on ? 'alguém aqui' : 'ninguém aqui') : this._stateText(ITEMS.find((i) => i.key === k), this._state[k])));   // sensor: leitura, não bloco
+      this._rCount.textContent = !ks.length ? 'Nenhum aparelho' : [ctl.length ? `${on} de ${ctl.length} ligados` : '', ...sens].filter(Boolean).join(' · ');
+      this._rAll.hidden = !ctl.length; this._rAll.firstChild.hidden = on > 0; this._rAll.lastChild.hidden = on === 0;   // só a ação que muda algo
     }
     const now = Date.now();
     for (const [k, t] of Object.entries(this._tiles)) {
@@ -4943,13 +5027,24 @@ export class Casa3DCard extends HTMLElement {
       const act = z.keys.filter((k) => this._state[k] && this._state[k].on).length;
       z.zn.textContent = `${act} de ${z.keys.length} ativos`; z.zh.classList.toggle('some', act > 0);
     }
-    const lights = ITEMS.filter((i) => i.kind === 'light');
-    const n = lights.filter((i) => this._state[i.key] && this._state[i.key].on).length;
+    // resumo do que está ligado ("4 luzes · Ar · TV", +N depois de 3 itens) e o filtro "Ligados · N"
+    const onK = this._onKeys(), n = onK.filter((k) => ITEMS.find((i) => i.key === k).kind === 'light').length;
     if (this._countEl) {
-      if (this._cN !== n) { this._cN = n; this._countEl.innerHTML = `${iconSvg('bulb')}<span><b>${n}</b> de ${lights.length}<span class="lbl"> luzes acesas</span></span>`; }
-      this._countEl.classList.toggle('lit', n > 0);
+      const SHORT = { ac: 'Ar', tv: 'TV', bomba_piscina: 'Bomba' };
+      const parts = [...(n ? [`<b>${n}</b> ${n === 1 ? 'luz' : 'luzes'}`] : []), ...onK.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'light').map((k) => SHORT[k] || ITEMS.find((i) => i.key === k).label)];
+      const txt = parts.length ? parts.slice(0, 3).join(' · ') + (parts.length > 3 ? ` +${parts.length - 3}` : '') : 'Tudo desligado';
+      if (this._cN !== txt) {
+        this._cN = txt; this._countEl.innerHTML = `${iconSvg('bulb')}<span>${txt}</span>`;
+        this._countEl.setAttribute('aria-label', `Mostrar o que está ligado: ${txt.replace(/<\/?b>/g, '')}`);
+        this._zbar.firstChild.textContent = `Ligados · ${onK.length}`;
+      }
+      this._countEl.classList.toggle('lit', n > 0); this._countEl.classList.toggle('any', onK.length > 0);
     }
-    if (this._reopen) { const rn = this._reopen.querySelector('.rn'); if (rn) rn.textContent = n ? String(n) : ''; }
+    if (!this._room && this._zone === 'on' && onK.some((k) => !this._onKeep.has(k))) { onK.forEach((k) => this._onKeep.add(k)); this._zoneHide(); }   // o que ligou entra na foto
+    if (this._reopen) {   // pílula: ligados do cômodo, ou as luzes da casa
+      const rn = this._reopen.querySelector('.rn'), m = this._room ? this._roomKeys(this._room).filter((k) => onK.includes(k)).length : n;
+      if (rn) { rn.textContent = m ? String(m) : ''; rn.title = this._room ? 'ligados' : 'luzes acesas'; }
+    }
     const key = this._detailKey;
     if (key && this._detail && !this._detail.hidden) {
       const st = this._state[key]; const on = !!(st && st.on); const it = ITEMS.find((i) => i.key === key);
@@ -5019,12 +5114,12 @@ export class Casa3DCard extends HTMLElement {
   }
   _flashRow(key) {
     const t = this._tiles && this._tiles[key]; if (!t || !this._panelOpen) return;
-    this._showTab('ctl'); if (!this._room && this._zone && t.room !== this._zone) this._setZone(''); t.tile.classList.add('flash'); t.tile.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this._showTab('ctl'); if (t.tile.hidden) this._setZone(''); t.tile.classList.add('flash'); t.tile.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     setTimeout(() => t.tile.classList.remove('flash'), 900);
   }
 
   // ---- Loop ----
-  _resize() {
+  _resize(fly = false) {
     if (!this._renderer) return;
     const w = Math.max(1, this.clientWidth), h = Math.max(1, this.clientHeight);
     // Orçamento de ~2,4 Mpx por quadro: em telas Retina grandes baixa o pixel ratio
@@ -5032,17 +5127,18 @@ export class Casa3DCard extends HTMLElement {
     this._renderer.setPixelRatio(dpr);
     this._renderer.setSize(w, h, false);
     this._layoutHud(w);
-    // Com o painel lateral aberto (desktop/tablet), a cena é enquadrada na área à esquerda dele; a gaveta do celular fica por cima
-    // No celular a folha de baixo fica fora do quadro: a cena é enquadrada na faixa entre o cabeçalho (T) e ela
+    // Com o painel lateral aberto (desktop/tablet deitado), a cena é enquadrada na área à esquerda dele
+    // Na folha de baixo (celular/tablet em pé), na faixa entre o cabeçalho (T) e a parte VISÍVEL dela (B)
     const open = this._panelOpen && this._dock && !this._dock.hidden;
-    const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._narrow ? this._dock.offsetHeight : 0, T = B ? this._hudH || 0 : 0;
+    if (open && this._sheet && !this._sprRaf && !this._dragging && this._dock.dataset.snap) this._sideX(this._snaps()[this._dock.dataset.snap]);   // conteúdo mudou de altura: fica no mesmo detente
+    const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._sheet ? Math.max(0, this._wrap.clientHeight - this._dock.offsetTop - (this._sprRaf ? this._sprGoal() : this._sprX || 0)) : 0, T = B ? this._hudH || 0 : 0;
     const vw = Math.max(160, w - P), vh = Math.max(160, h - B - T);
     this._camera.aspect = vw / vh; if (this._walkOn) this._camera.fov = this._walkFov();
     if (P || B) this._camera.setViewOffset(vw, vh, 0, -T, w, h); else this._camera.clearViewOffset();
     this._camera.updateProjectionMatrix();
     const u = 2 * Math.tan(this._camera.fov * Math.PI / 360) / vh;   // rótulos (sem perspectiva): px de tela → escala
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
-    if (!this._orbit.touched) this._resetView();
+    if (!this._orbit.touched) this._resetView(fly);   // fly: a folha assentou, a câmera desliza até o novo quadro
     this._orbit.dirty = true;
   }
   _start() {
