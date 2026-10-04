@@ -2792,7 +2792,9 @@ canvas.walk.pick { cursor: pointer; }
 .pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 36px 9px 12px; font-size: 12px; line-height: 1.35; color: #e6edf7; background: rgba(22, 29, 48, .96); }
 .pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: rgba(22, 29, 48, .96); border: solid rgba(255, 255, 255, .09); border-width: 1px 0 0 1px; transform: rotate(45deg); }
 .pegdica button { position: absolute; top: -2px; right: -2px; padding: 10px 12px; font-size: 14px; color: #9aa6bd; }
-.wrap.side .pegdica { display: none; }   /* com o painel aberto ela cobriria o cabeçalho dele */
+.pegdica.lado { transform: translateY(-50%); }   /* desktop: à esquerda dos botões, apontando para eles (não cobre o painel) */
+.pegdica.lado::before { top: 50%; right: -6px; margin-top: -5px; border-width: 1px 1px 0 0; }
+.wrap.side .pegdica:not(.lado) { display: none; }   /* celular com a folha aberta: ela cobriria a faixa da cena */
 .peg[hidden], .btns > button[hidden] { display: none; }
 .peg[aria-pressed="true"] { background: rgba(255, 196, 107, .18); }
 .pegghost { position: absolute; left: 0; top: 0; width: 44px; height: 44px; z-index: 7; pointer-events: none; display: grid; place-items: center; color: #ffc46b;
@@ -3002,7 +3004,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
   .hud.top { flex-wrap: nowrap; gap: 8px; }
   .hud > .lcol { flex: 1 1 auto; }
   .title { padding: 8px 12px; max-width: 100%; box-sizing: border-box; }
-  .title b { font-size: 14px; }
+  .title b { font-size: 14px; } .title .clock .per { display: none; }   /* "simulado" (só na demo) não cabe ao lado do "‹ Casa" */
   .btn { padding: 7px 10px; }
   .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
   .menu { left: 10px; right: 10px; width: auto; }
@@ -3294,7 +3296,7 @@ export class Casa3DCard extends HTMLElement {
       m.rotation.x = -Math.PI / 2; m.position.set(z.x + z.w / 2, 0.004, z.z + z.d / 2); m.receiveShadow = true;   // pisos a 4 mm: tapetes (≥ 5 mm) ficam por cima sem z-fighting
       m.userData = { item: z.item || null, zone: id }; scene.add(m);
       if (z.item) this._clickables.push(m);
-      if (z.label) { const s = this._makeLabel(z.label); s.position.set(z.lp[0], 3.35, z.lp[1]); scene.add(s); this._labels.push(s); }
+      if (z.label) { const s = this._makeLabel(z.label); s.userData.zone = id; s.position.set(z.lp[0], 3.35, z.lp[1]); scene.add(s); this._labels.push(s); }
     }
     this._buildWalls(scene, M);
     // Rodapés nas zonas internas
@@ -4439,7 +4441,12 @@ export class Casa3DCard extends HTMLElement {
     const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
     const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
     this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
-    if (this._dica) { const pr = this._pegBtn.getBoundingClientRect(); const ds = this._dica.style; ds.top = `${Math.round(Math.max(pr.bottom, this._narrow ? tr.bottom : 0) - wr.top + 10)}px`; ds.right = `${Math.round(wr.right - pr.right)}px`; ds.setProperty('--ax', `${Math.round(pr.width / 2 - 6)}px`); }
+    this._hudH = top;   // altura do cabeçalho (o _resize desconta no celular com a folha aberta)
+    if (this._dica) {   // celular: embaixo do cabeçalho, seta no bonequinho · desktop: à esquerda dos botões, na mesma linha
+      const pr = this._pegBtn.getBoundingClientRect(), ds = this._dica.style; this._dica.classList.toggle('lado', !this._narrow);
+      ds.top = `${Math.round(this._narrow ? Math.max(pr.bottom, tr.bottom) - wr.top + 10 : (pr.top + pr.bottom) / 2 - wr.top)}px`;
+      ds.right = `${Math.round(this._narrow ? wr.right - pr.right : wr.right - br.left + 12)}px`; ds.setProperty('--ax', `${Math.round(pr.width / 2 - 6)}px`);
+    }
     this._placeMenu();
   }
   _setWalk(on) {
@@ -5098,12 +5105,12 @@ export class Casa3DCard extends HTMLElement {
     this._renderer.setSize(w, h, false);
     this._layoutHud(w);
     // Com o painel lateral aberto (desktop/tablet), a cena é enquadrada na área à esquerda dele; a gaveta do celular fica por cima
-    // No celular a folha de baixo fica fora do quadro: a cena é enquadrada na faixa acima dela
+    // No celular a folha de baixo fica fora do quadro: a cena é enquadrada na faixa entre o cabeçalho (T) e ela
     const open = this._panelOpen && this._dock && !this._dock.hidden;
-    const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._narrow ? this._dock.offsetHeight : 0;
-    const vw = Math.max(160, w - P), vh = Math.max(160, h - B);
+    const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._narrow ? this._dock.offsetHeight : 0, T = B ? this._hudH || 0 : 0;
+    const vw = Math.max(160, w - P), vh = Math.max(160, h - B - T);
     this._camera.aspect = vw / vh; if (this._walkOn) this._camera.fov = this._walkFov();
-    if (P || B) this._camera.setViewOffset(vw, vh, 0, 0, w, h); else this._camera.clearViewOffset();
+    if (P || B) this._camera.setViewOffset(vw, vh, 0, -T, w, h); else this._camera.clearViewOffset();
     this._camera.updateProjectionMatrix();
     const u = 2 * Math.tan(this._camera.fov * Math.PI / 360) / vh;   // rótulos (sem perspectiva): px de tela → escala
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
@@ -5152,7 +5159,7 @@ export class Casa3DCard extends HTMLElement {
     const sunDir = new THREE.Vector3(Math.sin(az) * Math.cos(elr), Math.sin(elr), -Math.cos(az) * Math.cos(elr));
     if (this._mode === 'day') sunDir.copy(this._sunPos).normalize();
     const sunPos = this._sun.target.position.clone().addScaledVector(sunDir, 30);
-    const warm = clamp(1 - elev / 14, 0, 1);
+    const warm = clamp(1 - Math.abs(elev) / 14, 0, 1);   // quente só perto do horizonte: com o sol bem abaixo dele, a transição para a noite fica azulada (não bordô)
     const dayCol = this._sunCol.clone().lerp(new THREE.Color(0xff9848), warm * 0.85);
     const dayInt = 3.2 * clamp(0.25 + Math.sin(Math.max(elev, 0) * Math.PI / 180) * 1.5, 0.25, 1);
     this._sun.intensity = L(dayInt, L(0.5, 0.7, nv), nl);
@@ -5215,7 +5222,21 @@ export class Casa3DCard extends HTMLElement {
     if (this._needShadow) { this._renderer.shadowMap.needsUpdate = true; this._needShadow = false; dirty = true; }
     // Só animação ociosa (água/TV) rodando: renderiza em metade dos frames
     this._tick = (this._tick || 0) + 1;
+    if (dirty && this._labels) this._declutter();
     if (dirty || (ambient && this._tick % (this._waterFast ? 2 : 3) === 0)) this._renderer.render(this._scene, this._camera);
+  }
+  // rótulos sem sobreposição: projeta cada um na tela e, por prioridade (cômodo com algo ligado, depois o maior), esconde o que
+  // encostaria num já aceito; ao aproximar o zoom eles voltam sozinhos
+  _declutter() {
+    const on = this._labelsOn && !this._walkOn && !(this._nav && this._nav.room), v = new THREE.Vector3(), w = this.clientWidth, h = this.clientHeight, ok = [];
+    const pri = (s) => { const z = ZONES[s.userData.zone], st = this._state[z.item]; return (st && st.on ? 1e3 : 0) + z.w * z.d; };
+    for (const s of [...this._labels].sort((a, b) => pri(b) - pri(a))) {
+      s.visible = on; if (!on) continue;
+      v.copy(s.position).project(this._camera);
+      const x = (v.x + 1) * w / 2, y = (1 - v.y) * h / 2, hw = s.userData.px[0] / 2 + 3;
+      s.visible = !ok.some(([x2, y2, hw2]) => Math.abs(x - x2) < hw + hw2 && Math.abs(y - y2) < 24);
+      if (s.visible) ok.push([x, y, hw]);
+    }
   }
 }
 
