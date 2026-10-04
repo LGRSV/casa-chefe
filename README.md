@@ -7,6 +7,12 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.6.3 — roda bem em qualquer máquina
+
+- **Qualidade automática** (`quality: auto`, o novo padrão): o cartão detecta a placa de vídeo e escolhe sozinho — `alta` com GPU dedicada, `media` com vídeo integrado, `leve` no celular/tablet, `min` sem GPU. `alta`/`media`/`leve`/`min` na configuração continuam valendo.
+- **Resolução que se adapta**: girando ou dando zoom, a resolução segue o tempo real de quadro (fica fluido em aparelho fraco); parado, vem um quadro nítido. Em PC muito lento o `auto` ainda corta sombras pontuais e luzes, aos poucos — nunca a sombra do sol.
+- Água e TV animam só com o cartão visível; mesmo mecanismo da Igreja 3D.
+
 ## Novidades da v1.6.2 — polimento de design
 
 - Luz do dia neutra (tone mapping Neutral) com cores vivas e paredes brancas quentes; noite de verdade, com a casa escura e as luzes acesas em destaque, sem passar por tons encardidos.
@@ -160,7 +166,7 @@ height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
 panel: true           # painel lateral aberto ao carregar (false = recolhido; no celular começa recolhido)
 roof: false           # começa com o telhado visível (Opções › Telhado alterna)
 telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
-quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
+quality: auto         # auto (padrão: escolhe pela máquina) | alta | media | leve | min — leve/min = menos luzes e sombras menores (~40 MB em vez de ~120 MB de GPU)
 weather: true         # clima ao vivo: ícone + temperatura no título, detalhes no menu (Open-Meteo, sem chave)
 weather_city: 'Palmas, TO'   # nome mostrado no menu
 car_color: '#f3f3f0'  # cor do up! TSI na garagem (branco)
@@ -250,7 +256,8 @@ no véu ou arrastando para a direita. Ao entrar na visão de Pessoa o painel rec
 Uso de memória medido no navegador (a cena roda no dispositivo que abre o dashboard, não no
 HA nem no GitHub): ~30 MB de JavaScript + ~64 MB de mapas de sombra na GPU + ~15 MB de
 texturas/geometria, na qualidade `alta`. Com `quality: leve` os mapas de sombra caem para
-~14 MB e o pixel ratio fica em 1,25× — bom para tablets de parede ou notebooks fracos.
+~14 MB e o orçamento de pixels fica em 2,0 Mpx (`min`: sem sombras, 1,4 Mpx) — bom para tablets de parede ou notebooks fracos.
+No padrão `auto` o cartão detecta a GPU (software → min; celular/≤ 4 GB → leve; integrada → media; dedicada → alta).
 No disco o cartão tem 238 KB; nada é armazenado além disso.
 
 - As malhas estáticas (paredes, mobília) são fundidas por material na inicialização:

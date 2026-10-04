@@ -81,7 +81,19 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.6.2';
+export const VERSION = '1.6.3';
+
+// quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
+const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
+const MIN_LIGHTS = { externa: 1, led_piscina: 1, banheiro: 1 };
+// Governador de qualidade (ver _govFrame): por nível, a escala de resolução em movimento (move; min–max) e parado (idleMin–idleMax,
+// >1 = supersampling quando sobra fôlego). Trocar luzes/sombras/materiais recompila shaders, então o nível é fixo na construção.
+const GOV = {
+  alta:  { move: 1.0,  min: 0.5,  max: 1.0,  idleMax: 1.5,  idleMin: 1 },   // parado nunca abaixo da resolução cheia:
+  media: { move: 0.6,  min: 0.35, max: 0.75, idleMax: 1.25, idleMin: 1 },   // o quadro nítido é um só; a leveza fica no movimento
+  leve:  { move: 0.55, min: 0.35, max: 0.55, idleMax: 1.15, idleMin: 1 },
+  min:   { move: 0.45, min: 0.3,  max: 0.5,  idleMax: 1.0,  idleMin: 1 },
+};
 
 // Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
 // qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
@@ -89,7 +101,7 @@ export const VERSION = '1.6.2';
 // widget de clima nascia ausente: só existia no default do setConfig, não no do construtor).
 const DEFAULT_CONFIG = {
   title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, panel: true, roof: false,
-  quality: 'alta', car_color: '#f3f3f0', entities: {},
+  quality: 'auto', car_color: '#f3f3f0', entities: {},   // auto | alta | media | leve | min
   latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180,
   weather: true, weather_city: 'Palmas, TO',
   telhado_pessoa: true,   // v1.4: na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
@@ -3056,7 +3068,7 @@ export class Casa3DCard extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._config = Object.assign({}, DEFAULT_CONFIG);
-    this._lite = this._config.quality === 'leve';
+    this._q = this._qualityFor(this._config.quality); this._lite = this._q === 'leve' || this._q === 'min'; this._min = this._q === 'min';
     this._nightVision = true;
     this._state = {};          // key -> { on, state, attrs }
     this._lastChanged = {};    // key -> ISO da última mudança (do HA)
@@ -3082,7 +3094,7 @@ export class Casa3DCard extends HTMLElement {
 
   setConfig(config) {
     this._config = Object.assign({}, DEFAULT_CONFIG, config || {});
-    this._lite = this._config.quality === 'leve';   // no HA a posição real vem de hass.config
+    if (!this._built) { this._q = this._qualityFor(this._config.quality); this._lite = this._q === 'leve' || this._q === 'min'; this._min = this._q === 'min'; }   // o nível não muda com a cena montada
     this._mode = ['auto', 'day', 'night'].includes(this._config.mode) ? this._config.mode : 'auto';
     this._nightVision = this._config.night_vision !== false;
     if (this._config.height) this.style.setProperty('--casa3d-height', String(this._config.height));
@@ -3262,14 +3274,49 @@ export class Casa3DCard extends HTMLElement {
     this._setTopView(true);   // v1.6: abre na Vista de cima (planta inteira); o telhado volta ao sair dela
   }
 
+  // Detecção de GPU (cacheada, 1 contexto descartável por página): strong = dedicada/Apple; soft = desenho por software (sem GPU)
+  static _gpuInfo() {
+    if (Casa3DCard.__gpu !== undefined) return Casa3DCard.__gpu;
+    let strong = false, soft = false;
+    try {
+      const cv = document.createElement('canvas');
+      const gl = cv.getContext('webgl2') || cv.getContext('webgl');
+      if (gl) {
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) || '');
+        strong = /nvidia|geforce|quadro|rtx|gtx|radeon\s*(rx|pro)|apple m\d|apple gpu/i.test(name) && !/intel|swiftshader|llvmpipe|mali|adreno|powervr/i.test(name);
+        soft = /swiftshader|llvmpipe|softpipe|mesa offscreen|basic render/i.test(name);   // desenho por software (sem GPU)
+        const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+      }
+    } catch (_) { strong = soft = false; }
+    return (Casa3DCard.__gpu = { strong, soft });
+  }
+  static _strongGPU() { return Casa3DCard._gpuInfo().strong; }
+  // quality: 'alta' | 'media' | 'leve' | 'min' | 'auto' (padrão): min em aparelho muito fraco (software, ≤ 2 GB, ou ≤ 2 núcleos com ≤ 4 GB);
+  // leve em celular/tablet (toque + tela < 900 px) ou com ≤ 4 GB; no PC, alta com GPU dedicada e media com vídeo integrado ou desconhecido
+  _qualityFor(q) {
+    if (['alta', 'media', 'leve', 'min'].includes(q)) return q;
+    try {
+      if (Casa3DCard._gpuInfo().soft || (navigator.deviceMemory || 8) <= 2 || ((navigator.hardwareConcurrency || 8) <= 2 && (navigator.deviceMemory || 8) <= 4)) return 'min';   // só núcleos não basta: navegadores com anti-fingerprint dizem 2
+      const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+      const small = Math.min(window.screen.width, window.screen.height) < 900;
+      if ((coarse && small) || (navigator.deviceMemory || 8) <= 4) return 'leve';
+      return Casa3DCard._strongGPU() ? 'alta' : 'media';   // 'alta' só com GPU dedicada; integrada ou desconhecida → media
+    } catch (_) { return 'leve'; }
+  }
+
   // ---- Cena 3D ----
   _build3D(canvas) {
     const M = materials();
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !Casa3DCard._gpuInfo().soft, powerPreference: 'high-performance' });
     renderer.toneMapping = THREE.NeutralToneMapping;   // Neutral (não ACES): branco continua branco e as cores não perdem saturação
     renderer.toneMappingExposure = 1.0;
+    // Salvaguarda de GPU apertada (poucos samplers/uniforms): menos luzes reais e só 1 sombra pontual
+    const caps = renderer.capabilities;
+    this._tight = caps.maxFragmentUniforms < 512 || caps.maxTextures < 16;
+    if (this._tight) console.warn(`[casa3d-card] GPU com margem pequena (fragment uniforms ${caps.maxFragmentUniforms}, samplers ${caps.maxTextures}): menos luzes e sombras`);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = this._lite ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = this._q === 'alta' || this._q === 'media' ? THREE.PCFSoftShadowMap : this._min ? THREE.BasicShadowMap : THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;   // cena estática: sombras só recalculam quando algo muda
     this._renderer = renderer;
 
@@ -3294,7 +3341,7 @@ export class Casa3DCard extends HTMLElement {
     this._sunPos = new THREE.Vector3(-9, 22, 7); this._moonPos = new THREE.Vector3(11, 20, -9);
     this._sunCol = new THREE.Color(0xfff0d2); this._moonCol = new THREE.Color(0x8fa6d8);
     this._sun.position.copy(this._sunPos); this._sun.target.position.set(6.7, 0, 8.2);
-    this._sun.castShadow = true;
+    this._sun.castShadow = !this._min;   // min: sem nenhuma sombra
     this._sun.shadow.mapSize.set(this._lite ? 1024 : 2048, this._lite ? 1024 : 2048);
     const sc = this._sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 70;
     this._sun.shadow.bias = -0.0005; this._sun.shadow.normalBias = 0.025;
@@ -3317,8 +3364,8 @@ export class Casa3DCard extends HTMLElement {
       const [tk, tile] = FLOOR[id] || ['concrete', 3];
       const map = TX[tk].clone(); map.repeat.set(z.w / tile, z.d / tile);
       const tint = ['wood', 'tileWarm', 'tileCool', 'tileTerra', 'pavers'].includes(tk) ? 0xffffff : 0xdedede;
-      const ao = this._makeAO(z.w, z.d);
-      const mat = new THREE.MeshStandardMaterial({ color: tint, map, roughness: 0.9, bumpMap: map, bumpScale: 0.6, aoMap: ao, aoMapIntensity: 1.0 });
+      const ao = this._min ? null : this._makeAO(z.w, z.d);
+      const mat = new THREE.MeshStandardMaterial({ color: tint, map, roughness: 0.9, bumpMap: this._min ? null : map, bumpScale: 0.6, aoMap: ao, aoMapIntensity: 1.0 });
       const m = new THREE.Mesh(new THREE.PlaneGeometry(z.w, z.d), mat);
       m.rotation.x = -Math.PI / 2; m.position.set(z.x + z.w / 2, 0.004, z.z + z.d / 2); m.receiveShadow = true;   // pisos a 4 mm: tapetes (≥ 5 mm) ficam por cima sem z-fighting
       m.userData = { item: z.item || null, zone: id }; scene.add(m);
@@ -3342,15 +3389,26 @@ export class Casa3DCard extends HTMLElement {
       const rt = this._items.get(it.key) || {}; this._items.set(it.key, rt);
       rt.lights = []; rt.fixtures = []; rt.target = 0; rt.level = 0; rt.color = new THREE.Color(it.color || 0xffffff);
       if (!it.fixtures) continue;
-      for (const f of it.fixtures) {
-        const L = new THREE.PointLight(rt.color, 0, f.d, 2);
-        L.position.set(f.p[0], f.p[1], f.p[2]);
-        if (f.shadow && !(this._lite && !['quarto', 'sala', 'garagem'].includes(it.key))) {
-          L.castShadow = true; L.shadow.mapSize.set(this._lite ? 256 : 512, this._lite ? 256 : 512);
-          L.shadow.bias = -0.004; L.shadow.normalBias = 0.03;
-          L.shadow.camera.near = 0.15; L.shadow.camera.far = f.d + 1;
+      // leve/min/GPU apertada: poucas luzes reais por item (LITE_LIGHTS/MIN_LIGHTS), mais fortes e de maior alcance; as demais viram só malha + halo
+      const lite = this._lite || this._tight, n = it.fixtures.length;
+      const liteMax = this._min ? Math.min(n, MIN_LIGHTS[it.key] ?? n) : lite ? Math.min(n, LITE_LIGHTS[it.key] ?? n) : n;
+      const step = n / liteMax;
+      const keep = new Set(Array.from({ length: liteMax }, (_, k) => Math.floor(k * step + step / 2 - 0.5)));
+      const boost = n / keep.size;
+      for (const [fk, f] of it.fixtures.entries()) {
+        if (keep.has(fk)) {
+          const L = new THREE.PointLight(rt.color, 0, lite ? f.d * Math.min(1.35, Math.sqrt(boost)) : f.d, 2);
+          L.position.set(f.p[0], f.p[1], f.p[2]);
+          // sombra pontual: alta = todas; media/leve = só quarto/sala/garagem (256, leve 192, raio 2); min = nenhuma; GPU apertada = só o quarto
+          const main = ['quarto', 'sala', 'garagem'].includes(it.key);
+          if (f.shadow && !this._min && (this._tight ? it.key === 'quarto' : this._q === 'alta' || main)) {
+            const ms = this._q === 'alta' ? 512 : this._lite ? 192 : 256;
+            L.castShadow = true; L.shadow.mapSize.set(ms, ms); if (ms < 512) L.shadow.radius = 2;
+            L.shadow.bias = -0.004; L.shadow.normalBias = 0.03;
+            L.shadow.camera.near = 0.15; L.shadow.camera.far = f.d + 1;
+          }
+          scene.add(L); rt.lights.push({ L, i: lite ? f.i * boost : f.i });
         }
-        scene.add(L); rt.lights.push({ L, i: f.i });
         let mesh;
         if (f.under) {
           // refletor de parede: disco no lado interno da parede da piscina
@@ -3392,9 +3450,26 @@ export class Casa3DCard extends HTMLElement {
     this._ndc = new THREE.Vector2();
     this._ro = new ResizeObserver(() => this._resize());
     this._ro.observe(this);
+    // fora da tela (rolado para longe no dashboard) não gasta GPU com a animação ociosa
+    try { this._io = new window.IntersectionObserver((es) => { this._onScreen = es.some((e) => e.isIntersecting); }); this._io.observe(this); } catch (_) {}
     if (this._dock) this._ro.observe(this._dock);
     this._resize();
     renderer.shadowMap.needsUpdate = true;
+    this._precompile();
+  }
+  // Compila os shaders antes do primeiro quadro — em paralelo quando o navegador deixa (KHR_parallel_shader_compile),
+  // sem travar a página na carga — com o telhado visível, para o botão dele não engasgar depois. Enquanto isso _frame não desenha.
+  _precompile() {
+    const r = this._renderer, hide = [this._roof].filter((g) => g && !g.visible);
+    this._busy = true;
+    let p;
+    try {
+      hide.forEach((g) => { g.visible = true; });
+      if (r.extensions.has('KHR_parallel_shader_compile')) p = r.compileAsync(this._scene, this._camera);
+      else { r.compile(this._scene, this._camera); p = Promise.resolve(); }
+    } catch (e) { p = Promise.resolve(); }
+    hide.forEach((g) => { g.visible = false; });
+    p.catch(() => {}).then(() => { this._busy = false; if (this._orbit) this._orbit.dirty = true; });
   }
 
   // Domo de céu (dia/noite com crossfade) e mapa de ambiente para reflexos
@@ -3407,8 +3482,8 @@ export class Casa3DCard extends HTMLElement {
     this._skyNight.renderOrder = -3; this._skyDusk.renderOrder = -2; this._skyDay.renderOrder = -1;
     this._skyNight.position.set(LOT.w / 2, 0, LOT.d / 2); this._skyDay.position.copy(this._skyNight.position); this._skyDusk.position.copy(this._skyNight.position);
     scene.add(this._skyNight, this._skyDusk, this._skyDay);
-    // Ambiente (PMREM) a partir do próprio céu: reflexos na água/metais e luz difusa
-    try {
+    // Ambiente (PMREM) a partir do próprio céu: reflexos na água/metais e luz difusa (leve e min ficam sem: custava ~1/3 do quadro em GPU integrada)
+    if (!this._lite) try {
       const pm = new THREE.PMREMGenerator(renderer);
       const envScene = new THREE.Scene();
       const dome = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: T.skyDay, side: THREE.BackSide }));
@@ -5196,8 +5271,11 @@ export class Casa3DCard extends HTMLElement {
   _resize(fly = false) {
     if (!this._renderer) return;
     const w = Math.max(1, this.clientWidth), h = Math.max(1, this.clientHeight);
-    // Orçamento de ~2,4 Mpx por quadro: em telas Retina grandes baixa o pixel ratio
-    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, this._lite ? 1.25 : 2, Math.sqrt((this._lite ? 1.4e6 : 2.4e6) / (w * h))));
+    // Resolução cheia (parado): até o pixel ratio da tela, com teto por nível (alta 2,8–3,5 Mpx · media 2,4 · leve 2,0 · min 1,4)
+    const strong = this._q === 'alta' && Casa3DCard._strongGPU();
+    const [cap, px] = this._q === 'alta' ? (strong ? [2.5, 3.5e6] : [2, 2.8e6]) : this._q === 'media' ? [2, 2.4e6] : this._min ? [1.5, 1.4e6] : [2, 2.0e6];
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, cap, Math.sqrt(px / (w * h))));
+    this._dprFull = dpr; this._lowRes = false;   // o governador (movimento) escala a partir daqui
     this._renderer.setPixelRatio(dpr);
     this._renderer.setSize(w, h, false);
     this._layoutHud(w);
@@ -5215,6 +5293,108 @@ export class Casa3DCard extends HTMLElement {
     if (!this._orbit.touched) this._resetView(fly);   // fly: a folha assentou, a câmera desliza até o novo quadro
     this._orbit.dirty = true;
   }
+  // ---- Governador de qualidade ----
+  // O nível (alta/media/leve/min) é fixo na construção; em tempo de execução só a resolução se adapta ao TEMPO REAL DE QUADRO:
+  // em movimento a escala cai/sobe com histerese (2 janelas lentas de 300 ms para baixar, 4 rápidas para subir); ao parar vem UM
+  // quadro nítido (resolução cheia ou maior, se sobra fôlego) cujo custo é medido no rAF seguinte — nunca se desenha só para medir.
+  // Só no `auto` (quality manual vale como escolhido) e quando nem a escala mínima aguenta, desce uma escada (sombras, luzes).
+  _govInit() {
+    const t = GOV[this._q] || GOV.leve;
+    this._gov = { tier: this._q, auto: this._config.quality === 'auto', moveScale: t.move, moveMin: t.min, moveMax: t.max, idleScale: 1, idleMax: t.idleMax, idleMin: t.idleMin,
+      ft: 0, lastAdj: 0, slowWin: 0, fastWin: 0, rung: 0, lastStep: 0, sharpAt: 0, sharpPending: false, sharpFast: 0, slow: 0, slowIdle: 0,
+      t0: typeof performance !== 'undefined' ? performance.now() : 0 };
+    this._moveScale = t.move;
+  }
+  _govIdleMax() {
+    const g = this._gov, w = Math.max(1, this.clientWidth), h = Math.max(1, this.clientHeight), d = this._dprFull || 1;
+    return Math.max(g.idleMin, Math.min(g.idleMax, 3 / d, Math.sqrt(4e6 / (w * h * d * d))));   // nunca acima de 3× DPR nem de 4 Mpx
+  }
+  _govPR(v) {
+    const r = this._renderer; if (Math.abs(r.getPixelRatio() - v) < 0.01) return false;
+    r.setPixelRatio(v); return true;
+  }
+  _govFrame(now, dirty) {
+    const g = this._gov || (this._govInit(), this._gov), o = this._orbit;
+    const ft = now - (this._lastT || now); this._lastT = now;
+    if (o.moving) {
+      this._lastMove = now; g.sharpPending = false;
+      if (!this._lowRes) { this._lowRes = true; g.ft = 0; this._govPR(this._dprFull * g.moveScale); }
+      else if (ft > 0) {
+        g.ft = g.ft ? g.ft * 0.8 + ft * 0.2 : ft;
+        if (now - g.lastAdj > 300) {
+          g.lastAdj = now;
+          g.slowWin = g.ft > 40 ? g.slowWin + 1 : 0; g.fastWin = g.ft < 22 ? g.fastWin + 1 : 0;
+          if (g.slowWin >= 2) { g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }
+          if (g.fastWin >= 4) { g.moveScale = Math.min(g.moveMax, g.moveScale * 1.1); g.fastWin = 0; }
+          this._govPR(this._dprFull * g.moveScale);
+          // escada (só auto): na escala mínima e ainda < 15 quadros/s por ~1,5 s — nunca nos 20 s após carregar
+          // (compilação de shaders e texturas subindo dão picos que não dizem nada do aparelho)
+          g.slow = g.moveScale <= g.moveMin + 0.01 && g.ft > 66 ? g.slow + 1 : 0;
+          if (g.slow >= 5 && now - g.lastStep > 4000 && this._govSettled(now)) this._govStepDown(now);
+        }
+      }
+    } else if (this._lowRes && now - (this._lastMove || 0) > 180) {
+      // parou: um quadro nítido, na escala parada (medida abaixo); com `dirty` a cena é redesenhada uma vez
+      this._lowRes = false; this._govPR(Math.min(this._dprFull * Math.min(g.idleScale, this._govIdleMax()), 3));
+      dirty = true; g.sharpAt = now; g.sharpPending = true; g.ft = 0;
+    } else if (g.sharpPending) {
+      // o rAF seguinte ao quadro nítido só chega depois de o navegador apresentá-lo: o intervalo é o custo real (CPU + GPU)
+      g.sharpPending = false;
+      if (!dirty) this._govSharp(now - g.sharpAt);
+    }
+    this._ft = g.ft; this._moveScale = g.moveScale; this._lastAdj = g.lastAdj;   // espelhos (ferramentas de teste)
+    return dirty;
+  }
+  _govSharp(ms) {
+    const g = this._gov;
+    if (ms > 250) {
+      g.sharpFast = 0;
+      if (g.idleScale > g.idleMin + 0.01) g.idleScale = Math.max(g.idleMin, g.idleScale * 0.85);   // o próximo quadro nítido é mais leve: sem travar a página
+      else if (g.auto && ms > 400 && ++g.slowIdle >= 3 && performance.now() - g.lastStep > 4000 && this._govSettled(performance.now())) this._govStepDown(performance.now());
+    } else if (ms < 30) {
+      g.slowIdle = 0;
+      if (++g.sharpFast >= 2) { g.idleScale = Math.min(this._govIdleMax(), g.idleScale * 1.15); g.sharpFast = 0; }   // sobra fôlego: resolução acima da cheia
+    } else { g.sharpFast = 0; g.slowIdle = 0; }
+  }
+  // Degraus (só no auto): 1 sem sombras das luzes pontuais e sem reflexo de ambiente · 2 menos luzes reais · 3 sem supersampling
+  // parado e escala mínima menor em movimento. A sombra do sol e a resolução cheia parada NUNCA caem. Não voltam sozinhos
+  _govSettled(now) { return !this._busy && now - (this._gov.t0 || 0) > 20000; }
+  _govStepDown(now) {
+    const g = this._gov; if (!g.auto || g.rung >= 3) return;
+    g.rung++; g.lastStep = now; g.slow = g.slowIdle = 0;
+    if (g.rung === 1) {
+      let ch = !!this._scene.environment;   // no leve/min já não há ambiente nem sombras pontuais: nada a recompilar
+      for (const rt of this._items.values()) for (const { L } of rt.lights || []) if (L.castShadow) { L.castShadow = false; if (L.shadow.map) L.shadow.map.dispose(); ch = true; }
+      this._scene.environment = null; this._envDay = this._envNight = null;
+      if (ch) this._precompile();
+    } else if (g.rung === 2) this._shrinkLights();
+    else { g.idleMax = Math.min(g.idleMax, 1); g.idleScale = Math.min(g.idleScale, 1); g.moveMin = Math.max(0.3, g.moveMin - 0.05); }
+    console.info(`[casa3d-card] governador: degrau ${g.rung} — ${this.getQuality().lights} luzes reais`);
+    if (this._orbit) this._orbit.dirty = true;
+  }
+  // PC lento demais (governador, só no `auto`): cada item da tabela fica com MIN_LIGHTS[item] luzes (as com sombra primeiro),
+  // o resto soma a intensidade na vizinha. Recompila uma vez, em paralelo.
+  _shrinkLights() {
+    let n = 0;
+    for (const key in MIN_LIGHTS) {
+      const rt = this._items.get(key); if (!rt || !rt.lights || !rt.lights.length) continue;
+      const all = rt.lights.slice().sort((a, b) => (b.L.castShadow ? 1 : 0) - (a.L.castShadow ? 1 : 0)), kept = all.slice(0, MIN_LIGHTS[key]);
+      for (const d of all.slice(MIN_LIGHTS[key])) {
+        const near = kept.slice().sort((a, b) => a.L.position.distanceTo(d.L.position) - b.L.position.distanceTo(d.L.position))[0];
+        if (near) { const f = Math.sqrt((near.i + d.i) / near.i); near.i += d.i; near.L.distance *= Math.min(1.35, f); }
+        this._scene.remove(d.L); if (d.L.shadow && d.L.shadow.map) d.L.shadow.map.dispose(); n++;
+      }
+      rt.lights = kept;
+    }
+    console.info(`[casa3d-card] PC lento: ${n} luzes reais a menos`);
+    if (n) this._precompile();
+  }
+  // estado do governador (testes/demo)
+  getQuality() {
+    const g = this._gov || {};
+    let lights = 0; for (const rt of this._items.values()) lights += (rt.lights || []).length;
+    return { tier: this._q, auto: !!g.auto, rung: g.rung || 0, moveScale: g.moveScale, idleScale: g.idleScale, ftEMA: g.ft, lights };
+  }
   _start() {
     if (this._raf || !this._renderer) return;
     this._clock.start();
@@ -5224,6 +5404,7 @@ export class Casa3DCard extends HTMLElement {
   _stop() { if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0; this._clock.stop(); }
 
   _frame() {
+    if (this._busy) return;   // compilando shaders (_precompile)
     const dt = Math.min(this._clock.getDelta(), 0.1);
     const t = this._clock.elapsedTime;
     let dirty = this._walkOn ? this._walk.update(dt) : this._orbit.update(dt);
@@ -5318,8 +5499,6 @@ export class Casa3DCard extends HTMLElement {
       ambient = true; this._waterFast = sp > 1.5;
     }
     if (this._needShadow) { this._renderer.shadowMap.needsUpdate = true; this._needShadow = false; dirty = true; }
-    // Só animação ociosa (água/TV) rodando: renderiza em metade dos frames
-    this._tick = (this._tick || 0) + 1;
     if (dirty && this._labels) this._declutter();
     // rótulos esmaecem (~150 ms) em vez de piscar ao aparecer/sumir no giro e no zoom
     for (const s of this._labels || []) {
@@ -5328,7 +5507,16 @@ export class Casa3DCard extends HTMLElement {
       else if (m.opacity !== a) { m.opacity = a; dirty = true; }
       s.visible = m.opacity > 0.01;
     }
-    if (dirty || (ambient && this._tick % (this._waterFast ? 2 : 3) === 0)) this._renderer.render(this._scene, this._camera);
+    // Todos os níveis: girando/aproximando desenha na resolução que o tempo real de quadro permite; parou → um quadro nítido (governador)
+    const now = performance.now();
+    dirty = this._govFrame(now, dirty);
+    if (this._busy) return;   // o governador acabou de pedir recompilação (_shrinkLights)
+    // Só animação ociosa (água/TV): ~20 q/s (30 com a bomba; leve 10, min 5) e nada com a aba ou o cartão fora da tela
+    const visible = !(typeof document !== 'undefined' && document.hidden) && this._onScreen !== false;
+    if (dirty || (ambient && visible && now - (this._lastIdle || 0) > (this._waterFast ? (this._lite ? 40 : 30) : this._min ? 195 : this._lite ? 95 : 45))) {
+      if (!dirty) this._lastIdle = now;
+      this._renderer.render(this._scene, this._camera);
+    }
   }
   // rótulos sem sobreposição: projeta cada um na tela e, por prioridade (cômodo com algo ligado, depois o maior), esconde o que
   // encostaria num já aceito; ao aproximar o zoom eles voltam sozinhos (o _frame esmaece até o alvo)
