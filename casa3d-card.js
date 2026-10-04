@@ -2855,7 +2855,7 @@ canvas.walk.pick { cursor: pointer; }
 .tile .more:hover, .tile .more:focus-visible { background: var(--fill-2); color: var(--ink); opacity: 1; }
 .tile .more:focus-visible { outline: 2px solid var(--focus); }
 .tile .more::after { content: ""; position: absolute; inset: -4px; }   /* área de toque maior */
-.tile[data-kind]:not([data-kind="sensor"]):is(:hover, :focus-within) b { padding-right: 18px; } @media (hover: none) { .tile[data-kind]:not([data-kind="sensor"]) b { padding-right: 18px; } }   /* onde o "⋯" aparece, o nome acaba antes dele (reticências), não embaixo */
+.tile[data-kind]:not([data-kind="sensor"]):is(:hover, :focus-within) b { padding-right: 22px; } @media (hover: none) { .tile[data-kind]:not([data-kind="sensor"]) b { padding-right: 22px; } }   /* onde o "⋯" aparece, o nome acaba antes dele (reticências), não embaixo */
 .tiles.routines { grid-template-columns: minmax(0, 1fr); }
 .tile.routine { min-height: 62px; }
 .tile.routine .ico { background: var(--fill-2); color: var(--ink-2); }
@@ -2944,6 +2944,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 .rhead .rback:hover { color: var(--ink); background: var(--fill-2); }
 .rhead .rtitle { flex: 1; min-width: 0; } .rhead .rtitle b { display: block; font-size: 16px; letter-spacing: -.01em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rhead .rtitle small { display: block; margin-top: 1px; color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wrap:not(.sheet) .rhead .rtitle small { white-space: normal; }   /* coluna: a leitura dos sensores quebra a linha em vez de sumir (na folha, a 1ª linha é a espiada) */
 .rhead .all { display: flex; flex: none; } .rhead .all[hidden], .rhead .all button[hidden] { display: none; }
 .rhead .all button { padding: 8px 12px; white-space: nowrap; border-radius: 10px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }   /* Desligar tudo: grafite */
 .rhead .all button:hover { background: var(--fill-3); }
@@ -3090,9 +3091,13 @@ export class Casa3DCard extends HTMLElement {
 
   connectedCallback() {
     if (!this._built) this._build();
+    if (this._built && !this._feedTimer) {   // temporizadores presos à conexão: o cartão tirado da página (editar o dashboard, trocar de vista) não fica vivo
+      this._feedTimer = setInterval(() => { if (this._panelOpen) this._renderPanel(); this._updateTime(true); }, 30000);
+      if (this._weatherUI) { this._fetchWeather(); this._weatherTimer = setInterval(() => this._fetchWeather(), 15 * 60000); }   // de volta à vista: clima em dia
+    }
     this._start();
   }
-  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); if (this._walkOn) this._setWalk(false); this._toggleMenu(false); if (this._szStop) this._szStop(); }   // sai da Pessoa: solta o teclado da página; ajuste da largura no meio: a cena não fica parada
+  disconnectedCallback() { this._stop(); clearInterval(this._feedTimer); clearInterval(this._weatherTimer); this._feedTimer = this._weatherTimer = 0; if (this._walkOn) this._setWalk(false); this._toggleMenu(false); if (this._szStop) this._szStop(); }   // sai da Pessoa: solta o teclado da página; ajuste da largura no meio: a cena não fica parada
 
   // ---- Construção do DOM ----
   _build() {
@@ -3756,8 +3761,8 @@ export class Casa3DCard extends HTMLElement {
 
   _syncFromHass() {
     const hass = this._hass; if (!hass || !hass.states) return;
-    const sig = ITEMS.map((it) => { const s = hass.states[this.entity(it.key)]; return s ? s.state + '|' + JSON.stringify(s.attributes && (s.attributes.rgb_color || s.attributes.current_temperature || s.attributes.temperature || s.attributes.hvac_action) || '') : 'x'; }).join(';')
-      + '|' + (hass.states[this.entity('sun')] || {}).state;
+    const sig = ITEMS.map((it) => { const s = hass.states[this.entity(it.key)], a = (s && s.attributes) || {}; return s ? [s.state, a.brightness, a.rgb_color, a.temperature, a.current_temperature, a.hvac_action, a.media_title, a.volume_level].join('|') : 'x'; }).join(';')
+      + '|' + (hass.states[this.entity('sun')] || {}).state;   // tudo o que o painel mostra: brilho, título e volume não ficam presos
     if (sig === this._lastSig) return;
     this._lastSig = sig;
     const seeded = !!this._activitySeeded;
@@ -3825,14 +3830,13 @@ export class Casa3DCard extends HTMLElement {
     }
     if (it.kind === 'climate') { rt.hvac = state; rt.on = on; }
     this._state[key].text = val;
-    this._needShadow = true;
+    if (this._orbit) this._orbit.dirty = true;   // luz acende/apaga: um quadro novo, sem refazer as sombras (a geometria é a mesma)
   }
 
-  _refreshSub() {
+  _refreshSub() {   // só o título: o painel quem desenha é quem chama (_syncFromHass, _activate, _applyDemoDefaults), um render por atualização
     const lights = ITEMS.filter((i) => i.kind === 'light');
     const n = lights.filter((i) => this._state[i.key] && this._state[i.key].on).length;
     this._subEl.textContent = ` · ${n === 1 ? '1 luz acesa' : n ? `${n} luzes acesas` : 'luzes apagadas'}`;
-    this._renderPanel();
   }
 
   // Relógio + sol: hora local (ou simulada), elevação/azimute (do HA quando houver)
@@ -3870,7 +3874,6 @@ export class Casa3DCard extends HTMLElement {
     for (const [m, b] of Object.entries(this._modeBtns)) b.setAttribute('aria-pressed', m === this._mode ? 'true' : 'false');
     this._nvBtn.setAttribute('aria-pressed', this._nightVision ? 'true' : 'false');
     this._nvAvail(night);
-    this._needShadow = true;
   }
 
   // Visão noturna só vale à noite: de dia o item fica apagado e diz por quê
@@ -4536,11 +4539,12 @@ export class Casa3DCard extends HTMLElement {
   }
   _setWalk(on) {
     on = !!on; if (on === !!this._walkOn || !this._orbit) return;
+    const was = on && { room: this._room, nav: { ...this._nav }, snap: this._dock.dataset.snap };   // cômodo, nível da planta e altura da folha de antes: voltam ao sair
     this._showRoom(null); if (on) this._dicaOff();
     const o = this._orbit, cam = this._camera, cv = this._canvas;
     if (on) {
       const top = this._topView ? this._topSaved || {} : null; if (top) { this._topSaved = null; this._setTopView(false, true); }   // sai da planta sem religar o telhado; volta a ela ao sair
-      this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, snap: this._dock.dataset.snap, touched: o.touched, roof: !!this._roofOn, top };
+      this._walkSaved = { ...was, pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, touched: o.touched, roof: !!this._roofOn, top };
       // na visão de Pessoa o Telhado liga sozinho (forro por dentro, sem céu sobre os cômodos); ao sair volta como estava
       if (this._config.telhado_pessoa !== false && !this._roofOn) this._setRoof(true);
       if (this._panelOpen) this._setPanel(false);   // vista inteira para andar (no celular a gaveta cobriria o joystick); volta ao sair
@@ -4560,9 +4564,11 @@ export class Casa3DCard extends HTMLElement {
       // volta voando da altura dos olhos até onde a câmera estava antes
       o.sph.setFromVector3(cam.position.clone().sub(o.target)); o.goal.copy(o.sph);
       this._flyCam(sv.pos, sv.target, 3.2);
-      o.touched = sv.touched; if (sv.panel) this._setPanel(true, sv.snap);
+      o.touched = sv.touched;
       if (this._config.telhado_pessoa !== false && !!this._roofOn !== sv.roof) this._setRoof(sv.roof);
       if (sv.top) { this._setTopView(true); this._topSaved = sv.top; }
+      if (sv.nav.level) this._navTo(sv.nav.level, sv.nav.block, sv.nav.room);   // o nível da planta de antes
+      if (sv.panel) { if (sv.room) this._showRoom(sv.room); this._setPanel(true, sv.snap); }   // o cômodo e a altura da folha de antes
     }
     this._setLabels(this._labelsOn);   // rótulos (desenhados por cima de tudo) somem dentro da casa
     this._walkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -4764,7 +4770,7 @@ export class Casa3DCard extends HTMLElement {
   }
   _setPanel(open, snap = 'half') {
     this._panelOpen = !!open;
-    const d = this._dock;
+    const d = this._dock, a = this.shadowRoot.activeElement;
     cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sprX = 0;
     clearTimeout(this._dockT); d.classList.remove('closing');
     if (!open && !d.hidden && !this._reduced && this._wrap && this._wrap.isConnected) {   // recolhe deslizando para a esquerda (~0,2 s); o estado já vale na hora
@@ -4773,6 +4779,8 @@ export class Casa3DCard extends HTMLElement {
     } else { d.hidden = !open; d.style.transform = ''; }
     if (open && this._sideOverlay) this._closeGoto();   // painel do celular por cima: a lista "Ir para…" sai
     this._reopen.hidden = !!open;
+    if (!open && d.contains(a)) this._reopen.focus({ preventScroll: true });   // teclado: recolheu com o foco dentro → a pílula; reabriu por ela → o resumo (no cômodo, o ‹)
+    else if (open && a === this._reopen) (this._room ? this._rBack : this._countEl).focus({ preventScroll: true });
     if (this._wrap) this._wrap.classList.toggle('side', !!open);   // .goto fica à direita da coluna, sem cruzá-la
     this._panelBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
     if (open) { this._setZone(this._onKeys().length ? 'on' : ''); this._renderPanel(); }   // abre em "Ligados" se houver algo ligado
@@ -4832,21 +4840,21 @@ export class Casa3DCard extends HTMLElement {
   // posição da coluna (0 = aberta, + = para a esquerda; na folha, para baixo)
   _sideX(x) {
     this._sprX = x; const s = this._dock.style; s.transform = x ? (this._sheet ? `translateY(${x}px)` : `translateX(${-x}px)`) : '';   // coluna: + = para a esquerda (fora)
-    s.clipPath = this._sheet && !this._narrow ? `inset(0 0 ${Math.max(0, x)}px round 22px)` : '';   // folha flutuante (tablet): o que desce some no vão de 12 px, com os cantos de baixo
+    s.clipPath = this._sheet && !this._narrow && x > 0 ? `inset(0 0 ${x}px round 22px)` : '';   // folha flutuante (tablet): o que desce some no vão de 12 px, com os cantos de baixo; assentada no alto, a sombra volta
     s.willChange = this._sprRaf || this._dragging ? 'transform' : '';   // camada própria só enquanto a mola ou o dedo mexem
   }
   // alturas da folha como deslocamento para baixo: cheia (tudo), média (até metade do cartão), espiada (só a 1ª linha), fechada
   _snaps() {
     const d = this._dock, H = d.offsetHeight, el = this._room ? this._rTitle.parentNode.parentNode : this._phead;   // 1ª linha: a do cômodo ou o resumo
-    const pk = el.getBoundingClientRect().bottom - d.getBoundingClientRect().top + (parseFloat(window.getComputedStyle(d).getPropertyValue('--sab')) || 0);
+    const pk = el.getBoundingClientRect().bottom - d.getBoundingClientRect().top + (parseFloat(window.getComputedStyle(d).getPropertyValue('--sab')) || 0) + (this._room ? 8 : 0);   // cômodo: 8 px de respiro embaixo, como o do resumo
     return { full: 0, half: Math.max(0, H - Math.round(this.clientHeight * 0.5)), peek: Math.max(0, H - pk), shut: H + 16 };
   }
   // leva a folha a uma altura com a mola (ou direto, sem animação); a câmera reenquadra quando ela assenta
-  _snapTo(n, v = 0) {
+  _snapTo(n, v = 0, now = this._reduced) {   // now: sem mola (menos movimento, Tab)
     const d = this._dock; if (!this._sheet || !this._panelOpen || d.hidden) return;
     if (n !== 'full') for (const t of Object.values(this._panes)) t.pane.scrollTop = 0;   // fora da cheia a lista volta ao topo (o clip guardaria o deslocamento e ele voltaria num salto)
     d.dataset.snap = n; this._grab.setAttribute('aria-expanded', n !== 'peek' ? 'true' : 'false');
-    if (this._reduced) { this._sideX(this._snaps()[n]); this._resize(); return; }
+    if (now) { cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sideX(this._snaps()[n]); this._resize(); return; }
     this._sideSpring(() => this._snaps()[n], v, () => this._resize(true));   // alvo medido a cada quadro: o conteúdo pode mudar de altura no caminho
   }
   // mola feita à mão (amortecimento 0,8, resposta 0,3 s), partindo da posição e da velocidade atuais
@@ -4959,12 +4967,17 @@ export class Casa3DCard extends HTMLElement {
     for (const pane of panes) dock.appendChild(pane);
     this._swipeBind(dock);
     this._sizerBind(dock);
-    dock.addEventListener('pointerdown', () => { this._tapT = performance.now(); });   // hora do último toque/clique (o foco que vem dele não sobe a folha)
-    dock.addEventListener('focusin', (e) => {   // Tab/leitor de tela abaixo da dobra: a folha sobe até a cheia (como no iOS); o foco de um toque não mexe nela
-      if (!this._sheet || dock.dataset.snap === 'full' || performance.now() - (this._tapT || 0) < 1500 || e.target.closest('.grab, .phead, .rhead')) return;
-      this._snapTo('full'); const t = e.target, p = t.closest('.pane');
+    dock.addEventListener('keydown', (e) => { if (e.key === 'Tab' && this._sheet && dock.dataset.snap !== 'full') this._snapTo('full', 0, true); });   // Tab: a folha abre já, antes de o foco andar (o navegador rola a lista, não a página do HA)
+    dock.addEventListener('focusin', (e) => {   // foco abaixo da dobra (leitor de tela, Shift+Tab de fora): a folha sobe até a cheia, como no iOS; alvo à vista (toque, foco devolvido) não mexe nela
+      if (!this._sheet || dock.dataset.snap === 'full' || e.target.getBoundingClientRect().bottom <= dock.getBoundingClientRect().bottom - (this._sprX || 0) + 1) return;
+      this._snapTo('full'); this.scrollIntoView({ block: 'nearest' });   // o navegador já rolou a página até o alvo escondido: o cartão volta
+      const t = e.target, p = t.closest('.pane');
       if (p) requestAnimationFrame(() => { const r = t.getBoundingClientRect(), q = p.getBoundingClientRect(); if (r.bottom > q.bottom) p.scrollTop += r.bottom - q.bottom + 12; });   // o navegador rola antes do focusin, com a lista ainda presa: rola agora
     });
+    dock.addEventListener('wheel', (e) => {   // mouse/trackpad na folha: a roda abre a cheia (aí a lista rola) ou desce à espiada; dela para cima, rola a página
+      const to = e.deltaY > 0 ? 'full' : 'peek';
+      if (this._sheet && !e.ctrlKey && e.deltaY && dock.dataset.snap !== 'full' && dock.dataset.snap !== to) { e.preventDefault(); this._snapTo(to); }
+    }, { passive: false });
     this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.title = 'Abrir o painel'; this._reopen.setAttribute('aria-label', 'Abrir o painel');
     this._reopen.innerHTML = `${iconSvg('chevl')}<span class="rl">Painel</span><span class="rn" title="luzes acesas"></span>`; this._reopen.hidden = true;
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
@@ -5021,7 +5034,6 @@ export class Casa3DCard extends HTMLElement {
     // Atividade
     this._feed = document.createElement('ul'); this._feed.className = 'feed'; this._panes.act.pane.appendChild(this._feed);
     this._showTab('ctl');
-    this._feedTimer = setInterval(() => { if (this._panelOpen) this._renderPanel(); this._updateTime(true); }, 30000);
   }
   // Clima ao vivo (Open-Meteo, sem chave) — atualiza a cada 15 min. Título: só ícone + temperatura; detalhes no topo do menu ☰
   _buildWeather() {
@@ -5031,9 +5043,7 @@ export class Casa3DCard extends HTMLElement {
     const city = document.createElement('div'); city.className = 'mh'; city.textContent = this._config.weather_city || 'Clima';
     const det = document.createElement('div'); det.className = 'wd'; det.textContent = 'Carregando…';
     sec.append(city, det); this._menu.prepend(sec);
-    this._weatherUI = { chip, det };
-    this._fetchWeather();
-    this._weatherTimer = setInterval(() => this._fetchWeather(), 15 * 60000);
+    this._weatherUI = { chip, det };   // busca e intervalo: connectedCallback
   }
   async _fetchWeather() {
     const ui = this._weatherUI; if (!ui) return;
@@ -5060,6 +5070,7 @@ export class Casa3DCard extends HTMLElement {
     }
   }
   _showTab(id) {
+    this._tab = id; if (id !== 'ctl' && this._feedDirty) this._renderFeed();
     for (const [k, t] of Object.entries(this._panes)) { t.btn.setAttribute('aria-selected', k === id ? 'true' : 'false'); t.btn.tabIndex = k === id ? 0 : -1; t.pane.classList.toggle('active', k === id); }
   }
   // filtro "Ligados · Todos". Ligados é uma FOTO do momento da escolha: o que liga entra na hora, o que desliga fica embaixo do dedo
@@ -5168,7 +5179,7 @@ export class Casa3DCard extends HTMLElement {
     const close = document.createElement('button'); close.className = 'close'; close.textContent = '×'; close.setAttribute('aria-label', 'Fechar');
     close.addEventListener('click', () => { d.hidden = true; this._detailKey = null; }); head.appendChild(close);
     this._showTab('ctl'); this._renderPanel(); this._snapTo('full');   // folha: os controles pedem a altura cheia (a lista rola)
-    d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!this._sheet) d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });   // coluna: a página do HA mostra os controles; na folha a cheia já mostra (com ela ainda subindo, a página rolaria junto)
   }
   _stateText(it, st, short = false) {   // short: no bloco (o ar sem a temperatura atual, numa linha)
     if (!st || st.unavailable) return 'indisponível';
@@ -5237,7 +5248,7 @@ export class Casa3DCard extends HTMLElement {
       if (this._dPP) this._dPP.innerHTML = iconSvg(st && st.state === 'playing' ? 'pause' : 'play');
       if (this._dVol && st && st.attrs) this._dVol.textContent = st.attrs.volume_level != null ? `vol ${Math.round(st.attrs.volume_level * 100)}%` : '';
     }
-    this._renderFeed(now);
+    if (this._panelOpen && this._tab !== 'ctl') this._renderFeed(now); else this._feedDirty = true;   // Automações e Atividade só com a aba à vista (a troca de aba refaz)
   }
   _pushActivity(key, state, ts, seed = false) {
     this._activity.push({ key, state, ts, seed });
@@ -5268,6 +5279,7 @@ export class Casa3DCard extends HTMLElement {
   }
   _renderFeed(now = Date.now()) {
     if (!this._feed) return;
+    this._feedDirty = false;
     this._renderAutos(now);
     this._feed.innerHTML = '';
     if (!this._activity.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Nenhuma atividade ainda.'; this._feed.appendChild(li); return; }
@@ -5292,7 +5304,9 @@ export class Casa3DCard extends HTMLElement {
   }
   _flashRow(key) {
     const t = this._tiles && this._tiles[key]; if (!t || !this._panelOpen) return;
-    this._showTab('ctl'); if (t.tile.hidden) this._setZone(''); t.tile.classList.add('flash'); t.tile.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this._showTab('ctl'); if (t.tile.hidden) this._setZone(''); t.tile.classList.add('flash');
+    const p = t.tile.closest('.pane'), r = t.tile.getBoundingClientRect(), q = p.getBoundingClientRect();
+    if (r.top < q.top || r.bottom > q.bottom) p.scrollBy({ top: r.top - q.top - 12, behavior: 'smooth' });   // só a lista rola, nunca a página do HA (fora da cheia ela é clip e fica)
     setTimeout(() => t.tile.classList.remove('flash'), 900);
   }
 
@@ -5461,8 +5475,8 @@ export class Casa3DCard extends HTMLElement {
     // Visão noturna: à noite, luz de lua mais forte + ambiente frio para a casa inteira ficar legível
     const nvGoal = this._nightVision ? 1 : 0;
     if (this._nvLevel === undefined) this._nvLevel = nvGoal;
-    if (Math.abs(this._nvLevel - nvGoal) > 0.002) { this._nvLevel += (nvGoal - this._nvLevel) * k; dirty = true; this._needShadow = true; }
-    else if (this._nvLevel !== nvGoal) { this._nvLevel = nvGoal; dirty = true; this._needShadow = true; }
+    if (Math.abs(this._nvLevel - nvGoal) > 0.002) { this._nvLevel += (nvGoal - this._nvLevel) * k; dirty = true; }   // só intensidades: as sombras ficam
+    else if (this._nvLevel !== nvGoal) { this._nvLevel = nvGoal; dirty = true; }
     const nv = this._nvLevel, L = THREE.MathUtils.lerp;
     this._hemi.intensity = L(1.1, L(0.22, 0.45, nv), nl);
     this._hemi.color.setHex(0xe4ecf5).lerp(new THREE.Color(0x4a5f92), nl);
