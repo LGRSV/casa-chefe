@@ -7,6 +7,31 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Clicar no cô
 na luminária ou no chip alterna a entidade. Substitui o `picture-elements` com PNGs
 da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.4.0 — visão de Pessoa, portas que abrem e painel novo
+
+Trazido da [Igreja 3D](https://github.com/LGRSV/igreja-3d-v1) e adaptado à planta da casa:
+
+- **Pessoa (tipo Street View)**: botão **Pessoa** anda pela casa na altura dos olhos (1,6 m).
+  **Clique ou toque num ponto do piso** e a pessoa caminha até lá, desviando das paredes e da
+  piscina (anel âmbar mostra o destino). Também dá para andar com **setas/WASD** (Shift corre,
+  Q/E giram) ou com o **joystick** na tela; arrastar vira a cabeça. Clicar numa luminária,
+  na água (LED) ou na bomba continua ligando/desligando. **Esc** sai.
+- **Bonequinho**: arraste o ícone âmbar até um cômodo da maquete e solte para entrar ali
+  (o cômodo sob o cursor fica realçado e com o nome). Um toque simples nele, ou o botão
+  **Ir para…** no modo Pessoa, abre a lista de cômodos (Casa, Área externa, Rua).
+- **Portas que abrem andando**: as 6 portas internas abrem sozinhas quando a pessoa chega de
+  frente (a maçaneta desce antes de a folha sair do batente), giram para o lado livre e fecham
+  2,5 s depois. **Enter/F** ou clicar na folha abre/fecha na hora. Fora do modo Pessoa ficam
+  fechadas como sempre.
+- **Telhado automático**: ao entrar na Pessoa o Telhado (forro) liga e os rótulos somem; ao sair
+  volta como estava (`telhado_pessoa: false` desliga isso).
+- **Painel redesenhado**: vidro escuro com cantos maiores, abre/recolhe animado (no celular,
+  arrastar a barra das abas para baixo recolhe), abas com ícones (← → trocam), filtros por área
+  (Todos · Quarto · Sala / Cozinha · Externa · Piscina · Casa) com "N de M ativos", contador de
+  luzes com ícone, brilho na cor do aparelho, barra de brilho no LED e uma folha de controle presa
+  ao pé do painel (interruptor, brilho com %, cores, termostato, timer; Esc fecha).
+  "Painel ▴" mostra quantas luzes estão acesas.
+
 ## Arquivos
 
 | Arquivo | Para quê |
@@ -53,6 +78,7 @@ labels: true          # nomes dos cômodos flutuando
 height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
 panel: true           # painel inferior aberto ao iniciar (false = recolhido)
 roof: false           # começa com o telhado visível (botão "Telhado" alterna)
+telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
 weather: true         # widget de clima ao vivo no canto inferior direito (Open-Meteo, sem chave)
 weather_city: 'Palmas, TO'   # nome mostrado no widget
