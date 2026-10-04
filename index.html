@@ -22,18 +22,51 @@
   .toast.show { opacity: 1; }
   casa3d-card { flex: 1; min-height: 0; --casa3d-height: 100%; border-radius: 0; }
   .timectl { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .timectl[hidden] { display: none; }
   .timectl input { width: 160px; accent-color: var(--accent); }
   .timectl output { min-width: 44px; font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 600; }
-  .timectl button { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .timectl button, .habtn { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .bannerctl { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 4px; vertical-align: middle; }
+  .dot.ok { background: #2fa36b; } .dot.err { background: #d8473b; }
+  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); padding: 20px; width: min(420px, calc(100% - 32px)); box-sizing: border-box; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { margin: 0 0 4px; font-size: 17px; }
+  dialog p { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+  dialog label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  dialog input { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+  dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  dialog .row button { font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  dialog .row button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+  dialog .warn { color: #d8473b; font-size: 12px; min-height: 1em; margin-top: 8px; }
 </style>
 <div class="app">
   <div class="banner" role="status">
-    <div><b>Demo</b> &nbsp;<span>Estados simulados — clique num cômodo ou num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
-    <label class="timectl"><span>Hora do dia</span><input id="hora" type="range" min="0" max="1439" step="5" aria-label="Hora simulada"><output id="horaOut">agora</output><button id="horaAgora" type="button">agora</button></label>
+    <div><b id="modeTag">Demo</b> &nbsp;<span id="modeText">Estados simulados — clique num cômodo ou num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
+    <div class="bannerctl">
+      <label class="timectl" id="timectl"><span>Hora do dia</span><input id="hora" type="range" min="0" max="1439" step="5" aria-label="Hora simulada"><output id="horaOut">agora</output><button id="horaAgora" type="button">agora</button></label>
+      <button class="habtn" id="haBtn" type="button">⚙️ Conectar ao HA</button>
+    </div>
   </div>
   <casa3d-card id="card"></casa3d-card>
 </div>
 <div class="toast" id="toast"></div>
+<dialog id="haDlg">
+  <form method="dialog" id="haForm">
+    <h2>Conectar ao Home Assistant</h2>
+    <p>Com isso a casa mostra os estados reais e os toques comandam os dispositivos. O token fica salvo só neste navegador.</p>
+    <label for="haUrl">Endereço do Home Assistant (https)</label>
+    <input id="haUrl" type="url" placeholder="https://homeassistant.xxxx.ts.net" autocomplete="url" required>
+    <label for="haToken">Token de acesso de longa duração</label>
+    <input id="haToken" type="password" placeholder="Perfil → Segurança → Criar token" autocomplete="off">
+    <div class="warn" id="haWarn"></div>
+    <div class="row">
+      <button type="button" id="haDisconnect">Voltar para demo</button>
+      <button type="button" id="haCancel">Cancelar</button>
+      <button type="submit" class="primary">Conectar</button>
+    </div>
+  </form>
+</dialog>
 <script type="module">
 /*
  * Casa 3D — cartão Lovelace para Home Assistant (+ demo standalone)
@@ -3799,7 +3832,9 @@ const toastEl = document.getElementById('toast'); let toastT = 0;
 const toast = (msg) => { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2600); };
 
 const card = document.getElementById('card');
-const push = () => { card.hass = { states: { ...states }, language: 'pt', callService }; };
+// Modo ao vivo: quando há endereço+token salvos, `live` assume e o mock fica parado
+let live = null;
+const push = () => { if (live) return; card.hass = { states: { ...states }, language: 'pt', callService }; };
 // Simula os serviços que o cartão usa (com a latência de um interruptor Wi-Fi)
 function callService(domain, service, data) {
   const id = data && data.entity_id; const s = states[id]; if (!s) return;
@@ -3829,6 +3864,7 @@ function callService(domain, service, data) {
   }
 }
 card.addEventListener('hass-more-info', (e) => {
+  if (live) { live.moreInfo(e.detail.entityId); return; }
   const id = e.detail.entityId; const s = states[id]; if (!s) return;
   if (id.startsWith('climate.')) { s.state = s.state === 'off' ? 'cool' : 'off'; toast(`No Home Assistant isso abre o painel do ${s.attributes.friendly_name}. Na demo: ${s.state === 'off' ? 'desligado' : 'ligado (frio)'}.`); }
   else if (id.startsWith('media_player.')) { s.state = { playing: 'paused', paused: 'off', off: 'playing' }[s.state] || 'playing'; toast(`No Home Assistant isso abre o controle da TV. Na demo: ${s.state}.`); }
@@ -3848,4 +3884,110 @@ hora.addEventListener('input', () => {
   // o sun.sun simulado acompanha
 });
 document.getElementById('horaAgora').addEventListener('click', () => { card.setSimTime(null); hora.value = nowMin(); horaOut.textContent = 'agora'; });
+
+// ------------------------------------------------------------------
+// Modo ao vivo: conecta na API WebSocket do Home Assistant
+// ------------------------------------------------------------------
+const LS_URL = 'casa3d.ha_url', LS_TOKEN = 'casa3d.ha_token';
+const lsGet = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const lsSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} };
+const modeTag = document.getElementById('modeTag'), modeText = document.getElementById('modeText'), timectl = document.getElementById('timectl');
+const setBanner = (tag, html) => { modeTag.textContent = tag; modeText.innerHTML = html; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function connectLive(baseUrl, token) {
+  const host = new URL(baseUrl).host;
+  const wsUrl = baseUrl.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/websocket';
+  const liveStates = {}; let config = null, ws = null, nextId = 1, closed = false, retry = 0, retryT = 0, raf = 0;
+  const pending = new Map();
+  const status = (cls, msg) => setBanner('Ao vivo', `<span class="dot ${cls}"></span>${msg}`);
+  const render = () => { raf = 0; card.hass = { states: { ...liveStates }, config: config || undefined, language: 'pt', callService }; };
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(render); };
+  const send = (msg) => new Promise((resolve, reject) => {
+    if (!ws || ws.readyState !== 1) { reject(new Error('sem conexão')); return; }
+    const id = nextId++; pending.set(id, { resolve, reject }); ws.send(JSON.stringify({ id, ...msg }));
+  });
+  function callService(domain, service, data) {
+    return send({ type: 'call_service', domain, service, service_data: data || {} })
+      .catch((err) => toast(`Falhou: ${domain}.${service} (${err.message})`));
+  }
+  function open() {
+    status('', `Conectando a ${esc(host)}…`);
+    ws = new WebSocket(wsUrl);
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === 'auth_required') { ws.send(JSON.stringify({ type: 'auth', access_token: token })); return; }
+      if (m.type === 'auth_invalid') { closed = true; ws.close(); status('err', 'Token recusado pelo Home Assistant. Toque em ⚙️ e confira o token.'); return; }
+      if (m.type === 'auth_ok') {
+        retry = 0;
+        send({ type: 'get_config' }).then((c) => { config = c; schedule(); }).catch(() => {});
+        send({ type: 'get_states' }).then((list) => {
+          for (const k of Object.keys(liveStates)) delete liveStates[k];
+          for (const s of list) liveStates[s.entity_id] = s;
+          schedule(); status('ok', `Conectado a ${esc(host)} — toques comandam a casa de verdade.`);
+        }).catch(() => {});
+        send({ type: 'subscribe_events', event_type: 'state_changed' }).catch(() => {});
+        return;
+      }
+      if (m.type === 'event' && m.event && m.event.event_type === 'state_changed') {
+        const d = m.event.data;
+        if (d.new_state) liveStates[d.entity_id] = d.new_state; else delete liveStates[d.entity_id];
+        schedule(); return;
+      }
+      if (m.type === 'result' && pending.has(m.id)) {
+        const p = pending.get(m.id); pending.delete(m.id);
+        m.success ? p.resolve(m.result) : p.reject(new Error((m.error && m.error.message) || 'erro'));
+      }
+    };
+    ws.onclose = () => {
+      for (const p of pending.values()) p.reject(new Error('conexão caiu')); pending.clear();
+      if (closed) return;
+      const wait = Math.min(30, 2 ** retry++);
+      status('err', `Sem conexão com ${esc(host)}. Tentando de novo em ${wait}s…`);
+      retryT = setTimeout(open, wait * 1000);
+    };
+  }
+  open();
+  return {
+    stop() { closed = true; clearTimeout(retryT); if (ws) ws.close(); },
+    moreInfo(id) {
+      const s = liveStates[id]; if (!s) { toast(`Entidade ${id} não existe no seu Home Assistant.`); return; }
+      const name = s.attributes.friendly_name || id;
+      if (id.startsWith('climate.')) callService('climate', 'set_hvac_mode', { entity_id: id, hvac_mode: s.state === 'off' ? 'cool' : 'off' });
+      else if (id.startsWith('media_player.')) callService('media_player', 'media_play_pause', { entity_id: id });
+      else toast(`${name}: ${s.state}${s.attributes.unit_of_measurement ? ' ' + s.attributes.unit_of_measurement : ''}`);
+    },
+  };
+}
+
+function startLive(url, token) {
+  if (live) live.stop();
+  card.setSimTime(null); timectl.hidden = true;
+  live = connectLive(url, token);
+}
+function stopLive() {
+  if (live) live.stop(); live = null; timectl.hidden = false;
+  setBanner('Demo', 'Estados simulados — clique num cômodo ou num bloco para alternar. Toque em ⚙️ para conectar ao seu Home Assistant.');
+  push();
+}
+
+const dlg = document.getElementById('haDlg'), urlIn = document.getElementById('haUrl'), tokIn = document.getElementById('haToken'), warn = document.getElementById('haWarn');
+document.getElementById('haBtn').addEventListener('click', () => {
+  urlIn.value = lsGet(LS_URL); tokIn.value = ''; tokIn.placeholder = lsGet(LS_TOKEN) ? 'Token salvo — deixe vazio para manter' : 'Perfil → Segurança → Criar token';
+  warn.textContent = ''; dlg.showModal();
+});
+document.getElementById('haCancel').addEventListener('click', () => dlg.close());
+document.getElementById('haDisconnect').addEventListener('click', () => { lsSet(LS_URL, ''); lsSet(LS_TOKEN, ''); dlg.close(); stopLive(); });
+document.getElementById('haForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  let url = urlIn.value.trim().replace(/\/+$/, ''); const token = tokIn.value.trim() || lsGet(LS_TOKEN);
+  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
+  if (location.protocol === 'https:' && url.startsWith('http:')) { warn.textContent = 'Este site é https: o endereço do HA também precisa ser https (ex.: o link do Tailscale Funnel).'; return; }
+  if (!token) { warn.textContent = 'Cole o token de acesso de longa duração.'; return; }
+  lsSet(LS_URL, url); lsSet(LS_TOKEN, token); dlg.close(); startLive(url, token);
+});
+// Também aceita #ha=https://... no link (sem o token) para pré-preencher o endereço
+const hashUrl = new URLSearchParams(location.hash.slice(1)).get('ha');
+if (hashUrl && !lsGet(LS_URL)) lsSet(LS_URL, hashUrl);
+if (lsGet(LS_URL) && lsGet(LS_TOKEN)) startLive(lsGet(LS_URL), lsGet(LS_TOKEN));
 </script>
