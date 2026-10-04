@@ -12,6 +12,14 @@ export const VERSION = '1.6.2';
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
 const MIN_LIGHTS = { externa: 1, led_piscina: 1, banheiro: 1 };
+// Governador de qualidade (ver _govFrame): por nível, a escala de resolução em movimento (move; min–max) e parado (idleMin–idleMax,
+// >1 = supersampling quando sobra fôlego). Trocar luzes/sombras/materiais recompila shaders, então o nível é fixo na construção.
+const GOV = {
+  alta:  { move: 1.0,  min: 0.5,  max: 1.0,  idleMax: 1.5,  idleMin: 1 },   // parado nunca abaixo da resolução cheia:
+  media: { move: 0.6,  min: 0.35, max: 0.75, idleMax: 1.25, idleMin: 1 },   // o quadro nítido é um só; a leveza fica no movimento
+  leve:  { move: 0.55, min: 0.35, max: 0.55, idleMax: 1.15, idleMin: 1 },
+  min:   { move: 0.45, min: 0.3,  max: 0.5,  idleMax: 1.0,  idleMin: 1 },
+};
 
 // Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
 // qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
@@ -3342,9 +3350,26 @@ export class Casa3DCard extends HTMLElement {
     this._ndc = new THREE.Vector2();
     this._ro = new ResizeObserver(() => this._resize());
     this._ro.observe(this);
+    // fora da tela (rolado para longe no dashboard) não gasta GPU com a animação ociosa
+    try { this._io = new window.IntersectionObserver((es) => { this._onScreen = es.some((e) => e.isIntersecting); }); this._io.observe(this); } catch (_) {}
     if (this._dock) this._ro.observe(this._dock);
     this._resize();
     renderer.shadowMap.needsUpdate = true;
+    this._precompile();
+  }
+  // Compila os shaders antes do primeiro quadro — em paralelo quando o navegador deixa (KHR_parallel_shader_compile),
+  // sem travar a página na carga — com o telhado visível, para o botão dele não engasgar depois. Enquanto isso _frame não desenha.
+  _precompile() {
+    const r = this._renderer, hide = [this._roof].filter((g) => g && !g.visible);
+    this._busy = true;
+    let p;
+    try {
+      hide.forEach((g) => { g.visible = true; });
+      if (r.extensions.has('KHR_parallel_shader_compile')) p = r.compileAsync(this._scene, this._camera);
+      else { r.compile(this._scene, this._camera); p = Promise.resolve(); }
+    } catch (e) { p = Promise.resolve(); }
+    hide.forEach((g) => { g.visible = false; });
+    p.catch(() => {}).then(() => { this._busy = false; if (this._orbit) this._orbit.dirty = true; });
   }
 
   // Domo de céu (dia/noite com crossfade) e mapa de ambiente para reflexos
@@ -5098,6 +5123,107 @@ export class Casa3DCard extends HTMLElement {
     if (!this._orbit.touched) this._resetView();
     this._orbit.dirty = true;
   }
+  // ---- Governador de qualidade ----
+  // O nível (alta/media/leve/min) é fixo na construção; em tempo de execução só a resolução se adapta ao TEMPO REAL DE QUADRO:
+  // em movimento a escala cai/sobe com histerese (2 janelas lentas de 300 ms para baixar, 4 rápidas para subir); ao parar vem UM
+  // quadro nítido (resolução cheia ou maior, se sobra fôlego) cujo custo é medido no rAF seguinte — nunca se desenha só para medir.
+  // Só no `auto` (quality manual vale como escolhido) e quando nem a escala mínima aguenta, desce uma escada (sombras, luzes).
+  _govInit() {
+    const t = GOV[this._q] || GOV.leve;
+    this._gov = { tier: this._q, auto: this._config.quality === 'auto', moveScale: t.move, moveMin: t.min, moveMax: t.max, idleScale: 1, idleMax: t.idleMax, idleMin: t.idleMin,
+      ft: 0, lastAdj: 0, slowWin: 0, fastWin: 0, rung: 0, lastStep: 0, sharpAt: 0, sharpPending: false, sharpFast: 0, slow: 0, slowIdle: 0,
+      t0: typeof performance !== 'undefined' ? performance.now() : 0 };
+    this._moveScale = t.move;
+  }
+  _govIdleMax() {
+    const g = this._gov, w = Math.max(1, this.clientWidth), h = Math.max(1, this.clientHeight), d = this._dprFull || 1;
+    return Math.max(g.idleMin, Math.min(g.idleMax, 3 / d, Math.sqrt(4e6 / (w * h * d * d))));   // nunca acima de 3× DPR nem de 4 Mpx
+  }
+  _govPR(v) {
+    const r = this._renderer; if (Math.abs(r.getPixelRatio() - v) < 0.01) return false;
+    r.setPixelRatio(v); return true;
+  }
+  _govFrame(now, dirty) {
+    const g = this._gov || (this._govInit(), this._gov), o = this._orbit;
+    const ft = now - (this._lastT || now); this._lastT = now;
+    if (o.moving) {
+      this._lastMove = now; g.sharpPending = false;
+      if (!this._lowRes) { this._lowRes = true; g.ft = 0; this._govPR(this._dprFull * g.moveScale); }
+      else if (ft > 0) {
+        g.ft = g.ft ? g.ft * 0.8 + ft * 0.2 : ft;
+        if (now - g.lastAdj > 300) {
+          g.lastAdj = now;
+          g.slowWin = g.ft > 40 ? g.slowWin + 1 : 0; g.fastWin = g.ft < 22 ? g.fastWin + 1 : 0;
+          if (g.slowWin >= 2) { g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }
+          if (g.fastWin >= 4) { g.moveScale = Math.min(g.moveMax, g.moveScale * 1.1); g.fastWin = 0; }
+          this._govPR(this._dprFull * g.moveScale);
+          // escada (só auto): na escala mínima e ainda < 15 quadros/s por ~1,5 s — nunca nos 20 s após carregar
+          // (compilação de shaders e texturas subindo dão picos que não dizem nada do aparelho)
+          g.slow = g.moveScale <= g.moveMin + 0.01 && g.ft > 66 ? g.slow + 1 : 0;
+          if (g.slow >= 5 && now - g.lastStep > 4000 && this._govSettled(now)) this._govStepDown(now);
+        }
+      }
+    } else if (this._lowRes && now - (this._lastMove || 0) > 180) {
+      // parou: um quadro nítido, na escala parada (medida abaixo); com `dirty` a cena é redesenhada uma vez
+      this._lowRes = false; this._govPR(Math.min(this._dprFull * Math.min(g.idleScale, this._govIdleMax()), 3));
+      dirty = true; g.sharpAt = now; g.sharpPending = true; g.ft = 0;
+    } else if (g.sharpPending) {
+      // o rAF seguinte ao quadro nítido só chega depois de o navegador apresentá-lo: o intervalo é o custo real (CPU + GPU)
+      g.sharpPending = false;
+      if (!dirty) this._govSharp(now - g.sharpAt);
+    }
+    this._ft = g.ft; this._moveScale = g.moveScale; this._lastAdj = g.lastAdj;   // espelhos (ferramentas de teste)
+    return dirty;
+  }
+  _govSharp(ms) {
+    const g = this._gov;
+    if (ms > 250) {
+      g.sharpFast = 0;
+      if (g.idleScale > g.idleMin + 0.01) g.idleScale = Math.max(g.idleMin, g.idleScale * 0.85);   // o próximo quadro nítido é mais leve: sem travar a página
+      else if (g.auto && ms > 400 && ++g.slowIdle >= 3 && performance.now() - g.lastStep > 4000 && this._govSettled(performance.now())) this._govStepDown(performance.now());
+    } else if (ms < 30) {
+      g.slowIdle = 0;
+      if (++g.sharpFast >= 2) { g.idleScale = Math.min(this._govIdleMax(), g.idleScale * 1.15); g.sharpFast = 0; }   // sobra fôlego: resolução acima da cheia
+    } else { g.sharpFast = 0; g.slowIdle = 0; }
+  }
+  // Degraus (só no auto): 1 sem sombras das luzes pontuais e sem reflexo de ambiente · 2 menos luzes reais · 3 sem supersampling
+  // parado e escala mínima menor em movimento. A sombra do sol e a resolução cheia parada NUNCA caem. Não voltam sozinhos
+  _govSettled(now) { return !this._busy && now - (this._gov.t0 || 0) > 20000; }
+  _govStepDown(now) {
+    const g = this._gov; if (!g.auto || g.rung >= 3) return;
+    g.rung++; g.lastStep = now; g.slow = g.slowIdle = 0;
+    if (g.rung === 1) {
+      for (const rt of this._items.values()) for (const { L } of rt.lights || []) if (L.castShadow) { L.castShadow = false; if (L.shadow.map) L.shadow.map.dispose(); }
+      this._scene.environment = null; this._envDay = this._envNight = null;
+      this._precompile();
+    } else if (g.rung === 2) this._shrinkLights();
+    else { g.idleMax = Math.min(g.idleMax, 1); g.idleScale = Math.min(g.idleScale, 1); g.moveMin = Math.max(0.3, g.moveMin - 0.05); }
+    console.info(`[casa3d-card] governador: degrau ${g.rung} — ${this.getQuality().lights} luzes reais`);
+    if (this._orbit) this._orbit.dirty = true;
+  }
+  // PC lento demais (governador, só no `auto`): cada item da tabela fica com MIN_LIGHTS[item] luzes (as com sombra primeiro),
+  // o resto soma a intensidade na vizinha. Recompila uma vez, em paralelo.
+  _shrinkLights() {
+    let n = 0;
+    for (const key in MIN_LIGHTS) {
+      const rt = this._items.get(key); if (!rt || !rt.lights || !rt.lights.length) continue;
+      const all = rt.lights.slice().sort((a, b) => (b.L.castShadow ? 1 : 0) - (a.L.castShadow ? 1 : 0)), kept = all.slice(0, MIN_LIGHTS[key]);
+      for (const d of all.slice(MIN_LIGHTS[key])) {
+        const near = kept.slice().sort((a, b) => a.L.position.distanceTo(d.L.position) - b.L.position.distanceTo(d.L.position))[0];
+        if (near) { const f = Math.sqrt((near.i + d.i) / near.i); near.i += d.i; near.L.distance *= Math.min(1.35, f); }
+        this._scene.remove(d.L); if (d.L.shadow && d.L.shadow.map) d.L.shadow.map.dispose(); n++;
+      }
+      rt.lights = kept;
+    }
+    console.info(`[casa3d-card] PC lento: ${n} luzes reais a menos`);
+    this._precompile();
+  }
+  // estado do governador (testes/demo)
+  getQuality() {
+    const g = this._gov || {};
+    let lights = 0; for (const rt of this._items.values()) lights += (rt.lights || []).length;
+    return { tier: this._q, auto: !!g.auto, rung: g.rung || 0, moveScale: g.moveScale, idleScale: g.idleScale, ftEMA: g.ft, lights };
+  }
   _start() {
     if (this._raf || !this._renderer) return;
     this._clock.start();
@@ -5107,6 +5233,7 @@ export class Casa3DCard extends HTMLElement {
   _stop() { if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0; this._clock.stop(); }
 
   _frame() {
+    if (this._busy) return;   // compilando shaders (_precompile)
     const dt = Math.min(this._clock.getDelta(), 0.1);
     const t = this._clock.elapsedTime;
     let dirty = this._walkOn ? this._walk.update(dt) : this._orbit.update(dt);
@@ -5201,8 +5328,6 @@ export class Casa3DCard extends HTMLElement {
       ambient = true; this._waterFast = sp > 1.5;
     }
     if (this._needShadow) { this._renderer.shadowMap.needsUpdate = true; this._needShadow = false; dirty = true; }
-    // Só animação ociosa (água/TV) rodando: renderiza em metade dos frames
-    this._tick = (this._tick || 0) + 1;
     if (dirty && this._labels) this._declutter();
     // rótulos esmaecem (~150 ms) em vez de piscar ao aparecer/sumir no giro e no zoom
     for (const s of this._labels || []) {
@@ -5211,7 +5336,16 @@ export class Casa3DCard extends HTMLElement {
       else if (m.opacity !== a) { m.opacity = a; dirty = true; }
       s.visible = m.opacity > 0.01;
     }
-    if (dirty || (ambient && this._tick % (this._waterFast ? 2 : 3) === 0)) this._renderer.render(this._scene, this._camera);
+    // Todos os níveis: girando/aproximando desenha na resolução que o tempo real de quadro permite; parou → um quadro nítido (governador)
+    const now = performance.now();
+    dirty = this._govFrame(now, dirty);
+    if (this._busy) return;   // o governador acabou de pedir recompilação (_shrinkLights)
+    // Só animação ociosa (água/TV): ~10 q/s (25 com a bomba, 5 no min) e nada com a aba ou o cartão fora da tela
+    const visible = !(typeof document !== 'undefined' && document.hidden) && this._onScreen !== false;
+    if (dirty || (ambient && visible && now - (this._lastIdle || 0) > (this._waterFast ? 40 : this._min ? 200 : 100))) {
+      if (!dirty) this._lastIdle = now;
+      this._renderer.render(this._scene, this._camera);
+    }
   }
   // rótulos sem sobreposição: projeta cada um na tela e, por prioridade (cômodo com algo ligado, depois o maior), esconde o que
   // encostaria num já aceito; ao aproximar o zoom eles voltam sozinhos (o _frame esmaece até o alvo)
