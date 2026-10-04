@@ -44,7 +44,7 @@
 </style>
 <div class="app">
   <div class="banner" role="status">
-    <div><b id="modeTag">Demo</b> &nbsp;<span id="modeText">Estados simulados — toque 2× num cômodo ou 1× num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
+    <div><b id="modeTag">Demo</b> &nbsp;<span id="modeText">Estados simulados — toque num cômodo para abri-lo no painel e num bloco para alternar. No Home Assistant o cartão lê e comanda as entidades reais.</span></div>
     <div class="bannerctl">
       <label class="timectl" id="timectl"><span>Hora do dia</span><input id="hora" type="range" min="0" max="1439" step="5" aria-label="Hora simulada"><output id="horaOut">agora</output><button id="horaAgora" type="button">agora</button></label>
       <button class="habtn" id="haBtn" type="button">⚙️ Conectar ao HA</button>
@@ -266,7 +266,7 @@ function startLive(url, token) {
 }
 function stopLive() {
   if (live) live.stop(); live = null; timectl.hidden = false;
-  setBanner('Demo', 'Estados simulados — toque 2× num cômodo ou 1× num bloco para alternar. Toque em ⚙️ para conectar ao seu Home Assistant.');
+  setBanner('Demo', 'Estados simulados — toque num cômodo para abri-lo no painel e num bloco para alternar. Toque em ⚙️ para conectar ao seu Home Assistant.');
   push();
 }
 
