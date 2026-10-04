@@ -4,8 +4,15 @@ Demo: https://lgrsv.github.io/casa-chefe/ · Repositório: https://github.com/LG
 
 Modelo 3D interativo da sua casa (Three.js) ligado às entidades do Home Assistant:
 gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no cômodo ou
-na luminária seleciona (2º toque alterna); o bloco do painel alterna direto. Substitui o
+na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
+
+## Novidades da v1.6.1 — o cômodo tocado aparece no painel lateral
+
+- **Painel por cômodo**: tocar num cômodo (maquete ou Vista de cima) abre o painel lateral nele — nome, "N de M ligados", **Ligar/Desligar tudo**, os blocos dos aparelhos, as automações do HA dele, **Entrar aqui** e **‹ Todos os cômodos** (volta às abas); tocar num aparelho faz o mesmo e destaca o bloco dele.
+- **Sem painel à esquerda**: na Vista de cima o painel lateral não recolhe mais; no nível cômodo ele mostra o cômodo, e **‹ Planta** / **‹ Casa** (no topo), Esc ou Backspace sobem um nível.
+- **Sem balão de seleção**: tocar na maquete só realça o cômodo e abre o painel (nada liga sozinho); Esc ou tocar no vazio voltam à visão geral sem fechar o painel.
+- **Pessoa**: tocar num aparelho abre o cômodo dele no painel; no celular a gaveta não abre por cima do joystick — a aba **Painel** da borda passa a mostrar o nome do cômodo e abre nele.
 
 ## Novidades da v1.6.0 — Vista de cima por cômodo e gestos melhores no celular
 
@@ -144,7 +151,7 @@ mode: auto            # auto = segue sun.sun | day | night
 night_vision: true    # à noite, luz de lua + ambiente frio: a casa inteira fica legível
 labels: true          # nomes dos cômodos flutuando
 height: calc(100vh - 100px)   # numa vista com seções use algo como 520px
-panel: true           # painel lateral aberto ao sair da Vista de cima (false = recolhido)
+panel: true           # painel lateral aberto ao carregar (false = recolhido; no celular começa recolhido)
 roof: false           # começa com o telhado visível (Opções › Telhado alterna)
 telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)

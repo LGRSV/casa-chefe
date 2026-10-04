@@ -7,7 +7,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.6.0';
+export const VERSION = '1.6.1';
 
 // Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
 // qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
@@ -994,7 +994,7 @@ class Walker {
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;   // digitando em outro campo da página
     const c = e.code;
     if (t && t.closest && t.closest('.menu')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu
-    if (c === 'Escape') { if ((this.card._menu && !this.card._menu.hidden) || this.card._sel) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu (ou o balão de seleção) aberto só fecha ele
+    if (c === 'Escape') { if ((this.card._menu && !this.card._menu.hidden) || this.card._room) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha ele; com um cômodo no painel, volta à visão geral
     if (c === 'Enter' || c === 'KeyF') {   // interagir: abre/fecha a porta mais perto e à frente (E já é "girar")
       if (t && t !== this.card._canvas && t !== document.body && t !== document.documentElement) return;   // Enter em botões/links da página segue normal
       if (down && !e.repeat) this.card._doorInteract();
@@ -2722,11 +2722,6 @@ canvas.walk.pick { cursor: pointer; }
 .pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 30px 9px 12px; font-size: 12px; line-height: 1.35; color: #e6edf7; background: rgba(22, 29, 48, .96); }
 .pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: rgba(22, 29, 48, .96); border: solid rgba(255, 255, 255, .09); border-width: 1px 0 0 1px; transform: rotate(45deg); }
 .pegdica button { position: absolute; top: 3px; right: 3px; padding: 3px 8px; font-size: 14px; color: #9aa6bd; }
-/* seleção (v1.5.1): 1º toque seleciona e mostra este balão; o 2º toque (ou o botão) executa */
-.selpop { position: absolute; left: 0; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px; padding: 5px 5px 5px 11px; font-size: 12px; color: #e6edf7; white-space: nowrap; animation: menuIn .15s cubic-bezier(.2, .8, .2, 1); }
-.selpop[hidden] { display: none; }
-.selpop button { background: rgba(255, 196, 107, .2); color: #ffd48a; border-radius: 999px; padding: 6px 12px; min-height: 32px; transition: transform .1s ease-out; }
-.selpop button:active { transform: scale(.95); }   /* retorno já no toque */
 .peg[hidden], .btns > button[hidden] { display: none; }
 .peg[aria-pressed="true"] { background: rgba(255, 196, 107, .18); }
 .pegghost { position: absolute; left: 0; top: 0; width: 44px; height: 44px; z-index: 7; pointer-events: none; display: grid; place-items: center; color: #ffc46b;
@@ -2913,39 +2908,20 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .scrim { display: none; position: absolute; left: 0; right: 0; bottom: 0; top: var(--side-top, 58px); z-index: 3; background: rgba(4, 7, 14, .42); animation: scrimIn .25s ease-out; }
 .scrim.closing { animation: scrimOut .2s ease-in forwards; }
 @keyframes scrimIn { from { opacity: 0; } } @keyframes scrimOut { to { opacity: 0; } }
-/* Vista de cima (v1.6): painel do cômodo à esquerda, mesma linguagem da coluna (vidro escuro + âmbar); no celular, folha de baixo */
-.plan { position: absolute; left: 10px; top: var(--plan-top, 110px); z-index: 4; width: min(280px, calc(100% - 20px)); max-height: calc(100% - var(--plan-top, 110px) - 10px); box-sizing: border-box; overflow: auto; overscroll-behavior: contain; padding: 6px 10px 10px;
-  border-radius: 16px; border-color: rgba(255, 255, 255, .1); background: linear-gradient(180deg, rgba(18, 24, 42, .95), rgba(7, 10, 20, .97)); box-shadow: 0 20px 50px rgba(0, 0, 0, .55), 0 1px 0 rgba(255, 255, 255, .07) inset;
-  backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25); animation: planIn .25s cubic-bezier(.2, .8, .2, 1); scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
-.plan[hidden] { display: none; }
-@keyframes planIn { from { opacity: 0; transform: translateX(-16px); } }   /* entra pela esquerda */
-.plan .phd { display: flex; align-items: center; flex-wrap: wrap; gap: 0 2px; font-size: 12px; color: #8f9bb3; }
-.plan .phd .back { padding: 6px 9px; margin-left: -4px; }
-.plan .phd .crumb { padding: 5px; font-weight: 500; color: #9aa6bd; } .plan .phd .sep { color: #6b768f; }
-.plan .phd .hint2 { font-size: 11px; padding: 0 4px; }
-.plan .ptitle { display: flex; align-items: baseline; gap: 8px; margin: 4px 2px 8px; } .plan .ptitle b { font-size: 16px; letter-spacing: -.01em; color: #eef2f8; }
-.plan .ptitle small { color: #9aa6bd; font-size: 11.5px; font-variant-numeric: tabular-nums; }
-.plan .all { display: flex; gap: 6px; margin: 0 0 10px; }
-.plan .all button { flex: 1; padding: 8px 6px; border-radius: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); transition: transform .1s ease-out, background .2s; }
-.plan .all button:first-child { background: rgba(255, 196, 107, .18); color: #ffd48a; border-color: rgba(255, 196, 107, .4); }
-.plan .rows { display: grid; gap: 6px; }
-.prow { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 9px; width: 100%; min-height: 44px; padding: 6px 9px; border-radius: 12px; text-align: left;
-  background: rgba(255, 255, 255, .045); border: 1px solid rgba(255, 255, 255, .07); transition: transform .1s ease-out, background .2s, border-color .2s; }
-.prow:active, .plan .all button:active, .plan .enter:active { transform: scale(.97); }   /* retorno já no toque */
-.prow .ico { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: rgba(255, 255, 255, .06); color: #79849e; transition: color .3s, background .3s, box-shadow .3s; }
-.prow .ico svg { width: 17px; height: 17px; }
-.prow b { display: block; font-size: 12.5px; color: #eef2f8; } .prow small { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 500; color: #9aa6bd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.prow.on { border-color: rgba(255, 196, 107, .45); border-color: color-mix(in srgb, var(--dot, #ffc46b) 50%, transparent); }
-.prow.on .ico { color: var(--dot, #ffc46b); background: rgba(255, 196, 107, .2); background: color-mix(in srgb, var(--dot, #ffc46b) 22%, transparent); box-shadow: 0 0 14px -3px var(--dot, #ffc46b); }
-.prow .sw { pointer-events: none; transform: scale(.85); } .prow .go { color: #6b768f; font-size: 15px; }
-.plan .empty { color: #9aa6bd; font-size: 12px; padding: 10px; border-radius: 12px; border: 1px dashed rgba(255, 255, 255, .14); }
-.plan .sect { margin: 14px 2px 8px; }
-.plan .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 12px; padding: 9px; border-radius: 12px; background: rgba(255, 196, 107, .18); color: #ffd48a; border: 1px solid rgba(255, 196, 107, .4); transition: transform .1s ease-out; }
-.plan .enter svg { width: 16px; height: 16px; }
-@media (max-width: 640px) {
-  .plan { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 42%; border-radius: 18px 18px 0 0; border-bottom: 0; animation-name: planUp; }   /* folha baixa: a planta continua à vista */
-  @keyframes planUp { from { opacity: 0; transform: translateY(24px); } }
-}
+/* cômodo tocado (v1.6.1): o painel lateral focado nele — no lugar das abas e do filtro, "‹ Todos os cômodos", nome, "N de M ligados" e
+   Ligar/Desligar tudo; embaixo dos blocos, as automações do cômodo e "Entrar aqui" */
+.rhead { flex: none; margin: 0 10px 10px; }
+.dock:not(.room) .rhead, .dock:not(.room) .rfoot, .dock.room .tabs, .dock.room .zonebar, .dock.room .zone { display: none; }
+.rhead .rback { padding: 4px 6px; margin-left: -6px; font-size: 12px; color: #9aa6bd; } .rhead .rback:hover { color: var(--amber2); }
+.rhead .rtitle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin: 2px 2px 8px; } .rhead .rtitle b { font-size: 16px; letter-spacing: -.01em; color: var(--ink); }
+.rhead .rtitle small { color: var(--mute); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.rhead .all { display: flex; gap: 6px; } .rhead .all[hidden] { display: none; }
+.rhead .all button { flex: 1; padding: 8px 6px; border-radius: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); transition: transform .1s ease-out, background .2s; }
+.rhead .all button:first-child { background: rgba(255, 196, 107, .18); color: #ffd48a; border-color: rgba(255, 196, 107, .4); }
+.rfoot { margin-top: 14px; } .rfoot .autos { margin-bottom: 12px; }
+.rfoot .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 9px; border-radius: 12px; background: rgba(255, 196, 107, .18); color: #ffd48a; border: 1px solid rgba(255, 196, 107, .4); transition: transform .1s ease-out; }
+.rfoot .enter svg { width: 16px; height: 16px; }
+.rhead .all button:active, .rfoot .enter:active { transform: scale(.97); }   /* retorno já no toque */
 @media (max-width: 640px) {
   /* gaveta: entra pela direita cobrindo a maior parte da tela, altura toda abaixo do cabeçalho */
   .dock { right: 0; bottom: 0; border-radius: 20px 0 0 20px; border-right: 0; animation-name: drawerIn; }
@@ -2953,7 +2929,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
   @keyframes drawerIn { from { transform: translateX(100%); } }
   @keyframes drawerOut { to { transform: translateX(100%); } }
   .dock::before { display: block; }
-  .phead { padding: 8px 8px 6px 16px; } .tabs { margin: 0 8px 8px 14px; } .pane { padding: 10px 10px 14px 14px; }
+  .phead { padding: 8px 8px 6px 16px; } .tabs, .rhead { margin: 0 8px 8px 14px; } .pane { padding: 10px 10px 14px 14px; }
   .scrim:not([hidden]) { display: block; }
   .detail { padding: 11px 12px; gap: 10px; } .detail .rng { flex-basis: 100%; }
   /* cabeçalho numa linha: título (encolhe) à esquerda, bonequinho e menu à direita */
@@ -2966,13 +2942,13 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
   .menu { left: 10px; right: 10px; width: auto; }
   .hint { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .selpop, .selpop button, .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb, .prow, .plan .all button, .plan .enter { animation: none !important; transition: none !important; transform: none !important; }
-  .dock, .reopen, .scrim, .menu, .plan { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
+@media (prefers-reduced-motion: reduce) { .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb, .rhead .all button, .rfoot .enter { animation: none !important; transition: none !important; transform: none !important; }
+  .dock, .reopen, .scrim, .menu { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
 @keyframes fadeIn { from { opacity: 0; } }
 /* menos transparência: superfícies quase sólidas, sem blur */
 @media (prefers-reduced-transparency: reduce) {
   .panel, .dock, .menu, .joy { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .panel, .plan { background: rgba(12, 17, 30, .97); } .dock { background: #0c1222; } .menu { background: #1b2338; } .scrim { background: rgba(4, 7, 14, .6); }
+  .panel { background: rgba(12, 17, 30, .97); } .dock { background: #0c1222; } .menu { background: #1b2338; } .scrim { background: rgba(4, 7, 14, .6); }
 }
 /* mais contraste: fundo sólido e borda clara */
 @media (prefers-contrast: more) {
@@ -3120,6 +3096,9 @@ export class Casa3DCard extends HTMLElement {
     this._gotoBtn.title = 'Vai direto a um cômodo'; this._gotoBtn.setAttribute('aria-pressed', 'false');
     this._gotoBtn.addEventListener('click', () => this._toggleGoto());
     btns.appendChild(this._gotoBtn);
+    // Vista de cima (v1.6.1): "‹ Planta" / "‹ Casa" sobe um nível (como o Esc); na planta inteira some
+    this._backBtn = document.createElement('button'); this._backBtn.className = 'panel btn'; this._backBtn.hidden = true;
+    this._backBtn.addEventListener('click', () => this._navBack()); btns.appendChild(this._backBtn);
     const PERSON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.2" r="3"/><path d="M12 9.6c-2.9 0-4.6 1.5-4.8 4l-.2 3.2c0 .6.4 1 .9 1h.9l.4 4.2c0 .5.4.8.8.8h4c.4 0 .8-.3.8-.8l.4-4.2h.9c.5 0 .9-.4.9-1l-.2-3.2c-.2-2.5-1.9-4-4.8-4z"/></svg>';
     this._pegBtn = document.createElement('button'); this._pegBtn.className = 'panel btn peg'; this._pegBtn.innerHTML = `${PERSON}<span class="lbl">Andar</span>`;
     this._pegBtn.title = 'Andar pela casa: arraste até um cômodo e solte para entrar nele (visão de Pessoa) · toque: lista de cômodos';
@@ -3145,16 +3124,15 @@ export class Casa3DCard extends HTMLElement {
 
     this._pegGhost = document.createElement('div'); this._pegGhost.className = 'pegghost'; this._pegGhost.innerHTML = PERSON; this._pegGhost.hidden = true; wrap.appendChild(this._pegGhost);
     this._pegTip = document.createElement('div'); this._pegTip.className = 'panel pegtip'; this._pegTip.hidden = true; wrap.appendChild(this._pegTip);
-    this._selPop = document.createElement('div'); this._selPop.className = 'panel selpop'; this._selPop.hidden = true;
-    this._selPop.innerHTML = '<span aria-live="polite"></span><button type="button"></button>'; wrap.appendChild(this._selPop);
-    this._selPop.lastChild.addEventListener('click', () => this._selRun());
-    this._selEsc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); this._selClear(); } };
     this._gotoPanel = document.createElement('div'); this._gotoPanel.className = 'panel goto'; this._gotoPanel.hidden = true; this._gotoPanel.setAttribute('role', 'dialog'); this._gotoPanel.setAttribute('aria-label', 'Ir para um cômodo'); wrap.appendChild(this._gotoPanel);
     this._fadeEl = document.createElement('div'); this._fadeEl.className = 'fade'; wrap.appendChild(this._fadeEl);
-    // painel da Vista de cima (v1.6), preenchido em _renderNav; Esc/Backspace sobem um nível (com o menu ou o balão abertos, o Esc só fecha eles)
-    this._plan = document.createElement('div'); this._plan.className = 'panel plan'; this._plan.hidden = true; this._plan.setAttribute('role', 'region'); this._plan.setAttribute('aria-label', 'Vista de cima'); wrap.appendChild(this._plan);
-    const navKey = (e) => { if ((e.key === 'Escape' || e.key === 'Backspace') && this._topView && this._menu.hidden && !this._sel) { e.preventDefault(); this._navBack(); } };
-    canvas.addEventListener('keydown', navKey); this._plan.addEventListener('keydown', navKey);
+    // Esc/Backspace na Vista de cima sobem um nível; fora dela o Esc volta o painel do cômodo à visão geral (com o menu aberto, o Esc só fecha ele)
+    const navKey = (e) => {
+      if (!this._menu.hidden || (e.key !== 'Escape' && !(e.key === 'Backspace' && this._topView))) return;
+      if (this._topView) this._navBack(); else if (this._room) this._showRoom(null); else return;
+      e.preventDefault();
+    };
+    canvas.addEventListener('keydown', navKey);
     const joy = document.createElement('div'); joy.className = 'joy'; joy.hidden = true; joy.setAttribute('role', 'application'); joy.setAttribute('aria-label', 'Andar');
     const knob = document.createElement('div'); knob.className = 'knob'; joy.appendChild(knob); wrap.appendChild(joy); this._joy = joy;
     this._walkHint = document.createElement('div'); this._walkHint.className = 'panel walkhint'; wrap.appendChild(this._walkHint);
@@ -3165,10 +3143,11 @@ export class Casa3DCard extends HTMLElement {
     // some no primeiro gesto na cena (não por tempo)
     const hideHint = () => { if (this._hint.hidden || this._hint.classList.contains('hide')) return; this._hint.classList.add('hide'); setTimeout(() => { this._hint.hidden = true; }, 700); };
     canvas.addEventListener('pointerdown', hideHint, { once: true }); canvas.addEventListener('wheel', hideHint, { once: true, passive: true });
-    // retorno já no toque: o alvo sob o dedo realça antes de soltar; se virar arrasto, volta ao que estava selecionado
-    // (registrado antes do Orbit/Walker: no pointerup roda primeiro, e o clique em seguida decide a seleção)
-    canvas.addEventListener('pointerdown', (e) => { if (e.button === 0 && this._raycaster) this._selHl(this._selKey(this._pickHit(e))); });
-    const unpress = () => { if (this._raycaster) this._selHl(this._sel && this._sel.key); };
+    // retorno já no toque: o cômodo sob o dedo realça antes de soltar; se virar arrasto, volta ao do painel
+    // (registrado antes do Orbit/Walker: no pointerup roda primeiro, e o clique em seguida decide o cômodo)
+    const press = () => this._raycaster && !this._walkOn && !(this._topView && this._nav.level < 2);   // planta/área: o realce é o do mouse
+    canvas.addEventListener('pointerdown', (e) => { const t = e.button === 0 && press() && this._tapRoom(e); if (t) this._roomHl(t.r); });
+    const unpress = () => { if (press()) this._roomHl(this._room); };
     canvas.addEventListener('pointerup', unpress); canvas.addEventListener('pointercancel', unpress);
 
     try {
@@ -3181,17 +3160,16 @@ export class Casa3DCard extends HTMLElement {
       return;
     }
 
-    this._buildPanel(wrap);
+    this._buildPanel(wrap); this._dock.addEventListener('keydown', navKey);
     if (this._ro) { this._ro.observe(this._dock); this._ro.observe(this._titleCard); this._ro.observe(this._btnsEl); }   // título/botões mudam de altura → reposiciona coluna e menu
     this._built = true;
     this._setLabels(!!this._config.labels);
     this._applyMode();
-    this._setPanel(false);
+    this._setPanel(this._config.panel !== false && !this._narrow);   // no celular a gaveta cobriria a planta: abre ao tocar num cômodo
     this._setRoof(!!this._config.roof);
     if (this._hass) this._syncFromHass();
     else this._applyDemoDefaults();
-    this._setTopView(true);   // v1.6: abre na Vista de cima (planta inteira); o painel lateral e o telhado voltam ao sair dela
-    this._topSaved.panel = this._config.panel !== false;   // (o painel nem chega a abrir antes: sem piscar na carga)
+    this._setTopView(true);   // v1.6: abre na Vista de cima (planta inteira); o telhado volta ao sair dela
   }
 
   // ---- Cena 3D ----
@@ -4407,16 +4385,15 @@ export class Casa3DCard extends HTMLElement {
     const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
     const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
     this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
-    this._wrap.style.setProperty('--plan-top', `${Math.round(tr.bottom - wr.top + 8)}px`);   // painel da Vista de cima: logo abaixo do título
     if (this._dica) { const pr = this._pegBtn.getBoundingClientRect(); const ds = this._dica.style; ds.top = `${Math.round(pr.bottom - wr.top + 10)}px`; ds.right = `${Math.round(wr.right - pr.right)}px`; ds.setProperty('--ax', `${Math.round(pr.width / 2 - 6)}px`); }
     this._placeMenu();
   }
   _setWalk(on) {
     on = !!on; if (on === !!this._walkOn || !this._orbit) return;
-    this._selClear(); if (on) this._dicaOff();
+    this._showRoom(null); if (on) this._dicaOff();
     const o = this._orbit, cam = this._camera, cv = this._canvas;
     if (on) {
-      const top = this._topView ? this._topSaved || {} : null; if (top) { this._topSaved = null; this._setTopView(false, true); }   // sai da planta sem reabrir painel/telhado; volta a ela ao sair
+      const top = this._topView ? this._topSaved || {} : null; if (top) { this._topSaved = null; this._setTopView(false, true); }   // sai da planta sem religar o telhado; volta a ela ao sair
       this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, touched: o.touched, roof: !!this._roofOn, top };
       // na visão de Pessoa o Telhado liga sozinho (forro por dentro, sem céu sobre os cômodos); ao sair volta como estava
       if (this._config.telhado_pessoa !== false && !this._roofOn) this._setRoof(true);
@@ -4454,23 +4431,24 @@ export class Casa3DCard extends HTMLElement {
   }
 
   // ---- Vista de cima navegável (v1.6): planta inteira (inclinada, vista do quintal) → área de PLACES → cômodo (reto de cima) ----
-  // Sem telhado; o painel lateral recolhe (o da esquerda assume) e os dois voltam como estavam ao sair.
+  // Sem telhado (volta como estava ao sair). O painel lateral fica como está; no nível cômodo ele mostra o cômodo (v1.6.1).
   _setTopView(on, keepCamera = false) {
     on = !!on;
     if (on && this._walkOn) this._setWalk(false);
     const was = this._topView;
-    if (on && !was) this._topSaved = { roof: !!this._roofOn, panel: this._panelOpen };
-    this._topView = on; this._nav = { level: 0, block: null, room: null }; this._hoverKey = ''; this._hlShow(null); this._selClear();
+    if (on && !was) this._topSaved = { roof: !!this._roofOn };
+    this._topView = on; this._nav = { level: 0, block: null, room: null }; this._hoverKey = ''; this._backBtn.hidden = true; this._showRoom(null);
     this._topBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    if (on) { if (this._roofOn) this._setRoof(false); if (this._panelOpen) this._setPanel(false); }
-    else if (was && this._topSaved) { const sv = this._topSaved; this._topSaved = null; if (sv.roof) this._setRoof(true); if (sv.panel && !this._panelOpen) this._setPanel(true); }
-    this._renderNav(); this._resize();
+    if (on) { if (this._roofOn) this._setRoof(false); }
+    else if (was && this._topSaved) { const sv = this._topSaved; this._topSaved = null; if (sv.roof) this._setRoof(true); }
+    this._resize();
     if (!keepCamera) this._resetView(true);
   }
   _navTo(level, block, room) {
-    this._nav = { level: block ? (room ? 2 : 1) : 0, block: block || null, room: (block && room) || null };
-    this._hoverKey = ''; this._hlShow(null); this._selClear();
-    this._renderNav(); this._resize(); this._resetView(true);
+    const n = this._nav = { level: block ? (room ? 2 : 1) : 0, block: block || null, room: (block && room) || null }, b = this._backBtn, up = n.room ? n.block.label : 'Planta';
+    b.hidden = !n.level; b.textContent = `‹ ${up}`; b.setAttribute('aria-label', `Voltar para ${up}`);
+    this._hoverKey = ''; this._showRoom(n.room);   // cômodo: o painel lateral mostra ele · planta/área: visão geral
+    this._resize(); this._resetView(true);
   }
   // Voltar (botão, Esc, Backspace): cômodo → área → planta → sai da Vista de cima
   _navBack() {
@@ -4484,7 +4462,7 @@ export class Casa3DCard extends HTMLElement {
     const k = p.kind === 'wall' ? 0.5 / (Math.hypot(d.x, d.z) || 1) : 0;
     return this._roomAt(p.x + d.x * k, p.z + d.z * k);
   }
-  // 1º toque aproxima a área, 2º o cômodo; dentro do cômodo o toque volta a ser o de sempre (seleciona o aparelho) — salvo noutro cômodo
+  // 1º toque aproxima a área, 2º o cômodo; dentro do cômodo o toque volta a ser o de sempre (destaca o aparelho no painel) — salvo noutro cômodo
   _topClick(e) {
     const n = this._nav, r = this._topRoom(e);
     if (n.level === 2 && (!r || r === n.room)) return false;
@@ -4514,67 +4492,6 @@ export class Casa3DCard extends HTMLElement {
     const ctx = this._sceneCtx();
     for (const k of keys) { const kind = ITEMS.find((i) => i.key === k).kind; if (kind !== 'sensor' && (!on || kind === 'light' || kind === 'switch')) ctx[on ? 'on' : 'off'](k); }
   }
-  // Painel da Vista de cima: Voltar + trilha; na área, "Ligar/Desligar tudo" e os cômodos com "N de M ligados"; no cômodo, "Ligar/Desligar tudo",
-  // os aparelhos, as automações com o nome dele e "Entrar aqui". Reconstrói só quando o nível muda; senão só atualiza os estados.
-  _renderNav() {
-    const el = this._plan; if (!el) return;
-    el.hidden = !this._topView;
-    if (!this._topView) { this._navSig = ''; return; }
-    const n = this._nav, sig = [n.level, n.block && n.block.id, n.room && n.room.id].join('|');
-    if (sig !== this._navSig) {
-      const refocus = el.contains(this.shadowRoot.activeElement);
-      this._navSig = sig; el.innerHTML = ''; const upd = this._navUpd = [];
-      const add = (tag, cls, parent, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; parent.appendChild(x); return x; };
-      const hd = add('div', 'phd', el);
-      const back = add('button', 'back', hd, n.level ? '‹ Voltar' : '‹ Sair'); back.setAttribute('aria-label', n.level ? 'Voltar um nível' : 'Sair da Vista de cima');
-      back.addEventListener('click', () => this._navBack());
-      const path = n.level ? [['Planta', () => this._navTo(0)]] : [];
-      if (n.room) path.push([n.block.label, () => this._navTo(1, n.block)]);
-      path.forEach(([t, go], i) => { if (i) add('span', 'sep', hd, '›').setAttribute('aria-hidden', 'true'); add('button', 'crumb', hd, t).addEventListener('click', go); });
-      this._planHint = null;
-      if (!n.level) { const h = this._planHint = add('span', 'hint2', hd, 'Toque numa área para aproximar'); h.dataset.def = h.textContent; h.setAttribute('aria-live', 'polite'); }
-      else {
-        const keys = [...new Set((n.room ? [n.room] : n.block.rooms).flatMap((r) => this._roomKeys(r)))];
-        const ctl = (ks) => ks.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'sensor');
-        const onN = (ks) => ctl(ks).filter((k) => this._state[k] && this._state[k].on).length;
-        const ttl = add('div', 'ptitle', el); add('b', '', ttl, (n.room || n.block).label); const cnt = add('small', '', ttl);
-        upd.push(() => { cnt.textContent = ctl(keys).length ? `${onN(keys)} de ${ctl(keys).length} ligados` : ''; });
-        if (ctl(keys).length) {
-          const all = add('div', 'all', el); all.setAttribute('role', 'group'); all.setAttribute('aria-label', `Tudo em ${(n.room || n.block).label}`);
-          add('button', '', all, 'Ligar tudo').addEventListener('click', () => this._allSet(keys, true));
-          add('button', '', all, 'Desligar tudo').addEventListener('click', () => this._allSet(keys, false));
-        }
-        const rows = add('div', 'rows', el);
-        if (!n.room) for (const r of n.block.rooms) {
-          const ks = this._roomKeys(r), b = add('button', 'prow', rows);
-          b.innerHTML = `<span class="ico">${iconSvg('home')}</span><span><b></b><small></small></span><span class="go" aria-hidden="true">›</span>`;
-          b.querySelector('b').textContent = r.label; const sm = b.querySelector('small');
-          b.addEventListener('click', () => this._navTo(2, n.block, r));
-          upd.push(() => { const k = onN(ks); sm.textContent = ctl(ks).length ? `${k} de ${ctl(ks).length} ligados` : 'nenhum aparelho'; b.classList.toggle('on', k > 0); });
-        } else {
-          if (!keys.length) add('div', 'empty', rows, 'Nenhum aparelho neste cômodo');
-          for (const k of keys) {
-            const it = ITEMS.find((i) => i.key === k), b = add('button', 'prow', rows);
-            b.innerHTML = `<span class="ico">${iconSvg(it.icon)}</span><span><b></b><small></small></span>`;
-            b.querySelector('b').textContent = it.label; const sm = b.querySelector('small');
-            const sw = it.kind === 'sensor' ? null : add('span', 'sw', b); if (sw) sw.setAttribute('aria-hidden', 'true');
-            b.style.setProperty('--dot', this._dotColor(k)); b.addEventListener('click', () => this._toggleItem(k));
-            upd.push(() => {
-              const st = this._state[k], on = !!(st && st.on); sm.textContent = this._stateText(it, st); b.classList.toggle('on', on);
-              if (sw) { sw.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-            });
-          }
-          const autos = this._roomAutos(n.room);
-          if (autos.length) { add('div', 'sect', el, 'Automações'); const al = add('div', 'autos', el); for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); }
-          const enter = add('button', 'enter', el); enter.innerHTML = `${iconSvg('person')}<span>Entrar aqui</span>`;
-          enter.title = 'Entra neste cômodo na visão de Pessoa'; enter.addEventListener('click', () => this._enterRoom(n.room));
-        }
-      }
-      if (refocus) back.focus();
-    }
-    for (const f of this._navUpd) f();
-  }
-
   // ---- Ganchos públicos (depuração / demo) ----
   // setWalk(true|false) entra/sai da visão de pessoa · setWalkPose(x, z, yaw, pitch) posiciona a pessoa na hora (sem colisão; yaw 0 olha
   // para −z, + vira à esquerda) · getWalkPose() → { x, y, z, yaw, pitch, walking } · enterRoom('sala') · walkTo(x, z)
@@ -4611,46 +4528,43 @@ export class Casa3DCard extends HTMLElement {
     return hits.length ? hits[0] : null;
   }
   _onClick(e) {
-    const hit = this._pickHit(e), o = hit ? hit.object : null;
+    const hit = this._pickHit(e);
     if (this._topView && this._topClick(e)) return;
-    if (this._walkOn && this._doorClick(hit)) { this._selClear(); return; }      // folha da porta: abre/fecha
-    if (this._walkOn && this._walkClick(e, hit)) { this._selClear(); return; }   // piso / parede: caminha até lá
-    // 1º toque seleciona (realce + balão com estado e ação); 2º toque no mesmo alvo em até 5 s, ou o botão, executa —
-    // assim um toque sem querer na maquete não mexe na casa real. Vazio / outro ponto limpa.
-    const key = o && o.userData.item;
-    if (!key) this._selClear();
-    else if (this._sel && this._sel.key === key) this._selRun();
-    else this._select(key, e);
+    if (this._walkOn && (this._doorClick(hit) || this._walkClick(e, hit))) return;   // folha da porta abre/fecha · piso/parede: caminha até lá
+    // tocar na maquete não liga nada: abre o cômodo (o do aparelho, com o bloco dele destacado) no painel lateral; vazio volta à visão geral
+    const t = this._tapRoom(e, hit);
+    if (t) this._showRoom(t.r, t.key); else if (!this._topView) this._showRoom(null);
   }
-  // alvo do toque: luz/aparelho sob o ponto (no modo Pessoa o piso é destino, não alvo)
-  _selKey(hit) { const o = hit && hit.object; return o && o.userData.item && !(this._walkOn && o.userData.zone) ? o.userData.item : null; }
-  _select(key, e) {
-    const it = ITEMS.find((i) => i.key === key); if (!it) return;
-    this._sel = { key, it }; this._selUpd(); this._selHl(key);
-    const p = this._selPop, wr = this._wrap.getBoundingClientRect(); p.hidden = false;
-    const x = e.clientX - wr.left, y = e.clientY - wr.top, w = p.offsetWidth, h = p.offsetHeight;
-    p.style.left = `${Math.round(clamp(x - w / 2, 10, wr.width - w - 10))}px`; p.style.top = `${Math.round(y - h - 14 < 10 ? y + 14 : y - h - 14)}px`;
-    clearTimeout(this._selT); this._selT = setTimeout(() => this._selClear(), 5000);
-    window.addEventListener('keydown', this._selEsc, true);
+  // alvo do toque: aparelho sob o ponto → o cômodo dele (+ a chave); senão o cômodo sob o ponto. Na Pessoa só aparelho (o piso é destino)
+  _tapRoom(e, hit = this._pickHit(e)) {
+    const o = hit && hit.object, key = o && !o.userData.zone && o.userData.item;
+    if (this._walkOn && !key) return null;
+    const at = this._topRoom(e); if (!key) return at && { r: at };
+    const rs = this._roomsAll().filter((q) => this._roomKeys(q).includes(key));   // "externa" serve à Varanda e ao Jardim: vale o do ponto
+    return { r: rs.includes(at) ? at : rs[0] || at, key };
   }
-  // texto do balão: "Sala / Cozinha · apagada" + Acender/Apagar (aparelhos: Ligar/Desligar)
-  _selUpd() {
-    const s = this._sel; if (!s) return; const st = this._state[s.key], on = !!(st && st.on);
-    this._selPop.firstChild.textContent = `${s.it.label} · ${this._stateText(s.it, st)}`;
-    this._selPop.lastChild.textContent = s.it.kind === 'light' ? (on ? 'Apagar' : 'Acender') : on ? 'Desligar' : 'Ligar';
+  // Painel contextual (v1.6.1): o painel lateral focado no cômodo r (null = visão geral, com abas e filtros). Abre o painel recolhido —
+  // menos na Pessoa com a coluna por cima da vista (celular): a gaveta cobriria o joystick no meio do passeio; o cômodo fica pronto
+  // e a aba "Painel" da borda passa a mostrar o nome dele.
+  _showRoom(r, key) {
+    r = r || null; const d = this._dock;
+    if (r !== this._room) {
+      this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null;
+      this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
+      if (r) {
+        this._rTitle.textContent = r.label; this._showTab('ctl');
+        const autos = this._roomAutos(r), f = this._rFoot; f.replaceChildren();
+        if (autos.length) { const h = document.createElement('div'), al = document.createElement('div'); h.className = 'sect'; h.textContent = 'Automações'; al.className = 'autos'; for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); f.append(h, al); }
+        f.appendChild(this._rEnter);
+      }
+      this._setZone(this._zone);   // blocos: só os do cômodo (ou de volta ao filtro da visão geral)
+    }
+    this._roomHl(r);
+    if (r && !this._panelOpen && !(this._walkOn && this._sideOverlay)) this._setPanel(true); else this._renderPanel();
+    if (key) this._flashRow(key);
   }
-  _selRun() { const s = this._sel; if (!s) return; this._selClear(); this._toggleItem(s.key); this._flashRow(s.key); }
-  _selClear() {
-    if (!this._sel) return; this._sel = null; clearTimeout(this._selT);
-    this._selPop.hidden = true; this._selHl(null); window.removeEventListener('keydown', this._selEsc, true);
-  }
-  // realce âmbar do alvo: o(s) piso(s) que essa luz acende ou, sem piso, a área sob o aparelho
-  _selHl(key) {
-    if (this._topView && this._nav.level < 2) return;   // planta/área: o realce é do cômodo sob o mouse
-    const rects = key ? Object.values(ZONES).filter((z) => z.item === key).map((z) => [z.x, z.z, z.x + z.w, z.z + z.d]) : null;
-    if (rects && !rects.length) for (const m of this._clickables) if (m.userData.item === key) { const b = new THREE.Box3().setFromObject(m); rects.push([b.min.x - 0.25, b.min.z - 0.25, b.max.x + 0.25, b.max.z + 0.25]); }
-    this._hlShow(rects); this._orbit.dirty = true;
-  }
+  // realce âmbar do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
+  _roomHl(r) { this._hlShow(r && !this._walkOn ? r.rects.map(([x, z, w, d]) => [x, z, x + w, z + d]) : null); this._orbit.dirty = true; }
   _onHover(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
     if (this._topView && this._nav.level < 2) {   // planta: realça a área · área: o cômodo sob o mouse
@@ -4659,12 +4573,11 @@ export class Casa3DCard extends HTMLElement {
       this._canvas.classList.toggle('pick', !!r);
       if (key !== this._hoverKey) {
         this._hoverKey = key; this._hlShow(r ? (b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d]) : null);
-        if (this._planHint) this._planHint.textContent = r ? `${(b || r).label} — toque para aproximar` : this._planHint.dataset.def;
         this._orbit.dirty = true;
       }
       return;
     }
-    if (this._hoverKey) { this._hoverKey = ''; this._hlShow(null); }
+    if (this._hoverKey) { this._hoverKey = ''; this._roomHl(this._room); }
     const o = this._pick(e);
     if (this._walkOn) this._walkHover(e);
     // no modo Pessoa o piso vira destino (anel âmbar) e a folha da porta também é clicável
@@ -4791,6 +4704,13 @@ export class Casa3DCard extends HTMLElement {
     const col = document.createElement('button'); col.className = 'collapse'; col.title = 'Recolher painel'; col.setAttribute('aria-label', 'Recolher painel');
     col.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg>';
     col.addEventListener('click', () => this._setPanel(false)); head.appendChild(col);
+    // cômodo tocado (v1.6.1, ver _showRoom): "‹ Todos os cômodos", nome + "N de M ligados", Ligar/Desligar tudo
+    const rh = document.createElement('div'); rh.className = 'rhead'; dock.appendChild(rh);
+    rh.innerHTML = '<button class="rback">‹ Todos os cômodos</button><div class="rtitle" role="status"><b></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>';
+    rh.firstChild.addEventListener('click', () => this._showRoom(null));
+    this._rTitle = rh.querySelector('b'); this._rCount = rh.querySelector('small'); this._rAll = rh.querySelector('.all');
+    this._rAll.firstChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), true));
+    this._rAll.lastChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), false));
     const tabs = document.createElement('div'); tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Seções do painel'); dock.appendChild(tabs);
     this._panes = {};
     const panes = [];
@@ -4839,6 +4759,9 @@ export class Casa3DCard extends HTMLElement {
       for (const k of keys) grid.appendChild(this._makeTile(ITEMS.find((i) => i.key === k), title, ti++));
     }
     grid.appendChild(this._detail);
+    this._rFoot = document.createElement('div'); this._rFoot.className = 'rfoot'; this._panes.ctl.pane.appendChild(this._rFoot);   // automações do cômodo + Entrar aqui
+    this._rEnter = document.createElement('button'); this._rEnter.className = 'enter'; this._rEnter.innerHTML = `${iconSvg('person')}<span>Entrar aqui</span>`;
+    this._rEnter.title = 'Entra neste cômodo na visão de Pessoa'; this._rEnter.addEventListener('click', () => this._enterRoom(this._room));
     for (const [val, label] of [['', 'Todos'], ...ROOMS.map((r) => [r[0], r[1]])]) {
       const c = document.createElement('button'); c.textContent = label; c.dataset.zone = val; c.setAttribute('aria-pressed', val === '' ? 'true' : 'false');
       if (val && val !== label) { c.title = val; c.setAttribute('aria-label', val); }
@@ -4900,12 +4823,12 @@ export class Casa3DCard extends HTMLElement {
   _showTab(id) {
     for (const [k, t] of Object.entries(this._panes)) { t.btn.setAttribute('aria-selected', k === id ? 'true' : 'false'); t.btn.tabIndex = k === id ? 0 : -1; t.pane.classList.toggle('active', k === id); }
   }
-  // filtro por cômodo (Todos · Quarto · Sala · Balcão …): esconde cabeçalhos e blocos dos outros cômodos
+  // filtro por cômodo (Todos · Quarto · Sala · Balcão …): esconde cabeçalhos e blocos dos outros cômodos; com um cômodo tocado, só os dele
   _setZone(z) {
-    this._zone = z || '';
+    this._zone = z || ''; const ks = this._room && this._roomKeys(this._room);
     for (const c of this._zbar.children) c.setAttribute('aria-pressed', c.dataset.zone === this._zone ? 'true' : 'false');
     for (const zz of this._zones) zz.zh.hidden = !!this._zone && zz.title !== this._zone;
-    for (const t of Object.values(this._tiles)) if (t.room) t.tile.hidden = !!this._zone && t.room !== this._zone;
+    for (const [k, t] of Object.entries(this._tiles)) t.tile.hidden = ks ? !ks.includes(k) : !!this._zone && t.room !== this._zone;
     this._grid.classList.toggle('single', !!this._zone); this._panes.ctl.pane.scrollTop = 0;
   }
   _hasDetail(it) { return it.kind !== 'sensor'; }
@@ -5012,9 +4935,12 @@ export class Casa3DCard extends HTMLElement {
     return (st.on ? (it.key === 'bomba_piscina' ? 'ligada' : 'acesa') : (it.key === 'bomba_piscina' ? 'desligada' : 'apagada')) + pct;
   }
   _renderPanel() {
-    this._selUpd();   // balão de seleção acompanha o estado
-    if (this._topView) this._renderNav();
     if (!this._tiles) return;
+    if (this._room) {   // cabeçalho do cômodo: "N de M ligados" (sensor não conta); sem aparelho, só o aviso
+      const ks = this._roomKeys(this._room), ctl = ks.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'sensor');
+      this._rCount.textContent = !ks.length ? 'Nenhum aparelho neste cômodo' : ctl.length ? `${ctl.filter((k) => this._state[k] && this._state[k].on).length} de ${ctl.length} ligados` : '';
+      this._rAll.hidden = !ctl.length;
+    }
     const now = Date.now();
     for (const [k, t] of Object.entries(this._tiles)) {
       const st = this._state[k]; const on = !!(st && st.on);
@@ -5066,7 +4992,7 @@ export class Casa3DCard extends HTMLElement {
     if (!this._autos.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = this._hass ? 'Nenhuma automação encontrada no Home Assistant.' : 'As automações do HA aparecem aqui quando o cartão está no Home Assistant.'; el.appendChild(e); return; }
     for (const a of this._autos) el.appendChild(this._autoRow(a, now));
   }
-  // linha de automação (ligar/desligar · executar agora) — no painel lateral e no da Vista de cima
+  // linha de automação (ligar/desligar · executar agora) — na aba Automações e no painel do cômodo
   _autoRow(a, now) {
     const row = document.createElement('div');
     row.innerHTML = `<span class="ico">${iconSvg('auto')}</span><span><b>${a.name}</b><small></small></span>`;
@@ -5108,7 +5034,7 @@ export class Casa3DCard extends HTMLElement {
   }
   _flashRow(key) {
     const t = this._tiles && this._tiles[key]; if (!t || !this._panelOpen) return;
-    this._showTab('ctl'); if (this._zone && t.room !== this._zone) this._setZone(''); t.tile.classList.add('flash'); t.tile.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this._showTab('ctl'); if (!this._room && this._zone && t.room !== this._zone) this._setZone(''); t.tile.classList.add('flash'); t.tile.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     setTimeout(() => t.tile.classList.remove('flash'), 900);
   }
 
@@ -5123,12 +5049,9 @@ export class Casa3DCard extends HTMLElement {
     this._layoutHud(w);
     // Com o painel lateral aberto (desktop/tablet), a cena é enquadrada na área à esquerda dele; a gaveta do celular fica por cima
     const P = this._panelOpen && this._dock && !this._dock.hidden && !this._sideOverlay ? this._sideW + 20 : 0;
-    // Vista de cima: o painel da esquerda (área/cômodo) ou a folha de baixo do celular também tiram a sua faixa
-    const pl = this._topView && this._plan && !this._plan.hidden ? this._plan : null;
-    const L = pl && !this._narrow && this._nav.level > 0 ? pl.offsetWidth + 10 : 0, B = pl && this._narrow ? pl.offsetHeight : 0;
-    const vw = Math.max(160, w - P - L), vh = Math.max(160, h - B);
-    this._camera.aspect = vw / vh; if (this._walkOn) this._camera.fov = this._walkFov();
-    if (P || L || B) this._camera.setViewOffset(vw, vh, -L, 0, w, h); else this._camera.clearViewOffset();
+    const vw = Math.max(160, w - P);
+    this._camera.aspect = vw / h; if (this._walkOn) this._camera.fov = this._walkFov();
+    if (P > 0) this._camera.setViewOffset(vw, h, 0, 0, w, h); else this._camera.clearViewOffset();
     this._camera.updateProjectionMatrix();
     if (!this._orbit.touched) this._resetView();
     this._orbit.dirty = true;
