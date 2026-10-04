@@ -7,6 +7,12 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.6.3 — roda bem em qualquer máquina
+
+- **Qualidade automática** (`quality: auto`, o novo padrão): o cartão detecta a placa de vídeo e escolhe sozinho — `alta` com GPU dedicada, `media` com vídeo integrado, `leve` no celular/tablet, `min` sem GPU. `alta`/`media`/`leve`/`min` na configuração continuam valendo.
+- **Resolução que se adapta**: girando ou dando zoom, a resolução segue o tempo real de quadro (fica fluido em aparelho fraco); parado, vem um quadro nítido. Em PC muito lento o `auto` ainda corta sombras pontuais e luzes, aos poucos — nunca a sombra do sol.
+- Água e TV animam só com o cartão visível; mesmo mecanismo da Igreja 3D.
+
 ## Novidades da v1.6.2 — polimento de design
 
 - Luz do dia neutra (tone mapping Neutral) com cores vivas e paredes brancas quentes; noite de verdade, com a casa escura e as luzes acesas em destaque, sem passar por tons encardidos.
