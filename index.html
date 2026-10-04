@@ -1079,7 +1079,7 @@ class Walker {
     const t = e.composedPath ? e.composedPath()[0] : e.target;
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;   // digitando em outro campo da página
     const c = e.code;
-    if (t && t.closest && t.closest('.menu')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu
+    if (t && t.closest && t.closest('.menu, .sizer')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu; na borda do painel, ←/→ são da largura
     if (c === 'Escape') { if ((this.card._menu && !this.card._menu.hidden) || this.card._room) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha ele; com um cômodo no painel, volta à visão geral
     if (c === 'Enter' || c === 'KeyF') {   // interagir: abre/fecha a porta mais perto e à frente (E já é "girar")
       if (t && t !== this.card._canvas && t !== document.body && t !== document.documentElement) return;   // Enter em botões/links da página segue normal
@@ -2929,6 +2929,7 @@ canvas.walk.pick { cursor: pointer; }
 .tile .more:hover, .tile .more:focus-visible { background: var(--fill-2); color: var(--ink); opacity: 1; }
 .tile .more:focus-visible { outline: 2px solid var(--focus); }
 .tile .more::after { content: ""; position: absolute; inset: -4px; }   /* área de toque maior */
+.tile[data-kind]:not([data-kind="sensor"]):is(:hover, :focus-within) b { padding-right: 18px; } @media (hover: none) { .tile[data-kind]:not([data-kind="sensor"]) b { padding-right: 18px; } }   /* onde o "⋯" aparece, o nome acaba antes dele (reticências), não embaixo */
 .tiles.routines { grid-template-columns: minmax(0, 1fr); }
 .tile.routine { min-height: 62px; }
 .tile.routine .ico { background: var(--fill-2); color: var(--ink-2); }
@@ -3048,8 +3049,8 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
   .wrap.sheet .tiles:not(.routines) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 /* coluna à esquerda (v1.8): título em cima com a mesma largura; borda direita arrastável (.sizer); o conteúdo segue a largura do painel */
-.lcol .title { box-sizing: border-box; transition: min-width .3s var(--ease); } .wrap.sizing .lcol .title { transition: none; }
-.wrap.side:not(.sheet) .lcol .title { min-width: var(--side-w, 320px); }   /* título e painel formam uma coluna só */
+.lcol .title { box-sizing: border-box; min-width: 0; transition: min-width .2s ease-in; } .wrap.sizing .lcol .title { transition: none; }   /* min-width 0 (auto não anima): fecha junto com o dockOut */
+.wrap.side:not(.sheet) .lcol .title { min-width: var(--side-w, 320px); transition-duration: .3s; transition-timing-function: var(--ease); }   /* título e painel formam uma coluna só; abre junto com o dockIn */
 .wrap.side:not(.sheet) .joy { left: calc(var(--side-w, 320px) + 26px); }
 .wrap.side:not(.sheet) .walkhint { left: calc(50% + var(--side-w, 320px) / 2 + 10px); max-width: calc(100% - var(--side-w, 320px) - 52px); }   /* centrada na faixa livre */
 .wrap:not(.sheet) .dock { overflow: visible; } .wrap:not(.sheet) .pane { border-radius: 0 0 21px 21px; }   /* a alça sai 10 px da borda: o .pane recorta os cantos de baixo */
@@ -3058,15 +3059,15 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 @container (max-width: 400px) { .timerseg { display: flex; flex-wrap: wrap; flex: 1 1 100%; } .timerseg .tlab { flex-basis: 100%; padding: 3px 6px 4px; } .timerseg button { flex: 1 1 auto; padding-inline: 4px; white-space: nowrap; } }   /* "desligar em" em cima, os 4 tempos embaixo */
 .sizer { position: absolute; top: 0; bottom: 0; right: -10px; width: 12px; z-index: 2; cursor: col-resize; touch-action: none; outline: none; }
 .sizer::after { content: ""; position: absolute; top: 50%; left: .5px; width: 4px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--ink-3); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); opacity: 0; transition: opacity .15s, background-color .15s; }   /* a mesma pílula da alça da folha: neutra (não é estado nem valor da casa) */
-@media (hover: hover) { .dock:hover .sizer::after { opacity: .7; } .sizer:hover::after { opacity: 1; background: var(--ink-2); } }
+@media (hover: hover) { .dock:hover .sizer::after { opacity: .7; } .dock .sizer:hover::after { opacity: 1; background: var(--ink-2); } }
 @media (hover: none) { .sizer::after { opacity: .7; } }
 .wrap.sizing .sizer::after { opacity: 1; background: var(--ink-2); }
-.sizer:focus-visible::after { opacity: 1; background: var(--ink-2); box-shadow: 0 0 0 2px var(--focus); }
+.dock .sizer:focus-visible::after { opacity: 1; background: var(--ink-2); box-shadow: 0 0 0 2px var(--focus); }   /* .dock: acima do .dock:hover (0,3,1) */
 .sizer[data-edge="min"] { cursor: e-resize; } .sizer[data-edge="max"] { cursor: w-resize; }
 .wrap.sizing, .wrap.sizing * { cursor: col-resize !important; user-select: none; -webkit-user-select: none; }
 .wrap.sheet .sizer { display: none; }
 @media (pointer: coarse) { .sizer { width: 44px; right: -36px; } .sizer::after { left: 6.5px; } }   /* toque: alvo de 44 px (8 dentro, 36 fora) */
-@media (prefers-contrast: more) { .sizer::after { opacity: 1; background: var(--ink); } }
+@media (prefers-contrast: more) { .wrap .dock .sizer::after { opacity: 1; background: var(--ink); } }   /* acima do hover e do foco: sempre no máximo */
 /* toque: alvos de 44 px sem mudar o desenho */
 @media (pointer: coarse) {
   .phead .collapse::after { content: ""; position: absolute; inset: -6px; } .phead .count { min-height: 36px; }   /* círculo de 32 px, alvo de 44 */
@@ -3165,7 +3166,7 @@ export class Casa3DCard extends HTMLElement {
     if (!this._built) this._build();
     this._start();
   }
-  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); if (this._walkOn) this._setWalk(false); this._toggleMenu(false); }   // sai da Pessoa: solta o teclado da página
+  disconnectedCallback() { this._stop(); if (this._weatherTimer) clearInterval(this._weatherTimer); if (this._walkOn) this._setWalk(false); this._toggleMenu(false); if (this._szStop) this._szStop(); }   // sai da Pessoa: solta o teclado da página; ajuste da largura no meio: a cena não fica parada
 
   // ---- Construção do DOM ----
   _build() {
@@ -3492,7 +3493,7 @@ export class Casa3DCard extends HTMLElement {
 
     this._raycaster = new THREE.Raycaster();
     this._ndc = new THREE.Vector2();
-    this._ro = new ResizeObserver(() => this._sizing || this._resize());   // ajustando a largura: nada de _layoutHud/câmera por quadro
+    this._ro = new ResizeObserver((es) => { const th = this._titleCard.offsetHeight; if (!this._sizing && (th !== this._tH || es.some((e) => e.target !== this._titleCard))) this._resize(); this._tH = th; });   // ajustando a largura: nada de _layoutHud/câmera por quadro; do título só a altura conta (a largura anima junto com o painel)
     this._ro.observe(this);
     // fora da tela (rolado para longe no dashboard) não gasta GPU com a animação ociosa
     try { this._io = new window.IntersectionObserver((es) => { this._onScreen = es.some((e) => e.isIntersecting); }); this._io.observe(this); } catch (_) {}
@@ -4945,15 +4946,16 @@ export class Casa3DCard extends HTMLElement {
     const setW = (x) => { this._sideW = x = Math.round(x); this._wrap.style.setProperty('--side-w', `${x}px`); };
     const snaps = () => [this._sideMin, this._sideAuto, Math.min(470, this._sideMax)];
     const begin = () => { cancelAnimationFrame(this._szRaf); this._szRaf = 0; this._sizing = true; this._wrap.classList.add('sizing'); };
-    const finish = () => { this._sizing = false; this._wrap.classList.remove('sizing'); this._resize(true); };   // um reenquadramento só, deslizando
+    const finish = () => { this._szRaf = requestAnimationFrame(() => { this._szRaf = 0; this._sizing = false; this._wrap.classList.remove('sizing'); this._resize(true); }); };   // um quadro depois (o ResizeObserver do último passo ainda espera): um reenquadramento só, deslizando
     let goal = 0;   // encaixe para onde a mola está indo (teclas seguidas andam a partir dele)
-    const settle = (to, v = 0) => {
-      goal = to; this._sideUser = to === this._sideAuto ? 0 : to;   // escolher o padrão volta a acompanhar o cartão
-      try { const ls = window.localStorage; if (this._sideUser) ls.setItem('casa3d.painel_w', String(to)); else ls.removeItem('casa3d.painel_w'); } catch (_) {}
+    const settle = (i, v = 0) => {   // i: encaixe (0 compacta · 1 padrão · 2 larga)
+      const to = snaps()[i]; goal = to; this._sideUser = [this._sideMin, 0, 470][i];   // lembra o encaixe, não os px deste cartão (a larga volta a 470 num maior); o padrão acompanha o cartão
+      try { const ls = window.localStorage; if (this._sideUser) ls.setItem('casa3d.painel_w', String(this._sideUser)); else ls.removeItem('casa3d.painel_w'); } catch (_) {}
       if (this._reduced) { setW(to); finish(); } else this._sideSpring(to, v, finish, this._sideW, setW, '_szRaf');
     };
     const rub = (x) => x * 120 * 0.55 / (120 + 0.55 * Math.abs(x));   // além do limite: resistência progressiva
     let g = null;
+    this._szStop = () => { g = null; cancelAnimationFrame(this._szRaf); this._szRaf = 0; this._sizing = false; this._wrap.classList.remove('sizing'); };   // cartão saiu da página no meio do ajuste: a captura some sem lostpointercapture na alça
     sz.addEventListener('pointerdown', (e) => {
       if (this._sheet || e.button) return;
       e.preventDefault(); e.stopPropagation();   // sem seleção de texto e sem o arrasto de fechar da coluna (_swipeBind)
@@ -4969,18 +4971,19 @@ export class Casa3DCard extends HTMLElement {
     const end = (e) => {
       if (!g || e.pointerId !== g.id) return;
       const s = g; g = null; try { sz.releasePointerCapture(e.pointerId); } catch (_) {}
+      const S = snaps(); if (this._sideW === s.w && S.includes(s.w)) { finish(); return; }   // clique sem arrastar, parado num encaixe: não mexe na preferência
       const a = s.h[0], b = s.h[s.h.length - 1], v = e.type === 'pointerup' && a && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;
       const p = this._sideW + v * 0.099;   // projeção curta (desaceleração 0,99): um peteleco não pula o encaixe vizinho
-      settle(snaps().reduce((q, n) => (Math.abs(n - p) < Math.abs(q - p) ? n : q)), v);
+      settle(S.reduce((q, n, j) => (Math.abs(n - p) < Math.abs(S[q] - p) ? j : q), 0), v);
     };
     for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) sz.addEventListener(t, end);   // perdeu a captura (girou, escondeu): termina igual
-    sz.addEventListener('dblclick', () => { begin(); settle(this._sideAuto); });
+    sz.addEventListener('dblclick', () => { begin(); settle(1); });
     sz.addEventListener('keydown', (e) => {
       const S = snaps(), w = this._szRaf ? goal : this._sideW, k = e.key;
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(k)) return;
       e.preventDefault();
-      const to = k === 'Home' ? S[0] : k === 'End' ? S[2] : k === 'ArrowLeft' ? [...S].reverse().find((n) => n < w - 1) : S.find((n) => n > w + 1);
-      if (to != null) { begin(); settle(to); }
+      const i = k === 'Home' ? 0 : k === 'End' ? 2 : k === 'ArrowLeft' ? [2, 1, 0].find((j) => S[j] < w - 1) : [0, 1, 2].find((j) => S[j] > w + 1);
+      if (i != null) { begin(); settle(i); }
     });
   }
   _buildPanel(wrap) {
@@ -5385,15 +5388,20 @@ export class Casa3DCard extends HTMLElement {
     const open = this._panelOpen && this._dock && !this._dock.hidden;
     if (open && this._sheet && !this._sprRaf && !this._dragging && this._dock.dataset.snap) this._sideX(this._snaps()[this._dock.dataset.snap]);   // conteúdo mudou de altura: fica no mesmo detente
     const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._sheet ? Math.max(0, this._wrap.clientHeight - this._dock.offsetTop - (this._sprRaf ? this._sprGoal() : this._sprX || 0)) : 0, T = B ? this._hudH || 0 : 0;
-    const vw = Math.max(160, w - P), vh = Math.max(160, h - B - T);
-    this._camera.aspect = vw / vh; if (this._walkOn) this._camera.fov = this._walkFov();
-    if (P || B) this._camera.setViewOffset(vw, vh, -P, -T, w, h); else this._camera.clearViewOffset();
-    this._camera.updateProjectionMatrix();
+    const p0 = this._pNow, vh = Math.max(160, h - B - T); this._vb = [B, T, w, h]; this._viewP(P);   // já na faixa final: o _resetView enquadra por ela
     const u = 2 * Math.tan(this._camera.fov * Math.PI / 360) / vh;   // rótulos (sem perspectiva): px de tela → escala
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
     if (!this._orbit.touched) this._resetView(fly);   // fly: a folha assentou, a câmera desliza até o novo quadro
+    this._pA = fly && !this._reduced && p0 != null && p0 !== P ? [p0, P, 0] : null;   // a borda do painel assentou: a faixa da cena desliza em 0,25 s (_frame), sem pulo
+    if (this._pA) this._viewP(p0);
     this._orbit.dirty = true;
     if (changed && this._raf && !this._busy) r.render(this._scene, this._camera);   // o ResizeObserver roda depois do quadro: sem isso a tela piscaria preta
+  }
+  _viewP(P) {   // câmera na faixa livre: P px à esquerda (coluna), T em cima e B embaixo (folha); B, T e o tamanho vêm do _resize
+    const [B, T, w, h] = this._vb, vw = Math.max(160, w - P), vh = Math.max(160, h - B - T), c = this._camera;
+    this._pNow = P; c.aspect = vw / vh; if (this._walkOn) c.fov = this._walkFov();
+    if (P || B) c.setViewOffset(vw, vh, -P, -T, w, h); else c.clearViewOffset();
+    c.updateProjectionMatrix();
   }
   // ---- Governador de qualidade ----
   // O nível (alta/media/leve/min) é fixo na construção; em tempo de execução só a resolução se adapta ao TEMPO REAL DE QUADRO:
@@ -5500,7 +5508,7 @@ export class Casa3DCard extends HTMLElement {
   _start() {
     if (this._raf || !this._renderer) return;
     this._clock.start();
-    const tick = () => { this._raf = requestAnimationFrame(tick); if (!this._sizing) this._frame(); };   // ajustando a largura: a cena espera
+    const tick = () => { this._raf = requestAnimationFrame(tick); if (!this._sizing) this._frame(); else this._clock.getDelta(); };   // ajustando a largura: a cena espera (sem acumular o tempo: o 1º quadro depois não pula)
     this._raf = requestAnimationFrame(tick);
   }
   _stop() { if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0; this._clock.stop(); }
@@ -5510,6 +5518,7 @@ export class Casa3DCard extends HTMLElement {
     const dt = Math.min(this._clock.getDelta(), 0.1);
     const t = this._clock.elapsedTime;
     let dirty = this._walkOn ? this._walk.update(dt) : this._orbit.update(dt);
+    if (this._pA) { const a = this._pA, k = Math.min(1, (a[2] += dt) / 0.25); this._viewP(a[0] + (a[1] - a[0]) * (1 - (1 - k) ** 3)); if (k === 1) this._pA = null; dirty = true; }   // faixa da cena deslizando até a nova borda do painel
     if (this._walkOn && this._doorsTick(dt)) dirty = true;   // portas abrindo/fechando na visão de pessoa
     if (this._walkOn && this._mkTick(t)) dirty = true;        // marcador do destino pulsando
     if (this._walkOn && this._orbit.moving) this._walkHint.classList.remove('show');   // primeiro passo / olhada: a dica de comandos sai
