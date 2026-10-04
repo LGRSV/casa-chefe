@@ -7,6 +7,10 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.7.1 — sem piscadas pretas
+
+- A tela não pisca mais preto ao tocar num cômodo, abrir/fechar o painel, mexer a folha do celular, entrar na Pessoa ou mudar o tamanho da janela: o canvas só muda de tamanho quando o tamanho muda de verdade e, nesse caso, é redesenhado na hora. De quebra, arrastar a folha ficou mais leve (antes o canvas era refeito a cada passo).
+
 ## Novidades da v1.7.0 — painel inteligente (celular, tablet e desktop)
 
 - **Cada tela com o seu encaixe**: no celular e no tablet em pé o painel é uma folha que sobe de baixo, com 3 alturas — **espiada** (faixa de 72 px com o resumo), **meia** e **cheia**; arraste para mudar. No tablet deitado e no desktop continua a coluna lateral. A escolha segue o tamanho do próprio cartão e girar o aparelho mantém cômodo, aba e estado.

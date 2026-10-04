@@ -7,7 +7,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.7.0';
+export const VERSION = '1.7.1';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
@@ -940,6 +940,7 @@ class Orbit {
 }
 
 const _dm1 = new THREE.Matrix4(), _dm2 = new THREE.Matrix4(), _dm3 = new THREE.Matrix4();   // temporários das portas (_doorApply)
+const _rsz = new THREE.Vector2();   // temporário do _resize
 
 // ---------------------------------------------------------------------------
 // Visão de pessoa: câmera a 1,6 m do piso; setas/WASD ou joystick andam, arrastar vira a cabeça (Q/E também), Shift corre.
@@ -5201,9 +5202,10 @@ export class Casa3DCard extends HTMLElement {
     const strong = this._q === 'alta' && Casa3DCard._strongGPU();
     const [cap, px] = this._q === 'alta' ? (strong ? [2.5, 3.5e6] : [2, 2.8e6]) : this._q === 'media' ? [2, 2.4e6] : this._min ? [1.5, 1.4e6] : [2, 2.0e6];
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, cap, Math.sqrt(px / (w * h))));
-    this._dprFull = dpr; this._lowRes = false;   // o governador (movimento) escala a partir daqui
-    this._renderer.setPixelRatio(dpr);
-    this._renderer.setSize(w, h, false);
+    // mexer no tamanho do canvas o apaga (quadro preto até o próximo desenho): só quando muda de verdade — o painel e a folha
+    // chamam o _resize a cada passo só para reenquadrar a câmera —, e aí redesenha na hora (fim da função)
+    const r = this._renderer, sz = r.getSize(_rsz), changed = dpr !== this._dprFull || sz.x !== w || sz.y !== h;
+    if (changed) { this._dprFull = dpr; this._lowRes = false; r.setPixelRatio(dpr); r.setSize(w, h, false); }   // o governador (movimento) escala a partir daqui
     this._layoutHud(w);
     // Com o painel lateral aberto (desktop/tablet deitado), a cena é enquadrada na área à esquerda dele
     // Na folha de baixo (celular/tablet em pé), na faixa entre o cabeçalho (T) e a parte VISÍVEL dela (B)
@@ -5218,6 +5220,7 @@ export class Casa3DCard extends HTMLElement {
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
     if (!this._orbit.touched) this._resetView(fly);   // fly: a folha assentou, a câmera desliza até o novo quadro
     this._orbit.dirty = true;
+    if (changed && this._raf && !this._busy) r.render(this._scene, this._camera);   // o ResizeObserver roda depois do quadro: sem isso a tela piscaria preta
   }
   // ---- Governador de qualidade ----
   // O nível (alta/media/leve/min) é fixo na construção; em tempo de execução só a resolução se adapta ao TEMPO REAL DE QUADRO:
@@ -5244,7 +5247,7 @@ export class Casa3DCard extends HTMLElement {
     const ft = now - (this._lastT || now); this._lastT = now;
     if (o.moving) {
       this._lastMove = now; g.sharpPending = false;
-      if (!this._lowRes) { this._lowRes = true; g.ft = 0; this._govPR(this._dprFull * g.moveScale); }
+      if (!this._lowRes) { this._lowRes = true; g.ft = 0; if (this._govPR(this._dprFull * g.moveScale)) dirty = true; }
       else if (ft > 0) {
         g.ft = g.ft ? g.ft * 0.8 + ft * 0.2 : ft;
         if (now - g.lastAdj > 300) {
@@ -5252,11 +5255,11 @@ export class Casa3DCard extends HTMLElement {
           g.slowWin = g.ft > 40 ? g.slowWin + 1 : 0; g.fastWin = g.ft < 22 ? g.fastWin + 1 : 0;
           if (g.slowWin >= 2) { g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }
           if (g.fastWin >= 4) { g.moveScale = Math.min(g.moveMax, g.moveScale * 1.1); g.fastWin = 0; }
-          this._govPR(this._dprFull * g.moveScale);
           // escada (só auto): na escala mínima e ainda < 15 quadros/s por ~1,5 s — nunca nos 20 s após carregar
           // (compilação de shaders e texturas subindo dão picos que não dizem nada do aparelho)
           g.slow = g.moveScale <= g.moveMin + 0.01 && g.ft > 66 ? g.slow + 1 : 0;
-          if (g.slow >= 5 && now - g.lastStep > 4000 && this._govSettled(now)) this._govStepDown(now);
+          if (g.slow >= 5 && now - g.lastStep > 4000 && this._govSettled(now)) this._govStepDown(now);   // recompila (_busy, sem desenhar): o canvas não muda neste quadro
+          else if (this._govPR(this._dprFull * g.moveScale)) dirty = true;
         }
       }
     } else if (this._lowRes && now - (this._lastMove || 0) > 180) {
