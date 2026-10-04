@@ -7,6 +7,14 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.8.0 — painel à esquerda, ajustável, com paleta própria e mais leve
+
+- **Paleta âmbar + grafite**: âmbar só no que está ligado (bloco, «Ligar tudo», selo «Ligados»), grafite no desligado e na estrutura («Desligar tudo», «Entrar aqui», abas, navegação), azul suave nos ajustes (brilho, modo do ar, «desligar em»). Contraste medido: texto ≥ 4,5:1 e ícone ≥ 3:1; «mais contraste» e «menos transparência» só trocam as cores.
+- **Painel à esquerda** no desktop e no tablet deitado, com o título «Casa 3D» em cima formando uma barra só; fecha arrastando para a esquerda; a pílula de reabrir fica na borda esquerda. No celular e no tablet em pé continua a folha de baixo.
+- **Largura ajustável**: arraste a borda direita do painel — encaixa em **compacta** (272 px), **padrão** ou **larga** (470 px, 3 blocos por linha), com mola; duplo clique volta ao padrão; ←/→, Home e End no teclado. O cartão lembra a escolha. Durante o ajuste a cena espera e desliza uma vez no fim (sem pesar nem piscar).
+- **Mais leve**: painel, pílula e menu sem desfoque de vidro (que o compositor refazia a cada quadro); cada atualização do HA redesenha o painel uma vez só (≈ 0,1 ms) e só a aba à vista; ligar/desligar não refaz sombras; temporizadores e clima param quando o cartão sai da tela do HA.
+- **Detalhes**: nome curto nos blocos (o completo no leitor de tela), alvos de 44 px no toque, o «⋯» sempre tocável, rotinas em 2 linhas, sair da Pessoa devolve cômodo, nível e altura da folha, Tab e foco sem rolar a página.
+
 ## Novidades da v1.7.2 — folha do celular mais firme
 
 - No celular e no tablet em pé o cartão não rola mais sozinho quando o painel destaca um aparelho, nem com Tab ou leitor de tela: se o item focado está escondido, a folha sobe até a cheia e mostra ele (toque normal não mexe na folha).
