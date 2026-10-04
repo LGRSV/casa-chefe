@@ -189,10 +189,10 @@ const H = 2.8;      // pé-direito
 const T = 0.15;     // espessura das paredes
 
 const ZONES = {
-  quarto_casal: { x: 0,    z: 0,    w: 3.6,  d: 4.2, color: 0xb18b5f, label: 'Quarto Casal', lp: [1.8, 2.1] },
-  quarto:       { x: 3.6,  z: 0,    w: 3.2,  d: 4.2, color: 0xb18b5f, label: 'Quarto',        lp: [5.2, 2.1], item: 'quarto' },
+  quarto_casal: { x: 0,    z: 0,    w: 3.6,  d: 4.2, color: 0xb18b5f, label: 'Quarto Casal', lp: [1.8, 2.9] },
+  quarto:       { x: 3.6,  z: 0,    w: 3.2,  d: 4.2, color: 0xb18b5f, label: 'Quarto',        lp: [5.2, 1.2], item: 'quarto' },
   sala:         { x: 6.8,  z: 0,    w: 3.5,  d: 4.2, color: 0xd8d3c6, label: 'Sala / Cozinha', lp: [8.5, 2.9], item: 'sala' },
-  balcao:       { x: 10.3, z: 0,    w: 2.2,  d: 4.2, color: 0xd8d3c6, label: 'Balcão',        lp: [11.4, 3.2], item: 'balcao' },
+  balcao:       { x: 10.3, z: 0,    w: 2.2,  d: 4.2, color: 0xd8d3c6, label: 'Balcão',        lp: [11.4, 1.2], item: 'balcao' },
   varanda:      { x: 0,    z: 4.2,  w: 12.5, d: 2.0, color: 0xc6bda8, label: 'Varanda',       lp: [6.25, 5.2], item: 'externa' },
   banheiro:     { x: 0,    z: 6.2,  w: 2.4,  d: 2.6, color: 0xcfd7da, label: 'Banheiro',      lp: [1.2, 7.5], item: 'banheiro' },
   dispensa:     { x: 0,    z: 8.8,  w: 2.4,  d: 1.8, color: 0xcbc4b6, label: 'Dispensa',      lp: [1.2, 9.7], item: 'banheiro' },
@@ -3735,7 +3735,7 @@ export class Casa3DCard extends HTMLElement {
 
   _setLabels(on) {
     this._labelsOn = on;
-    for (const s of this._labels || []) s.visible = on && !this._walkOn && !(this._nav && this._nav.room);   // na visão de pessoa os rótulos (por cima de tudo) atrapalham; no nível cômodo o painel já diz o nome
+    if (this._labels && this._camera) this._declutter();   // na visão de pessoa os rótulos (por cima de tudo) atrapalham; no nível cômodo o painel já diz o nome
     this._labelsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     if (this._orbit) this._orbit.dirty = true;
   }
@@ -4373,6 +4373,7 @@ export class Casa3DCard extends HTMLElement {
       const pr = this._pegBtn.getBoundingClientRect(), ds = this._dica.style; this._dica.classList.toggle('lado', !this._narrow);
       ds.top = `${Math.round(this._narrow ? Math.max(pr.bottom, tr.bottom) - wr.top + 10 : (pr.top + pr.bottom) / 2 - wr.top)}px`;
       ds.right = `${Math.round(this._narrow ? wr.right - pr.right : wr.right - br.left + 12)}px`; ds.setProperty('--ax', `${Math.round(pr.width / 2 - 6)}px`);
+      ds.visibility = !this._narrow && !this._backBtn.hidden ? 'hidden' : '';   // desktop: só no nível casa (dentro de um cômodo a seta cairia no '‹ Casa')
     }
     this._placeMenu();
   }
@@ -5150,19 +5151,27 @@ export class Casa3DCard extends HTMLElement {
     // Só animação ociosa (água/TV) rodando: renderiza em metade dos frames
     this._tick = (this._tick || 0) + 1;
     if (dirty && this._labels) this._declutter();
+    // rótulos esmaecem (~150 ms) em vez de piscar ao aparecer/sumir no giro e no zoom
+    for (const s of this._labels || []) {
+      const m = s.material, a = s.userData.alvo || 0;
+      if (Math.abs(a - m.opacity) > 0.01) { m.opacity += (a - m.opacity) * (this._reduced ? 1 : 1 - Math.exp(-dt * 14)); dirty = true; }
+      else if (m.opacity !== a) { m.opacity = a; dirty = true; }
+      s.visible = m.opacity > 0.01;
+    }
     if (dirty || (ambient && this._tick % (this._waterFast ? 2 : 3) === 0)) this._renderer.render(this._scene, this._camera);
   }
   // rótulos sem sobreposição: projeta cada um na tela e, por prioridade (cômodo com algo ligado, depois o maior), esconde o que
-  // encostaria num já aceito; ao aproximar o zoom eles voltam sozinhos
+  // encostaria num já aceito; ao aproximar o zoom eles voltam sozinhos (o _frame esmaece até o alvo)
   _declutter() {
+    this._camera.updateMatrixWorld();   // o orbit só fez lookAt: sem isto a projeção usaria a câmera do quadro anterior
     const on = this._labelsOn && !this._walkOn && !(this._nav && this._nav.room), v = new THREE.Vector3(), w = this.clientWidth, h = this.clientHeight, ok = [];
     const pri = (s) => { const z = ZONES[s.userData.zone], st = this._state[z.item]; return (st && st.on ? 1e3 : 0) + z.w * z.d; };
     for (const s of [...this._labels].sort((a, b) => pri(b) - pri(a))) {
-      s.visible = on; if (!on) continue;
+      s.userData.alvo = 0; if (!on) continue;
       v.copy(s.position).project(this._camera);
       const x = (v.x + 1) * w / 2, y = (1 - v.y) * h / 2, hw = s.userData.px[0] / 2 + 3;
-      s.visible = !ok.some(([x2, y2, hw2]) => Math.abs(x - x2) < hw + hw2 && Math.abs(y - y2) < 24);
-      if (s.visible) ok.push([x, y, hw]);
+      if (ok.some(([x2, y2, hw2]) => Math.abs(x - x2) < hw + hw2 && Math.abs(y - y2) < 24)) continue;
+      s.userData.alvo = 1; ok.push([x, y, hw]);
     }
   }
 }
