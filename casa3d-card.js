@@ -111,7 +111,7 @@ const ICONS = {
   moon: '<path d="M13 9.6A5.2 5.2 0 0 1 6.4 3a5.4 5.4 0 1 0 6.6 6.6z"/>',
   film: '<rect x="2" y="3" width="12" height="10" rx="1.2"/><path d="M5 3v10M11 3v10M2 6h3M2 10h3M11 6h3M11 10h3"/>',
   power: '<path d="M8 2.5v5.5"/><path d="M4.6 4.6a4.8 4.8 0 1 0 6.8 0"/>',
-  panel: '<rect x="1.5" y="2.5" width="13" height="11" rx="1.4"/><path d="M9.5 2.5v11M11 6h2M11 8.5h2"/>',
+  panel: '<rect x="1.5" y="2.5" width="13" height="11" rx="1.4"/><path d="M6.5 2.5v11M3 6h2M3 8.5h2"/>',
   // menu de opções (v1.5)
   menu: '<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>',
   tag: '<path d="M2 2.5h5.3l6.2 6.2-4.8 4.8L2.5 7.3z"/><circle cx="5" cy="5.3" r="1" fill="currentColor" stroke="none"/>',
@@ -2760,7 +2760,7 @@ canvas.walk.pick { cursor: pointer; }
 .pegtip[hidden] { display: none; }
 .goto { position: absolute; right: 10px; top: var(--side-top, 58px); z-index: 6; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 8px 10px 10px; overscroll-behavior: contain; box-sizing: border-box; }
 .goto[hidden] { display: none; }
-.wrap.side .goto { right: calc(var(--side-w, 340px) + 20px); width: min(340px, calc(100% - var(--side-w, 340px) - 30px)); }   /* painel lateral aberto: a lista fica à esquerda dele */
+.wrap.side .goto { width: min(340px, calc(100% - var(--side-w, 340px) - 30px)); }   /* coluna aberta à esquerda: a lista fica à direita, sem cruzar */
 .goto .gh { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; padding: 2px 2px 6px; }
 .goto .gt { font-size: 11px; color: var(--ink-2); font-weight: 700; margin: 8px 2px 4px; }
 .goto .grow { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -2769,21 +2769,21 @@ canvas.walk.pick { cursor: pointer; }
 .fade { position: absolute; inset: 0; background: #06090f; opacity: 0; pointer-events: none; z-index: 5; }
 @media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 40px; } .goto, .wrap.side .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
 @media (max-width: 640px) { .joy { width: 104px; height: 104px; left: 14px; bottom: 14px; } .walkhint { bottom: 130px; } }
-/* Painel lateral (v1.5) — coluna de vidro grafite à direita; âmbar só no que está ligado, azul suave nos ajustes (tokens no :host).
-   --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo dos botões, ou do título se ele invadir a faixa) */
-.dock { position: absolute; top: var(--side-top, 58px); right: 10px; bottom: auto; max-height: calc(100% - var(--side-top, 58px) - 10px); width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
+/* Painel lateral (v1.5) — coluna de vidro grafite à esquerda; âmbar só no que está ligado, azul suave nos ajustes (tokens no :host).
+   --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo do título, ou dos botões se eles invadirem a faixa) */
+.dock { position: absolute; top: var(--side-top, 58px); left: 10px; bottom: auto; max-height: calc(100% - var(--side-top, 58px) - 10px); width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
   border-radius: 22px; border: 1px solid var(--line); background: var(--glass);   /* vidro grafite opaco: sem backdrop-filter (o none vence o blur do .panel) */
   box-shadow: 0 24px 60px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .06) inset; backdrop-filter: none; -webkit-backdrop-filter: none;
   animation: dockIn .3s var(--ease) backwards; }
 .dock[hidden] { display: none; }
 .dock.closing { animation: dockOut .2s ease-in forwards; pointer-events: none; }
-@keyframes dockIn { from { opacity: 0; transform: translateX(32px); } }
-@keyframes dockOut { to { opacity: 0; transform: translateX(calc(100% + 16px)); } }   /* sai pelo mesmo lado por onde entrou */
+@keyframes dockIn { from { opacity: 0; transform: translateX(-32px); } }
+@keyframes dockOut { to { opacity: 0; transform: translateX(calc(-100% - 16px)); } }   /* sai pelo mesmo lado por onde entrou */
 .grab { display: none; }   /* alça da folha (só na folha de baixo) */
 @keyframes paneIn { from { opacity: 0; } }   /* troca de aba: só esmaece */
 @keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
 @keyframes flashPulse { 0% { box-shadow: 0 0 0 0 var(--focus); } 100% { box-shadow: 0 0 0 14px transparent; } }
-/* cabeçalho da coluna: contador de luzes + recolher (→); abaixo, as abas em segmento de largura igual */
+/* cabeçalho da coluna: contador de luzes + recolher (←); abaixo, as abas em segmento de largura igual */
 .phead { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; flex: none; }
 .phead .spacer { flex: 1; }
 .phead .count { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 5px 11px 5px 9px; border-radius: 999px; background: var(--fill); border: 1px solid var(--line); color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -2922,13 +2922,14 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 .feed li.on .d { background: var(--on-bg); color: var(--on); }   /* o que acendeu, ligou ou começou a tocar */
 .feed b { font-weight: 700; color: var(--ink); } .feed time { color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: 11px; text-align: right; white-space: nowrap; }
 .feed .empty { color: var(--ink-3); padding: 14px 12px; font-size: 12px; grid-column: 1 / -1; display: block; border-style: dashed; }
-/* aba de reabrir presa à borda direita: seta, "Painel" na vertical e o nº de luzes acesas */
-.reopen { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 7px 12px 8px; z-index: 3;
-  border-radius: 14px 0 0 14px; border: 1px solid var(--line-2); border-right: 0; font-size: 12px; color: var(--ink); letter-spacing: .04em;
+/* aba de reabrir presa à borda esquerda, na altura do topo da coluna: seta, "Painel" na vertical e o nº de luzes acesas */
+.reopen { position: absolute; left: 0; top: var(--side-top, 58px); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px 12px 7px; z-index: 3;
+  border-radius: 0 14px 14px 0; border: 1px solid var(--line-2); border-left: 0; font-size: 12px; color: var(--ink); letter-spacing: .04em;
   background: var(--glass); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); backdrop-filter: none; -webkit-backdrop-filter: none; animation: reopenIn .3s var(--ease) backwards; }
 .reopen .rl { writing-mode: vertical-rl; line-height: 1; }
 .reopen svg { width: 14px; height: 14px; color: var(--ink-2); }
-@keyframes reopenIn { from { opacity: 0; transform: translateY(-50%) translateX(14px); } }
+.reopen svg, .phead .collapse svg { transform: scaleX(-1); }   /* setas espelhadas: o painel mora à esquerda (na folha giram 90°) */
+@keyframes reopenIn { from { opacity: 0; transform: translateX(-14px); } }
 .reopen:hover { background: var(--raised); }
 .reopen .rn { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--on); color: var(--on-ink); font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .reopen .rn:empty { display: none; }
@@ -2964,7 +2965,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 .wrap.sheet .grab::after { content: ""; position: absolute; inset: 0 0 -22px; }   /* alvo de 44 px */
 .wrap.sheet .phead .collapse svg { transform: rotate(90deg); }
 .wrap.sheet .dock.room .phead { display: none; } .wrap.sheet .dock.room .rhead { margin-top: 16px; }   /* no cômodo a 1ª linha é a dele */
-.wrap.sheet .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-right: 1px solid var(--line-2); border-bottom: 0; animation-name: fadeIn; }
+.wrap.sheet .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-left: 1px solid var(--line-2); border-bottom: 0; animation-name: fadeIn; }
 .wrap.sheet .reopen .rl { writing-mode: horizontal-tb; } .wrap.sheet .reopen svg { transform: rotate(90deg); }   /* a aba de reabrir fica onde a folha mora: embaixo */
 .wrap.sheet .phead { padding: 14px 12px 6px; } .wrap.sheet .tabs, .wrap.sheet .rhead { margin: 0 12px 8px; } .wrap.sheet .pane { padding: 10px 12px calc(14px + env(safe-area-inset-bottom)); }
 @media (min-width: 641px) {   /* tablet em pé: folha flutuante, blocos em 4 colunas */
@@ -2972,6 +2973,26 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
   .wrap.sheet .reopen { bottom: 12px; border-radius: 999px; border-bottom: 1px solid var(--line-2); padding-bottom: 9px; }
   .wrap.sheet .tiles:not(.routines) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+/* coluna à esquerda (v1.8): título em cima com a mesma largura; borda direita arrastável (.sizer); o conteúdo segue a largura do painel */
+.lcol .title { box-sizing: border-box; transition: min-width .3s var(--ease); } .wrap.sizing .lcol .title { transition: none; }
+.wrap.side:not(.sheet) .lcol .title { min-width: var(--side-w, 320px); }   /* título e painel formam uma coluna só */
+.wrap.side:not(.sheet) .joy { left: calc(var(--side-w, 320px) + 26px); }
+.wrap.side:not(.sheet) .walkhint { left: calc(50% + var(--side-w, 320px) / 2 + 10px); max-width: calc(100% - var(--side-w, 320px) - 52px); }   /* centrada na faixa livre */
+.wrap:not(.sheet) .dock { overflow: visible; } .wrap:not(.sheet) .pane { border-radius: 0 0 21px 21px; }   /* a alça sai 10 px da borda: o .pane recorta os cantos de baixo */
+.dock { container-type: inline-size; }   /* consultas pela largura do PAINEL (coluna ajustável e folha); sem contain: paint, que cortaria a alça */
+@container (max-width: 300px) { .tabs button[role="tab"] { padding-inline: 3px; font-size: 11.5px; letter-spacing: 0; } }   /* "Automações" inteira a 272 px */
+@container (max-width: 400px) { .timerseg { display: flex; flex-wrap: wrap; flex: 1 1 100%; } .timerseg .tlab { flex-basis: 100%; padding: 3px 6px 4px; } .timerseg button { flex: 1 1 auto; padding-inline: 4px; white-space: nowrap; } }   /* "desligar em" em cima, os 4 tempos embaixo */
+.sizer { position: absolute; top: 0; bottom: 0; right: -10px; width: 12px; z-index: 2; cursor: col-resize; touch-action: none; outline: none; }
+.sizer::after { content: ""; position: absolute; top: 50%; left: .5px; width: 4px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--ink-3); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); opacity: 0; transition: opacity .15s, background-color .15s; }   /* a mesma pílula da alça da folha: neutra (não é estado nem valor da casa) */
+@media (hover: hover) { .dock:hover .sizer::after { opacity: .7; } .sizer:hover::after { opacity: 1; background: var(--ink-2); } }
+@media (hover: none) { .sizer::after { opacity: .7; } }
+.wrap.sizing .sizer::after { opacity: 1; background: var(--ink-2); }
+.sizer:focus-visible::after { opacity: 1; background: var(--ink-2); box-shadow: 0 0 0 2px var(--focus); }
+.sizer[data-edge="min"] { cursor: e-resize; } .sizer[data-edge="max"] { cursor: w-resize; }
+.wrap.sizing, .wrap.sizing * { cursor: col-resize !important; user-select: none; -webkit-user-select: none; }
+.wrap.sheet .sizer { display: none; }
+@media (pointer: coarse) { .sizer { width: 44px; right: -36px; } .sizer::after { left: 6.5px; } }   /* toque: alvo de 44 px (8 dentro, 36 fora) */
+@media (prefers-contrast: more) { .sizer::after { opacity: 1; background: var(--ink); } }
 /* toque: alvos de 44 px sem mudar o desenho */
 @media (pointer: coarse) {
   .phead .collapse::after { content: ""; position: absolute; inset: -6px; } .phead .count { min-height: 36px; }   /* círculo de 32 px, alvo de 44 */
@@ -2992,7 +3013,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
   .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
   .menu { left: 10px; right: 10px; width: auto; }
 }
-@media (prefers-reduced-motion: reduce) { .pane.active, .tile, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb, .rhead .all button, .rfoot .enter { animation: none !important; transition: none !important; transform: none !important; }
+@media (prefers-reduced-motion: reduce) { .lcol .title, .pane.active, .tile, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb, .rhead .all button, .rfoot .enter { animation: none !important; transition: none !important; transform: none !important; }
   .sw::after { transition: none !important; }   /* sem o transform: none, o polegar ligado ficava preso à esquerda */
   .dock, .reopen, .menu { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
 @keyframes fadeIn { from { opacity: 0; } }
@@ -3033,6 +3054,7 @@ export class Casa3DCard extends HTMLElement {
     this._hoverObj = null;
     this._nav = { level: 0, block: null, room: null };   // Vista de cima: 0 planta · 1 área · 2 cômodo
     this._reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { this._sideUser = +window.localStorage.getItem('casa3d.painel_w') || 0; } catch (_) { this._sideUser = 0; }   // largura escolhida do painel (0 = automática)
   }
 
   // ---- API Lovelace ----
@@ -3396,7 +3418,7 @@ export class Casa3DCard extends HTMLElement {
 
     this._raycaster = new THREE.Raycaster();
     this._ndc = new THREE.Vector2();
-    this._ro = new ResizeObserver(() => this._resize());
+    this._ro = new ResizeObserver(() => this._sizing || this._resize());   // ajustando a largura: nada de _layoutHud/câmera por quadro
     this._ro.observe(this);
     // fora da tela (rolado para longe no dashboard) não gasta GPU com a animação ociosa
     try { this._io = new window.IntersectionObserver((es) => { this._onScreen = es.some((e) => e.isIntersecting); }); this._io.observe(this); } catch (_) {}
@@ -4481,8 +4503,8 @@ export class Casa3DCard extends HTMLElement {
     const top = Math.round((tr.right > wr.right - 10 - mw - 6 ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 6);
     m.style.top = `${top}px`; m.style.maxHeight = `${Math.max(160, wr.height - top - 10)}px`;
   }
-  // mede o topo e posiciona a coluna lateral: largura (--side-w) e topo (--side-top) logo abaixo dos botões — ou do título,
-  // se ele invadir a faixa da coluna; no celular (gaveta por cima) abaixo do cabeçalho inteiro
+  // mede o topo e posiciona a coluna lateral (à esquerda): largura (--side-w) e topo (--side-top) logo abaixo do título — ou dos botões,
+  // se eles invadirem a faixa da coluna; no celular (gaveta por cima) abaixo do cabeçalho inteiro
   _layoutHud(w) {
     if (!this._titleCard || !this._wrap) return;
     const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
@@ -4493,10 +4515,14 @@ export class Casa3DCard extends HTMLElement {
       cancelAnimationFrame(this._sprRaf); this._sprRaf = 0;
       if (this._dock) { this._dock.dataset.snap = this._room ? 'half' : 'peek'; this._sideX(sheet && this._panelOpen ? this._snaps()[this._dock.dataset.snap] : 0); }
     }
-    const sw = Math.round(clamp(w * 0.26, 260, 320));   // v1.6: coluna mais estreita
+    const lo = 272, hi = Math.max(lo, Math.min(480, Math.round(w * 0.42)));   // largura: 1 coluna de blocos … até 42 % do cartão
+    this._sideAuto = Math.round(clamp(Math.min(w * 0.26, 320), lo, hi));   // padrão (sem preferência / duplo clique)
+    const sw = this._sizing ? this._sideW : Math.round(clamp(this._sideUser || this._sideAuto, lo, hi));   // a lembrada, cabendo neste cartão
+    this._sideMin = lo; this._sideMax = hi;
+    if (this._sizer) { const z = this._sizer; z.setAttribute('aria-valuemin', lo); z.setAttribute('aria-valuemax', hi); z.setAttribute('aria-valuenow', sw); z.dataset.edge = sw <= lo ? 'min' : sw >= hi ? 'max' : ''; }
     this._sideOverlay = sheet || sw + 20 > w * 0.6;   // folha, ou coluna larga demais para dividir a tela: fica por cima, sem reenquadrar
-    const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
-    const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
+    const hit = this._sideOverlay || br.left - wr.left < 10 + sw + 8;   // coluna à esquerda: abaixo do título (e dos botões, se invadirem a faixa)
+    const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : tr.bottom) - wr.top + 8);
     this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
     this._hudH = top;   // altura do cabeçalho (o _resize desconta no celular com a folha aberta)
     if (this._dica) {   // celular: embaixo do cabeçalho, seta no bonequinho · desktop: à esquerda dos botões, na mesma linha
@@ -4740,26 +4766,26 @@ export class Casa3DCard extends HTMLElement {
     const d = this._dock;
     cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sprX = 0;
     clearTimeout(this._dockT); d.classList.remove('closing');
-    if (!open && !d.hidden && !this._reduced && this._wrap && this._wrap.isConnected) {   // recolhe deslizando para a direita (~0,2 s); o estado já vale na hora
+    if (!open && !d.hidden && !this._reduced && this._wrap && this._wrap.isConnected) {   // recolhe deslizando para a esquerda (~0,2 s); o estado já vale na hora
       d.classList.add('closing');
       this._dockT = setTimeout(() => { d.classList.remove('closing'); d.hidden = !this._panelOpen; d.style.transform = ''; }, 200);
     } else { d.hidden = !open; d.style.transform = ''; }
     if (open && this._sideOverlay) this._closeGoto();   // painel do celular por cima: a lista "Ir para…" sai
     this._reopen.hidden = !!open;
-    if (this._wrap) this._wrap.classList.toggle('side', !!open);   // .goto passa para a esquerda da coluna
+    if (this._wrap) this._wrap.classList.toggle('side', !!open);   // .goto fica à direita da coluna, sem cruzá-la
     this._panelBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
     if (open) { this._setZone(this._onKeys().length ? 'on' : ''); this._renderPanel(); }   // abre em "Ligados" se houver algo ligado
     if (open && this._sheet) { d.dataset.snap = snap; this._grab.setAttribute('aria-expanded', snap !== 'peek' ? 'true' : 'false'); this._sideX(this._snaps()[snap]); }   // a folha entra já na altura dela
     requestAnimationFrame(() => this._resize());
   }
-  // Gaveta (v1.5): no toque, arrastar a coluna para a direita acompanha o dedo 1:1 (limiar de 10 px antes de assumir o gesto);
+  // Gaveta (v1.5): no toque, arrastar a coluna para a esquerda acompanha o dedo 1:1 (limiar de 10 px antes de assumir o gesto);
   // ao soltar, abre ou fecha pela posição projetada com a velocidade do dedo e assenta numa mola que herda essa velocidade.
-  // Agarrar no meio da mola interrompe e segue daqui; puxar além do aberto (para a esquerda) tem resistência progressiva.
+  // Agarrar no meio da mola interrompe e segue daqui; puxar além do aberto (para a direita) tem resistência progressiva.
   // Folha de baixo: o mesmo gesto no eixo Y, com três alturas (espiada, média, cheia) em vez de aberta/fechada (ver _snaps)
   _swipeBind(dock) {
     let g = null;
-    const W = () => (this._sheet ? this._snaps().shut : dock.offsetWidth + 16);   // deslocamento de "fechado" (sai inteira por onde entrou: direita, ou baixo na folha)
-    const P = (e) => (this._sheet ? [e.clientY, e.clientX] : [e.clientX, e.clientY]);   // [eixo do gesto, transversal]
+    const W = () => (this._sheet ? this._snaps().shut : dock.offsetWidth + 16);   // deslocamento de "fechado" (sai inteira por onde entrou: esquerda, ou baixo na folha)
+    const P = (e) => (this._sheet ? [e.clientY, e.clientX] : [-e.clientX, e.clientY]);   // [eixo do gesto, transversal]; coluna: + = para a esquerda
     const rubber = (x, dim) => x * dim * 0.55 / (dim + 0.55 * Math.abs(x));
     dock.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch' || g || e.target.closest('input[type="range"]')) return;   // o brilho (range) arrasta de lado
@@ -4802,9 +4828,9 @@ export class Casa3DCard extends HTMLElement {
     dock.addEventListener('pointerup', end); dock.addEventListener('pointercancel', end);
     dock.addEventListener('click', (e) => { if (performance.now() - (this._swiped || 0) < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
   }
-  // posição da coluna (0 = aberta, + = para a direita; na folha, para baixo)
+  // posição da coluna (0 = aberta, + = para a esquerda; na folha, para baixo)
   _sideX(x) {
-    this._sprX = x; const s = this._dock.style; s.transform = x ? `translate${this._sheet ? 'Y' : 'X'}(${x}px)` : '';
+    this._sprX = x; const s = this._dock.style; s.transform = x ? (this._sheet ? `translateY(${x}px)` : `translateX(${-x}px)`) : '';   // coluna: + = para a esquerda (fora)
     s.clipPath = this._sheet && !this._narrow ? `inset(0 0 ${Math.max(0, x)}px round 22px)` : '';   // folha flutuante (tablet): o que desce some no vão de 12 px, com os cantos de baixo
     s.willChange = this._sprRaf || this._dragging ? 'transform' : '';   // camada própria só enquanto a mola ou o dedo mexem
   }
@@ -4823,17 +4849,65 @@ export class Casa3DCard extends HTMLElement {
     this._sideSpring(() => this._snaps()[n], v, () => this._resize(true));   // alvo medido a cada quadro: o conteúdo pode mudar de altura no caminho
   }
   // mola feita à mão (amortecimento 0,8, resposta 0,3 s), partindo da posição e da velocidade atuais
-  _sideSpring(goal, v, done) {
+  _sideSpring(goal, v, done, x = this._sprX || 0, set = (p) => this._sideX(p), id = '_sprRaf') {   // x/set/id: a borda do painel usa a mesma mola
     const w = 2 * Math.PI / 0.3, k = w * w, c = 2 * 0.8 * w;
-    const G = this._sprGoal = typeof goal === 'function' ? goal : () => goal;   // alvo (o _resize enquadra a câmera já nele)
-    let x = this._sprX || 0, last = 0, to;
+    const G = typeof goal === 'function' ? goal : () => goal; if (id === '_sprRaf') this._sprGoal = G;   // alvo (o _resize enquadra a câmera já nele)
+    let last = 0, to;
     const tick = (t) => {
       const dt = last ? Math.min((t - last) / 1000, 0.1) : 1 / 60; last = t; to = G();
       for (let i = 0, n = Math.ceil(dt * 240); i < n; i++) { v += (-k * (x - to) - c * v) * (dt / n); x += v * (dt / n); }   // Euler semi-implícito
-      if (Math.abs(x - to) < 0.5 && Math.abs(v) < 8) { this._sprRaf = 0; this._sideX(to); if (done) done(); return; }
-      this._sideX(x); this._sprRaf = requestAnimationFrame(tick);
+      if (Math.abs(x - to) < 0.5 && Math.abs(v) < 8) { this[id] = 0; set(to); if (done) done(); return; }
+      set(x); this[id] = requestAnimationFrame(tick);
     };
-    cancelAnimationFrame(this._sprRaf); this._sprRaf = requestAnimationFrame(tick);
+    cancelAnimationFrame(this[id]); this[id] = requestAnimationFrame(tick);
+  }
+  // Borda direita da coluna (desktop/tablet deitado): arrasto 1:1 com elástico nos limites; ao soltar, mola até o encaixe mais perto da
+  // projeção — compacta (1 coluna) · padrão · larga (3 colunas do mesmo tamanho). Teclado ←/→ troca de encaixe, Home/End vão às pontas,
+  // duplo clique volta ao padrão. Enquanto mexe só o --side-w muda (a cena espera: _sizing); a câmera reenquadra uma vez, ao assentar.
+  _sizerBind(dock) {
+    const sz = document.createElement('div'); sz.className = 'sizer'; sz.tabIndex = 0; this._sizer = sz;
+    for (const [a, v] of [['role', 'separator'], ['aria-orientation', 'vertical'], ['aria-label', 'Largura do painel'], ['title', 'Arraste para ajustar a largura · duplo clique: padrão']]) sz.setAttribute(a, v);
+    dock.appendChild(sz);
+    const setW = (x) => { this._sideW = x = Math.round(x); this._wrap.style.setProperty('--side-w', `${x}px`); };
+    const snaps = () => [this._sideMin, this._sideAuto, Math.min(470, this._sideMax)];
+    const begin = () => { cancelAnimationFrame(this._szRaf); this._szRaf = 0; this._sizing = true; this._wrap.classList.add('sizing'); };
+    const finish = () => { this._sizing = false; this._wrap.classList.remove('sizing'); this._resize(true); };   // um reenquadramento só, deslizando
+    let goal = 0;   // encaixe para onde a mola está indo (teclas seguidas andam a partir dele)
+    const settle = (to, v = 0) => {
+      goal = to; this._sideUser = to === this._sideAuto ? 0 : to;   // escolher o padrão volta a acompanhar o cartão
+      try { const ls = window.localStorage; if (this._sideUser) ls.setItem('casa3d.painel_w', String(to)); else ls.removeItem('casa3d.painel_w'); } catch (_) {}
+      if (this._reduced) { setW(to); finish(); } else this._sideSpring(to, v, finish, this._sideW, setW, '_szRaf');
+    };
+    const rub = (x) => x * 120 * 0.55 / (120 + 0.55 * Math.abs(x));   // além do limite: resistência progressiva
+    let g = null;
+    sz.addEventListener('pointerdown', (e) => {
+      if (this._sheet || e.button) return;
+      e.preventDefault(); e.stopPropagation();   // sem seleção de texto e sem o arrasto de fechar da coluna (_swipeBind)
+      begin(); try { sz.setPointerCapture(e.pointerId); } catch (_) {}
+      g = { id: e.pointerId, x: e.clientX, w: this._sideW, h: [] };   // agarrou no meio da mola: segue do valor na tela
+    });
+    sz.addEventListener('pointermove', (e) => {
+      if (!g || e.pointerId !== g.id) return;
+      const x = g.w + e.clientX - g.x, lo = this._sideMin, hi = this._sideMax;
+      setW(x < lo ? lo - rub(lo - x) : x > hi ? hi + rub(x - hi) : x);   // 1:1 com o ponto agarrado
+      g.h.push([e.timeStamp, this._sideW]); if (g.h.length > 6) g.h.shift();
+    });
+    const end = (e) => {
+      if (!g || e.pointerId !== g.id) return;
+      const s = g; g = null; try { sz.releasePointerCapture(e.pointerId); } catch (_) {}
+      const a = s.h[0], b = s.h[s.h.length - 1], v = e.type === 'pointerup' && a && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;
+      const p = this._sideW + v * 0.099;   // projeção curta (desaceleração 0,99): um peteleco não pula o encaixe vizinho
+      settle(snaps().reduce((q, n) => (Math.abs(n - p) < Math.abs(q - p) ? n : q)), v);
+    };
+    for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) sz.addEventListener(t, end);   // perdeu a captura (girou, escondeu): termina igual
+    sz.addEventListener('dblclick', () => { begin(); settle(this._sideAuto); });
+    sz.addEventListener('keydown', (e) => {
+      const S = snaps(), w = this._szRaf ? goal : this._sideW, k = e.key;
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(k)) return;
+      e.preventDefault();
+      const to = k === 'Home' ? S[0] : k === 'End' ? S[2] : k === 'ArrowLeft' ? [...S].reverse().find((n) => n < w - 1) : S.find((n) => n > w + 1);
+      if (to != null) { begin(); settle(to); }
+    });
   }
   _buildPanel(wrap) {
     this._wrap = wrap;
@@ -4843,7 +4917,7 @@ export class Casa3DCard extends HTMLElement {
     this._grab = document.createElement('button'); this._grab.className = 'grab'; this._grab.setAttribute('aria-label', 'Expandir painel'); this._grab.setAttribute('aria-expanded', 'false'); dock.appendChild(this._grab);
     const flip = () => this._snapTo(this._dock.dataset.snap === 'peek' ? 'half' : 'peek');
     this._grab.addEventListener('click', flip);
-    // cabeçalho: resumo do que está ligado (toque → "Ligados") + recolher (→)
+    // cabeçalho: resumo do que está ligado (toque → "Ligados") + recolher (←)
     const head = document.createElement('div'); head.className = 'phead'; dock.appendChild(head); this._phead = head;
     head.addEventListener('click', (e) => { if (this._sheet && !e.target.closest('button')) flip(); });
     this._countEl = document.createElement('button'); this._countEl.className = 'count'; head.appendChild(this._countEl);
@@ -4881,6 +4955,7 @@ export class Casa3DCard extends HTMLElement {
     }
     for (const pane of panes) dock.appendChild(pane);
     this._swipeBind(dock);
+    this._sizerBind(dock);
     dock.addEventListener('pointerdown', () => { this._tapT = performance.now(); });   // hora do último toque/clique (o foco que vem dele não sobe a folha)
     dock.addEventListener('focusin', (e) => {   // Tab/leitor de tela abaixo da dobra: a folha sobe até a cheia (como no iOS); o foco de um toque não mexe nela
       if (!this._sheet || dock.dataset.snap === 'full' || performance.now() - (this._tapT || 0) < 1500 || e.target.closest('.grab, .phead, .rhead')) return;
@@ -5231,14 +5306,14 @@ export class Casa3DCard extends HTMLElement {
     const r = this._renderer, sz = r.getSize(_rsz), changed = dpr !== this._dprFull || sz.x !== w || sz.y !== h;
     if (changed) { this._dprFull = dpr; this._lowRes = false; r.setPixelRatio(dpr); r.setSize(w, h, false); }   // o governador (movimento) escala a partir daqui
     this._layoutHud(w);
-    // Com o painel lateral aberto (desktop/tablet deitado), a cena é enquadrada na área à esquerda dele
+    // Com o painel lateral aberto (desktop/tablet deitado), a cena é enquadrada na área à direita dele
     // Na folha de baixo (celular/tablet em pé), na faixa entre o cabeçalho (T) e a parte VISÍVEL dela (B)
     const open = this._panelOpen && this._dock && !this._dock.hidden;
     if (open && this._sheet && !this._sprRaf && !this._dragging && this._dock.dataset.snap) this._sideX(this._snaps()[this._dock.dataset.snap]);   // conteúdo mudou de altura: fica no mesmo detente
     const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._sheet ? Math.max(0, this._wrap.clientHeight - this._dock.offsetTop - (this._sprRaf ? this._sprGoal() : this._sprX || 0)) : 0, T = B ? this._hudH || 0 : 0;
     const vw = Math.max(160, w - P), vh = Math.max(160, h - B - T);
     this._camera.aspect = vw / vh; if (this._walkOn) this._camera.fov = this._walkFov();
-    if (P || B) this._camera.setViewOffset(vw, vh, 0, -T, w, h); else this._camera.clearViewOffset();
+    if (P || B) this._camera.setViewOffset(vw, vh, -P, -T, w, h); else this._camera.clearViewOffset();
     this._camera.updateProjectionMatrix();
     const u = 2 * Math.tan(this._camera.fov * Math.PI / 360) / vh;   // rótulos (sem perspectiva): px de tela → escala
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
@@ -5351,7 +5426,7 @@ export class Casa3DCard extends HTMLElement {
   _start() {
     if (this._raf || !this._renderer) return;
     this._clock.start();
-    const tick = () => { this._raf = requestAnimationFrame(tick); this._frame(); };
+    const tick = () => { this._raf = requestAnimationFrame(tick); if (!this._sizing) this._frame(); };   // ajustando a largura: a cena espera
     this._raf = requestAnimationFrame(tick);
   }
   _stop() { if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0; this._clock.stop(); }
