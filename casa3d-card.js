@@ -7,7 +7,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.5.0';
+export const VERSION = '1.5.1';
 
 // Única fonte de verdade para as opções do cartão — usada tanto no construtor (antes de
 // qualquer setConfig, caso do próprio elemento já presente no HTML ao carregar o módulo)
@@ -202,8 +202,8 @@ const ZONES = {
 const POOL  = { x0: 3.9, x1: 8.3, zc: 9.8, r: 1.6, depth: 1.4 };   // reta de x0→x1 + meia-lua de raio r
 const DECK  = { x: 2.9, z: 7.2, w: 8.0, d: 5.2 };
 const LOT   = { w: 13.4, d: 16.6 };
-// Visão de pessoa: área onde dá para andar (lote + calçada da frente, z 16,6–18,4)
-const WALK  = { x0: 0, x1: LOT.w, z0: 0, z1: 18.4 };
+// Visão de pessoa: área onde dá para andar (só o lote; sem rua nem calçada desde a v1.5.1)
+const WALK  = { x0: 0, x1: LOT.w, z0: 0, z1: LOT.d };
 // dentro da piscina (reta x0→x1 + meia-lua de raio r), com folga g — a pessoa contorna a água
 const inPool = (x, z, g = 0) => (x >= POOL.x0 - g && x <= POOL.x1 && Math.abs(z - POOL.zc) <= POOL.r + g) || Math.hypot(x - POOL.x1, z - POOL.zc) <= POOL.r + g;
 // Cômodos para o bonequinho e o "Ir para…": [x, z, w, d] no piso; `zone` reaproveita o retângulo de ZONES
@@ -222,8 +222,6 @@ const PLACES = [
     { id: 'banheiro', label: 'Banheiro', rects: [zr('banheiro')] },
     { id: 'dispensa', label: 'Dispensa', rects: [zr('dispensa')] },
     { id: 'garagem', label: 'Garagem', rects: [zr('garagem')] }] },
-  { id: 'rua', label: 'Rua', rooms: [
-    { id: 'calcada', label: 'Calçada', rects: [[0, 16.75, LOT.w, 1.6]] }] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -354,8 +352,6 @@ function materials() {
   const std = (o) => new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.9, metalness: 0 }, o));
   MAT.wall     = std({ color: 0xf0eadf, map: T.plaster, roughness: 0.95 });
   MAT.lowWall  = std({ color: 0xd6ccb8, map: T.plaster, roughness: 0.95 });
-  MAT.ground   = std({ color: 0x9fb08c, map: T.grass, roughness: 1 });
-  MAT.ground.map = T.grass.clone(); MAT.ground.map.repeat.set(1 / 2.2, 1 / 2.2);
   MAT.deck     = std({ color: 0xf2e6cf, map: T.pavers, roughness: 0.95 });
   MAT.deck.map = T.pavers.clone(); MAT.deck.map.repeat.set(1 / 1.6, 1 / 1.6);
   MAT.basin    = std({ color: 0xa9d3ea, roughness: 0.55, emissive: 0x9fd8ff, emissiveMap: T.caustics.clone(), emissiveIntensity: 0.12 });
@@ -895,7 +891,7 @@ const _dm1 = new THREE.Matrix4(), _dm2 = new THREE.Matrix4(), _dm3 = new THREE.M
 class Walker {
   constructor(card, camera, dom) {
     this.card = card; this.camera = camera; this.dom = dom;
-    this.pos = new THREE.Vector3(6.1, 1.6, 17.6);   // começa na calçada, de frente para o portãozinho do muro
+    this.pos = new THREE.Vector3(6.1, 1.6, 15.8);   // começa logo depois do portãozinho do muro, olhando para a casa
     this.yaw = 0; this.pitch = 0;                    // frente = (−sin yaw, 0, −cos yaw): yaw 0 olha para −z (para dentro do lote)
     this.vel = new THREE.Vector3(); this.keys = new Set(); this.joy = { x: 0, y: 0 };
     this.on = false; this.moving = false; this.dirty = false; this.head = false; this.gesture = false;
@@ -951,7 +947,7 @@ class Walker {
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;   // digitando em outro campo da página
     const c = e.code;
     if (t && t.closest && t.closest('.menu')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu
-    if (c === 'Escape') { if (this.card._menu && !this.card._menu.hidden) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha o menu
+    if (c === 'Escape') { if ((this.card._menu && !this.card._menu.hidden) || this.card._sel) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu (ou o balão de seleção) aberto só fecha ele
     if (c === 'Enter' || c === 'KeyF') {   // interagir: abre/fecha a porta mais perto e à frente (E já é "girar")
       if (t && t !== this.card._canvas && t !== document.body && t !== document.documentElement) return;   // Enter em botões/links da página segue normal
       if (down && !e.repeat) this.card._doorInteract();
@@ -2613,7 +2609,12 @@ canvas:active { cursor: grabbing; }
 .title .clock { color: #e6edf7; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 .title .clock .per { color: #ffd48a; font-weight: 700; }
 .title .clock .suntimes { color: #9aa6bd; font-weight: 500; }
-.hud > .lcol { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; pointer-events: none; }   /* coluna esquerda: título + clima */
+/* Clima (v1.5.1): só ícone + temperatura na linha do relógio; os detalhes ficam no topo do menu ☰ */
+.title .cline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.title .wx { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: #e6edf7; }
+.title .wx svg { width: 15px; height: 15px; color: #ffc46b; } .title .wx[hidden] { display: none; }
+.menu .mwx .wd { padding: 0 8px 4px; font-size: 12px; color: #d5dcea; } .menu .mwx .wd small { display: block; font-size: 10.5px; color: #7f8ba3; margin-top: 2px; }
+.hud > .lcol { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; pointer-events: none; }   /* coluna esquerda: título */
 .lcol > * { pointer-events: auto; }
 .btns { display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; align-items: center; flex: none; }
 /* Menu de opções (v1.5): um botão ☰ no topo abre a lista suspensa por seções; nasce do botão (canto superior direito) */
@@ -2668,7 +2669,17 @@ button[aria-pressed="true"] { background: rgba(255, 196, 107, .18); color: #ffd4
 .walkhint.show { opacity: 1; }
 canvas.walk { cursor: crosshair; }
 canvas.walk.pick { cursor: pointer; }
-.peg { display: inline-flex; align-items: center; justify-content: center; color: #ffc46b; touch-action: none; cursor: grab; padding: 8px 10px; }
+.peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ffc46b; touch-action: none; cursor: grab; padding: 8px 10px; }
+.peg .lbl { color: #ffd48a; }
+/* dica de primeiro acesso apontando para o bonequinho (some quando ele é usado ou ao fechar) */
+.pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 30px 9px 12px; font-size: 12px; line-height: 1.35; color: #e6edf7; background: rgba(22, 29, 48, .96); }
+.pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: rgba(22, 29, 48, .96); border: solid rgba(255, 255, 255, .09); border-width: 1px 0 0 1px; transform: rotate(45deg); }
+.pegdica button { position: absolute; top: 3px; right: 3px; padding: 3px 8px; font-size: 14px; color: #9aa6bd; }
+/* seleção (v1.5.1): 1º toque seleciona e mostra este balão; o 2º toque (ou o botão) executa */
+.selpop { position: absolute; left: 0; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px; padding: 5px 5px 5px 11px; font-size: 12px; color: #e6edf7; white-space: nowrap; animation: menuIn .15s cubic-bezier(.2, .8, .2, 1); }
+.selpop[hidden] { display: none; }
+.selpop button { background: rgba(255, 196, 107, .2); color: #ffd48a; border-radius: 999px; padding: 6px 12px; min-height: 32px; transition: transform .1s ease-out; }
+.selpop button:active { transform: scale(.95); }   /* retorno já no toque */
 .peg[hidden], .btns > button[hidden] { display: none; }
 .peg[aria-pressed="true"] { background: rgba(255, 196, 107, .18); }
 .pegghost { position: absolute; left: 0; top: 0; width: 44px; height: 44px; z-index: 7; pointer-events: none; display: grid; place-items: center; color: #ffc46b;
@@ -2855,25 +2866,6 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
 .scrim { display: none; position: absolute; left: 0; right: 0; bottom: 0; top: var(--side-top, 58px); z-index: 3; background: rgba(4, 7, 14, .42); animation: scrimIn .25s ease-out; }
 .scrim.closing { animation: scrimOut .2s ease-in forwards; }
 @keyframes scrimIn { from { opacity: 0; } } @keyframes scrimOut { to { opacity: 0; } }
-/* Clima ao vivo (v1.5): embaixo do cartão do título, no canto superior esquerdo — o único canto livre em todos os modos
-   (direita = painel lateral/aba, embaixo à esquerda = joystick da Pessoa, embaixo no meio = aviso de comandos) */
-.weather { position: relative; width: 168px; box-sizing: border-box; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
-.weather[hidden] { display: none; }
-.weather .wtop { display: flex; align-items: center; gap: 8px; }
-.weather .wicon { width: 30px; height: 30px; color: #ffc46b; flex: none; display: flex; }
-.weather .wicon svg { width: 30px; height: 30px; }
-.weather .wtemp { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-.weather .wtemp sup { font-size: 15px; font-weight: 600; opacity: .8; }
-.weather .wcond { font-size: 12px; color: #c9d2e3; line-height: 1.25; }
-.weather .wcity { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #8f9bb3; font-weight: 700; }
-.weather .wmeta { display: flex; justify-content: space-between; font-size: 11px; color: #9aa6bd; font-variant-numeric: tabular-nums; margin-top: 2px; }
-.weather .wupd { font-size: 10px; color: #6b768f; text-align: right; }
-@media (max-width: 640px) {
-  /* clima compacto: ícone, temperatura e condição numa faixa só */
-  .weather { width: auto; max-width: 190px; padding: 6px 10px; flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; }
-  .weather .wtemp { font-size: 18px; } .weather .wtemp sup { font-size: 11px; } .weather .wicon, .weather .wicon svg { width: 20px; height: 20px; }
-  .weather .wcity, .weather .wmeta, .weather .wupd { display: none; } .weather .wcond { font-size: 11.5px; }
-}
 @media (max-width: 640px) {
   /* gaveta: entra pela direita cobrindo a maior parte da tela, altura toda abaixo do cabeçalho */
   .dock { right: 0; bottom: 0; border-radius: 20px 0 0 20px; border-right: 0; animation-name: drawerIn; }
@@ -2891,11 +2883,11 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: #ffc46b; }
   .title { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 0; padding: 6px 10px; max-width: 100%; box-sizing: border-box; }
   .title b { font-size: 14px; }
   .btn { padding: 7px 10px; }
-  .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl { display: none; }
+  .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
   .menu { left: 10px; right: 10px; width: auto; }
   .hint { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb { animation: none !important; transition: none !important; transform: none !important; }
+@media (prefers-reduced-motion: reduce) { .selpop, .selpop button, .pane.active, .tile, .tile::before, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .sw::after, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb { animation: none !important; transition: none !important; transform: none !important; }
   .dock, .reopen, .scrim, .menu { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
 @keyframes fadeIn { from { opacity: 0; } }
 /* menos transparência: superfícies quase sólidas, sem blur */
@@ -2980,12 +2972,13 @@ export class Casa3DCard extends HTMLElement {
     canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && this._mk) { this._hoverDest = null; this._mkHide(); } });   // sai do quadro: some o anel do destino
 
     const top = document.createElement('div'); top.className = 'hud top'; wrap.appendChild(top); this._hudTop = top;
-    const lcol = document.createElement('div'); lcol.className = 'lcol'; top.appendChild(lcol); this._lcol = lcol;   // título + clima (v1.5)
+    const lcol = document.createElement('div'); lcol.className = 'lcol'; top.appendChild(lcol); this._lcol = lcol;   // título (v1.5)
     const title = document.createElement('div'); title.className = 'panel title'; this._titleCard = title;
     this._titleEl = document.createElement('b'); this._titleEl.textContent = this._config.title || 'Casa 3D';
     this._clockEl = document.createElement('span'); this._clockEl.className = 'clock'; this._clockEl.textContent = '—';
     this._subEl = document.createElement('span'); this._subEl.className = 'sub'; this._subEl.textContent = '—';
-    title.append(this._titleEl, this._clockEl, this._subEl); lcol.appendChild(title);
+    const cline = document.createElement('div'); cline.className = 'cline'; cline.appendChild(this._clockEl); this._clineEl = cline;   // relógio + clima (v1.5.1)
+    title.append(this._titleEl, cline, this._subEl); lcol.appendChild(title);
     this._wrap = wrap;
 
     // Topo (v1.5): "Ir para…" (só na Pessoa) + bonequinho + UM botão de menu; as opções ficam na lista suspensa por seções.
@@ -3018,7 +3011,6 @@ export class Casa3DCard extends HTMLElement {
     }
     sAmb.appendChild(seg);
     this._nvBtn = item(sAmb, 'moon', 'Visão noturna', { note: 'à noite, casa inteira visível', toggle: true });
-    this._nvBtn.title = 'À noite, deixa a casa inteira visível (luz de lua)';
     this._nvBtn.addEventListener('click', () => { this._nightVision = !this._nightVision; this._applyMode(); });
     // Vista: Rótulos, Telhado, Recentrar
     const sVis = sec('Vista');
@@ -3047,10 +3039,18 @@ export class Casa3DCard extends HTMLElement {
     this._gotoBtn.addEventListener('click', () => this._toggleGoto());
     btns.appendChild(this._gotoBtn);
     const PERSON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.2" r="3"/><path d="M12 9.6c-2.9 0-4.6 1.5-4.8 4l-.2 3.2c0 .6.4 1 .9 1h.9l.4 4.2c0 .5.4.8.8.8h4c.4 0 .8-.3.8-.8l.4-4.2h.9c.5 0 .9-.4.9-1l-.2-3.2c-.2-2.5-1.9-4-4.8-4z"/></svg>';
-    this._pegBtn = document.createElement('button'); this._pegBtn.className = 'panel btn peg'; this._pegBtn.innerHTML = PERSON;
-    this._pegBtn.title = 'Arraste até um cômodo e solte para entrar nele (visão de Pessoa) · toque: lista de cômodos';
-    this._pegBtn.setAttribute('aria-label', 'Bonequinho: arraste até um cômodo para entrar nele; Enter abre a lista de cômodos'); this._pegBtn.setAttribute('aria-pressed', 'false');
+    this._pegBtn = document.createElement('button'); this._pegBtn.className = 'panel btn peg'; this._pegBtn.innerHTML = `${PERSON}<span class="lbl">Andar</span>`;
+    this._pegBtn.title = 'Andar pela casa: arraste até um cômodo e solte para entrar nele (visão de Pessoa) · toque: lista de cômodos';
+    this._pegBtn.setAttribute('aria-label', 'Andar: arraste até um cômodo para entrar nele; Enter abre a lista de cômodos'); this._pegBtn.setAttribute('aria-pressed', 'false');
     btns.appendChild(this._pegBtn); this._pegBind(this._pegBtn);
+    // dica de primeiro acesso (v1.5.1): aponta para o bonequinho até ele ser usado, a Pessoa abrir ou a dica ser fechada
+    let dicaVista = false; try { dicaVista = !!window.localStorage.getItem('casa3d.dica_pessoa'); } catch (_) {}
+    if (!dicaVista) {
+      const d = document.createElement('div'); d.className = 'panel pegdica'; d.setAttribute('role', 'note');
+      d.textContent = 'Arraste até um cômodo para andar pela casa — ou toque para escolher';
+      const x = document.createElement('button'); x.textContent = '×'; x.setAttribute('aria-label', 'Fechar dica'); x.addEventListener('click', () => this._dicaOff());
+      d.appendChild(x); wrap.appendChild(d); this._dica = d;
+    }
     this._menuBtn = document.createElement('button'); this._menuBtn.className = 'panel btn menubtn';
     this._menuBtn.innerHTML = `${iconSvg('menu')}<span class="lbl">Opções</span>`;
     this._menuBtn.setAttribute('aria-label', 'Opções'); this._menuBtn.title = 'Opções: ambiente, vista, navegação e painel';
@@ -3063,6 +3063,10 @@ export class Casa3DCard extends HTMLElement {
 
     this._pegGhost = document.createElement('div'); this._pegGhost.className = 'pegghost'; this._pegGhost.innerHTML = PERSON; this._pegGhost.hidden = true; wrap.appendChild(this._pegGhost);
     this._pegTip = document.createElement('div'); this._pegTip.className = 'panel pegtip'; this._pegTip.hidden = true; wrap.appendChild(this._pegTip);
+    this._selPop = document.createElement('div'); this._selPop.className = 'panel selpop'; this._selPop.hidden = true;
+    this._selPop.innerHTML = '<span aria-live="polite"></span><button type="button"></button>'; wrap.appendChild(this._selPop);
+    this._selPop.lastChild.addEventListener('click', () => this._selRun());
+    this._selEsc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); this._selClear(); } };
     this._gotoPanel = document.createElement('div'); this._gotoPanel.className = 'panel goto'; this._gotoPanel.hidden = true; this._gotoPanel.setAttribute('role', 'dialog'); this._gotoPanel.setAttribute('aria-label', 'Ir para um cômodo'); wrap.appendChild(this._gotoPanel);
     this._fadeEl = document.createElement('div'); this._fadeEl.className = 'fade'; wrap.appendChild(this._fadeEl);
     const joy = document.createElement('div'); joy.className = 'joy'; joy.hidden = true; joy.setAttribute('role', 'application'); joy.setAttribute('aria-label', 'Andar');
@@ -3070,9 +3074,16 @@ export class Casa3DCard extends HTMLElement {
     this._walkHint = document.createElement('div'); this._walkHint.className = 'panel walkhint'; wrap.appendChild(this._walkHint);
 
     this._hint = document.createElement('div'); this._hint.className = 'hint';
-    this._hint.textContent = 'Arraste para girar · roda/pinça para zoom · clique num cômodo para acender';
+    this._hint.textContent = 'Arraste para girar · roda/pinça para zoom · toque 2× num cômodo para acender';
     title.appendChild(this._hint);
-    setTimeout(() => { if (!this._hint) return; this._hint.classList.add('hide'); setTimeout(() => { this._hint.hidden = true; }, 700); }, 9000);
+    // some no primeiro gesto na cena (não por tempo)
+    const hideHint = () => { if (this._hint.hidden || this._hint.classList.contains('hide')) return; this._hint.classList.add('hide'); setTimeout(() => { this._hint.hidden = true; }, 700); };
+    canvas.addEventListener('pointerdown', hideHint, { once: true }); canvas.addEventListener('wheel', hideHint, { once: true, passive: true });
+    // retorno já no toque: o alvo sob o dedo realça antes de soltar; se virar arrasto, volta ao que estava selecionado
+    // (registrado antes do Orbit/Walker: no pointerup roda primeiro, e o clique em seguida decide a seleção)
+    canvas.addEventListener('pointerdown', (e) => { if (e.button === 0 && this._raycaster) this._selHl(this._selKey(this._pickHit(e))); });
+    const unpress = () => { if (this._raycaster) this._selHl(this._sel && this._sel.key); };
+    canvas.addEventListener('pointerup', unpress); canvas.addEventListener('pointercancel', unpress);
 
     try {
       this._build3D(canvas);
@@ -3133,12 +3144,13 @@ export class Casa3DCard extends HTMLElement {
     this._sun.shadow.bias = -0.0005; this._sun.shadow.normalBias = 0.025;
     scene.add(this._sun); scene.add(this._sun.target);
 
-    // Terreno (com o recorte da piscina)
+    // Chão em volta (v1.5.1): cor chapada barata (MeshBasic, sem textura nem sombra) que acompanha dia/noite em _frame; recorte da piscina
     const gsh = new THREE.Shape();
     gsh.moveTo(-40, 40); gsh.lineTo(53, 40); gsh.lineTo(53, -56); gsh.lineTo(-40, -56); gsh.closePath();
     gsh.holes.push(this._poolShape());
-    const ground = new THREE.Mesh(new THREE.ShapeGeometry(gsh), M.ground);
-    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    this._groundMat = new THREE.MeshBasicMaterial({ color: 0xc9ced6 });
+    const ground = new THREE.Mesh(new THREE.ShapeGeometry(gsh), this._groundMat);
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
     this._clickables = []; this._labels = [];
     // Pisos (zonas)
@@ -3166,7 +3178,6 @@ export class Casa3DCard extends HTMLElement {
       scene.add(box(0.02, hb, z.d - 2 * i, M.baseboard, z.x + i, hb / 2, z.z + z.d / 2, { cast: false }));
       scene.add(box(0.02, hb, z.d - 2 * i, M.baseboard, z.x + z.w - i, hb / 2, z.z + z.d / 2, { cast: false }));
     }
-    this._buildStreet(scene, M);
     this._buildPool(scene, M);
     this._buildFurniture(scene, M);
 
@@ -3230,7 +3241,7 @@ export class Casa3DCard extends HTMLElement {
     renderer.shadowMap.needsUpdate = true;
   }
 
-  // Domo de céu (dia/noite com crossfade), estrelas e mapa de ambiente para reflexos
+  // Domo de céu (dia/noite com crossfade) e mapa de ambiente para reflexos
   _buildSky(scene, renderer) {
     const T = textures();
     const geo = new THREE.SphereGeometry(130, 32, 16);
@@ -3240,14 +3251,6 @@ export class Casa3DCard extends HTMLElement {
     this._skyNight.renderOrder = -3; this._skyDusk.renderOrder = -2; this._skyDay.renderOrder = -1;
     this._skyNight.position.set(LOT.w / 2, 0, LOT.d / 2); this._skyDay.position.copy(this._skyNight.position); this._skyDusk.position.copy(this._skyNight.position);
     scene.add(this._skyNight, this._skyDusk, this._skyDay);
-    const rnd = mulberry32(77), n = 700, pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const th = rnd() * Math.PI * 2, ph = Math.acos(1 - rnd() * 0.9), r = 120;
-      pos[i * 3] = LOT.w / 2 + r * Math.sin(ph) * Math.cos(th); pos[i * 3 + 1] = r * Math.cos(ph); pos[i * 3 + 2] = LOT.d / 2 + r * Math.sin(ph) * Math.sin(th);
-    }
-    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    this._stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xdfe8ff, size: 0.55, transparent: true, opacity: 0, fog: false, depthWrite: false }));
-    scene.add(this._stars);
     // Ambiente (PMREM) a partir do próprio céu: reflexos na água/metais e luz difusa
     try {
       const pm = new THREE.PMREMGenerator(renderer);
@@ -3261,18 +3264,6 @@ export class Casa3DCard extends HTMLElement {
       pm.dispose();
       scene.environment = this._envNight; scene.environmentIntensity = 0.35;
     } catch (e) { console.warn('[casa3d-card] sem environment map', e); }
-  }
-
-  // Rua e calçada na frente do lote
-  _buildStreet(scene, M) {
-    const TX = textures();
-    const walk = new THREE.MeshStandardMaterial({ color: 0xbdbab2, map: TX.concrete.clone(), roughness: 1 }); walk.map.repeat.set(12, 1);
-    scene.add(box(34, 0.12, 1.8, walk, LOT.w / 2, 0.06, LOT.d + 0.95, { cast: false }));
-    scene.add(box(34, 0.14, 0.14, M.dark, LOT.w / 2, 0.07, LOT.d + 1.9, { cast: false }));
-    const road = new THREE.MeshStandardMaterial({ color: 0x8d8c86, map: TX.asphalt.clone(), roughness: 1 }); road.map.repeat.set(14, 3);
-    scene.add(box(46, 0.02, 7, road, LOT.w / 2, 0.005, LOT.d + 5.5, { cast: false }));
-    for (let x = -12; x < 32; x += 3.2) scene.add(box(1.6, 0.012, 0.12, M.white, x, 0.02, LOT.d + 5.5, { cast: false }));
-    for (const sx of [0.3, LOT.w - 0.3]) scene.add(box(0.06, 0.12, 0.6, M.dark, sx, 0.13, LOT.d + 0.95, { cast: false }));
   }
 
   // Telhado de telha cerâmica + forro (ligado pelo botão "Telhado")
@@ -3682,8 +3673,15 @@ export class Casa3DCard extends HTMLElement {
     this._night = night;
     for (const [m, b] of Object.entries(this._modeBtns)) b.setAttribute('aria-pressed', m === this._mode ? 'true' : 'false');
     this._nvBtn.setAttribute('aria-pressed', this._nightVision ? 'true' : 'false');
-    this._nvBtn.disabled = !night; this._nvBtn.style.opacity = night ? '' : '.55';
+    this._nvAvail(night);
     this._needShadow = true;
+  }
+
+  // Visão noturna só vale à noite: de dia o item fica apagado e diz por quê
+  _nvAvail(night) {
+    const b = this._nvBtn; b.disabled = !night; b.style.opacity = night ? '' : '.55';
+    b.querySelector('small').textContent = night ? 'à noite, casa inteira visível' : 'só à noite';
+    b.title = night ? 'À noite, deixa a casa inteira visível (luz de lua)' : 'Só à noite — de dia a casa já aparece inteira';
   }
 
   _setLabels(on) {
@@ -4195,6 +4193,7 @@ export class Casa3DCard extends HTMLElement {
     let st = null;
     const pt = (e) => ({ x: e.clientX, y: e.clientY - (e.pointerType === 'touch' ? 56 : 0) });   // no toque a mira fica acima do dedo
     btn.addEventListener('pointerdown', (e) => {
+      this._dicaOff();
       if (e.button > 0 || this._walkOn) return;
       st = { id: e.pointerId, x0: e.clientX, y0: e.clientY, live: false }; try { btn.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
@@ -4211,7 +4210,11 @@ export class Casa3DCard extends HTMLElement {
       this._pegDrop(e.type === 'pointerup' ? pt(e) : null);
     };
     btn.addEventListener('pointerup', end); btn.addEventListener('pointercancel', end);
-    btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._toggleGoto(); } });
+    btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._dicaOff(); this._toggleGoto(); } });
+  }
+  _dicaOff() {
+    if (!this._dica) return; this._dica.remove(); this._dica = null;
+    try { window.localStorage.setItem('casa3d.dica_pessoa', '1'); } catch (_) {}
   }
   _pegAt(p) {
     const el = this.shadowRoot.elementFromPoint(p.x, p.y);
@@ -4297,10 +4300,12 @@ export class Casa3DCard extends HTMLElement {
     const hit = this._sideOverlay || tr.right > wr.right - 10 - sw - 8;
     const top = Math.round((hit ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 8);
     this._sideW = sw; this._wrap.style.setProperty('--side-w', `${sw}px`); this._wrap.style.setProperty('--side-top', `${top}px`);
+    if (this._dica) { const pr = this._pegBtn.getBoundingClientRect(); const ds = this._dica.style; ds.top = `${Math.round(pr.bottom - wr.top + 10)}px`; ds.right = `${Math.round(wr.right - pr.right)}px`; ds.setProperty('--ax', `${Math.round(pr.width / 2 - 6)}px`); }
     this._placeMenu();
   }
   _setWalk(on) {
     on = !!on; if (on === !!this._walkOn || !this._orbit) return;
+    this._selClear(); if (on) this._dicaOff();
     const o = this._orbit, cam = this._camera, cv = this._canvas;
     if (on) {
       this._walkSaved = { pos: cam.position.clone(), target: o.target.clone(), panel: this._panelOpen, touched: o.touched, roof: !!this._roofOn };
@@ -4308,7 +4313,7 @@ export class Casa3DCard extends HTMLElement {
       if (this._config.telhado_pessoa !== false && !this._roofOn) this._setRoof(true);
       if (this._panelOpen) this._setPanel(false);   // vista inteira para andar (no celular a gaveta cobriria o joystick); volta ao sair
       o.enabled = false; o.touched = true;
-      if (!this._walk) { this._walk = new Walker(this, cam, cv); this._walk.reset(6.1, 17.6); }
+      if (!this._walk) { this._walk = new Walker(this, cam, cv); this._walk.reset(6.1, 15.8); }
       this._walkOn = true; this._walk.enable();
       cam.near = 0.15; cam.fov = this._walkFov(); cam.updateProjectionMatrix();
       cv.classList.add('walk'); try { cv.focus({ preventScroll: true }); } catch (_) {}
@@ -4335,7 +4340,7 @@ export class Casa3DCard extends HTMLElement {
   _showWalkHint() {
     const h = this._walkHint, coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
     h.textContent = coarse ? 'Toque no piso para ir até lá · joystick anda · arraste para olhar' : 'Clique no piso para ir até lá · setas/WASD ou joystick andam · arraste para olhar · Shift corre · Enter/F abre a porta · Esc sai';
-    h.classList.add('show'); clearTimeout(this._walkHintT); this._walkHintT = setTimeout(() => h.classList.remove('show'), 6000);
+    h.classList.add('show');   // some no primeiro passo / gesto (_frame), não por tempo
   }
 
   // ---- Ganchos públicos (depuração / demo) ----
@@ -4375,9 +4380,42 @@ export class Casa3DCard extends HTMLElement {
   }
   _onClick(e) {
     const hit = this._pickHit(e), o = hit ? hit.object : null;
-    if (this._walkOn && this._doorClick(hit)) return;               // folha da porta: abre/fecha
-    if (this._walkOn && this._walkClick(e, hit)) return;            // piso / parede: caminha até lá
-    if (o && o.userData.item) { this._activate(o.userData.item); this._flashRow(o.userData.item); }
+    if (this._walkOn && this._doorClick(hit)) { this._selClear(); return; }      // folha da porta: abre/fecha
+    if (this._walkOn && this._walkClick(e, hit)) { this._selClear(); return; }   // piso / parede: caminha até lá
+    // 1º toque seleciona (realce + balão com estado e ação); 2º toque no mesmo alvo em até 5 s, ou o botão, executa —
+    // assim um toque sem querer na maquete não mexe na casa real. Vazio / outro ponto limpa.
+    const key = o && o.userData.item;
+    if (!key) this._selClear();
+    else if (this._sel && this._sel.key === key) this._selRun();
+    else this._select(key, e);
+  }
+  // alvo do toque: luz/aparelho sob o ponto (no modo Pessoa o piso é destino, não alvo)
+  _selKey(hit) { const o = hit && hit.object; return o && o.userData.item && !(this._walkOn && o.userData.zone) ? o.userData.item : null; }
+  _select(key, e) {
+    const it = ITEMS.find((i) => i.key === key); if (!it) return;
+    this._sel = { key, it }; this._selUpd(); this._selHl(key);
+    const p = this._selPop, wr = this._wrap.getBoundingClientRect(); p.hidden = false;
+    const x = e.clientX - wr.left, y = e.clientY - wr.top, w = p.offsetWidth, h = p.offsetHeight;
+    p.style.left = `${Math.round(clamp(x - w / 2, 10, wr.width - w - 10))}px`; p.style.top = `${Math.round(y - h - 14 < 10 ? y + 14 : y - h - 14)}px`;
+    clearTimeout(this._selT); this._selT = setTimeout(() => this._selClear(), 5000);
+    window.addEventListener('keydown', this._selEsc, true);
+  }
+  // texto do balão: "Sala / Cozinha · apagada" + Acender/Apagar (aparelhos: Ligar/Desligar)
+  _selUpd() {
+    const s = this._sel; if (!s) return; const st = this._state[s.key], on = !!(st && st.on);
+    this._selPop.firstChild.textContent = `${s.it.label} · ${this._stateText(s.it, st)}`;
+    this._selPop.lastChild.textContent = s.it.kind === 'light' ? (on ? 'Apagar' : 'Acender') : on ? 'Desligar' : 'Ligar';
+  }
+  _selRun() { const s = this._sel; if (!s) return; this._selClear(); this._toggleItem(s.key); this._flashRow(s.key); }
+  _selClear() {
+    if (!this._sel) return; this._sel = null; clearTimeout(this._selT);
+    this._selPop.hidden = true; this._selHl(null); window.removeEventListener('keydown', this._selEsc, true);
+  }
+  // realce âmbar do alvo: o(s) piso(s) que essa luz acende ou, sem piso, a área sob o aparelho
+  _selHl(key) {
+    const rects = key ? Object.values(ZONES).filter((z) => z.item === key).map((z) => [z.x, z.z, z.x + z.w, z.z + z.d]) : null;
+    if (rects && !rects.length) for (const m of this._clickables) if (m.userData.item === key) { const b = new THREE.Box3().setFromObject(m); rects.push([b.min.x - 0.25, b.min.z - 0.25, b.max.x + 0.25, b.max.z + 0.25]); }
+    this._hlShow(rects); this._orbit.dirty = true;
   }
   _onHover(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
@@ -4527,7 +4565,7 @@ export class Casa3DCard extends HTMLElement {
     this._reopen = document.createElement('button'); this._reopen.className = 'panel btn reopen'; this._reopen.title = 'Abrir o painel'; this._reopen.setAttribute('aria-label', 'Abrir o painel');
     this._reopen.innerHTML = `${iconSvg('chevl')}<span class="rl">Painel</span><span class="rn" title="luzes acesas"></span>`; this._reopen.hidden = true;
     this._reopen.addEventListener('click', () => this._setPanel(true)); wrap.appendChild(this._reopen);
-    this._buildWeather(this._lcol || wrap);
+    this._buildWeather();
 
     // Cômodos (v1.5): blocos agrupados pelos cômodos reais da planta (ZONES/PLACES), com filtro
     this._tiles = {};
@@ -4578,20 +4616,15 @@ export class Casa3DCard extends HTMLElement {
     this._showTab('ctl');
     this._feedTimer = setInterval(() => { if (this._panelOpen) this._renderPanel(); this._updateTime(true); }, 30000);
   }
-  // Clima ao vivo (Open-Meteo, sem chave) — atualiza a cada 15 min
-  _buildWeather(wrap) {
+  // Clima ao vivo (Open-Meteo, sem chave) — atualiza a cada 15 min. Título: só ícone + temperatura; detalhes no topo do menu ☰
+  _buildWeather() {
     if (!this._config.weather) return;
-    const w = document.createElement('div'); w.className = 'panel weather'; wrap.appendChild(w); this._weatherEl = w;
-    const top = document.createElement('div'); top.className = 'wtop';
-    const ico = document.createElement('span'); ico.className = 'wicon'; ico.innerHTML = iconSvg('cloudsun');
-    const temp = document.createElement('span'); temp.className = 'wtemp'; temp.textContent = '—';
-    top.append(ico, temp); w.appendChild(top);
-    const city = document.createElement('div'); city.className = 'wcity'; city.textContent = this._config.weather_city || 'Local';
-    const cond = document.createElement('div'); cond.className = 'wcond'; cond.textContent = 'Carregando…';
-    const meta = document.createElement('div'); meta.className = 'wmeta';
-    const upd = document.createElement('div'); upd.className = 'wupd'; upd.textContent = '';
-    w.append(city, cond, meta, upd);
-    this._weatherUI = { ico, temp, cond, meta, upd };
+    const chip = document.createElement('span'); chip.className = 'wx'; chip.hidden = true; chip.setAttribute('role', 'img'); this._clineEl.appendChild(chip);
+    const sec = document.createElement('div'); sec.className = 'msec mwx'; sec.setAttribute('role', 'group'); sec.setAttribute('aria-label', 'Clima');
+    const city = document.createElement('div'); city.className = 'mh'; city.textContent = this._config.weather_city || 'Clima';
+    const det = document.createElement('div'); det.className = 'wd'; det.textContent = 'Carregando…';
+    sec.append(city, det); this._menu.prepend(sec);
+    this._weatherUI = { chip, det };
     this._fetchWeather();
     this._weatherTimer = setInterval(() => this._fetchWeather(), 15 * 60000);
   }
@@ -4606,14 +4639,15 @@ export class Casa3DCard extends HTMLElement {
       const j = await res.json(); const c = j.current; if (!c) throw new Error('sem dados');
       const [iconKey, desc] = WEATHER_CODE[c.weather_code] || ['cloud', '—'];
       const icon = !c.is_day && iconKey === 'sun' ? 'moon' : !c.is_day && iconKey === 'cloudsun' ? 'cloud' : iconKey;
-      ui.ico.innerHTML = iconSvg(icon);
-      ui.temp.innerHTML = `${Math.round(c.temperature_2m)}<sup>°C</sup>`;
-      ui.cond.textContent = desc;
-      ui.meta.innerHTML = `<span>sensação ${Math.round(c.apparent_temperature)}°</span><span>${Math.round(c.wind_speed_10m)} km/h</span>`;
-      ui.upd.textContent = `atualizado ${fmtClock(Date.now())}`;
+      const t = Math.round(c.temperature_2m);
+      ui.chip.innerHTML = `${iconSvg(icon)}${t}°`; ui.chip.hidden = false;
+      ui.chip.title = desc; ui.chip.setAttribute('aria-label', `${desc}, ${t} graus`);
+      ui.det.innerHTML = '';
+      ui.det.append(`${desc} · ${t}°C · sensação ${Math.round(c.apparent_temperature)}° · vento ${Math.round(c.wind_speed_10m)} km/h`);
+      const upd = document.createElement('small'); upd.textContent = `atualizado ${fmtClock(Date.now())}`; ui.det.appendChild(upd);
       this._weatherOk = true;
     } catch (err) {
-      if (!this._weatherOk) { ui.cond.textContent = 'Indisponível'; ui.upd.textContent = 'sem conexão'; }
+      if (!this._weatherOk) ui.det.textContent = 'Clima indisponível';
       console.warn('[casa3d-card] clima indisponível:', err && err.message);
     }
   }
@@ -4732,6 +4766,7 @@ export class Casa3DCard extends HTMLElement {
     return (st.on ? (it.key === 'bomba_piscina' ? 'ligada' : 'acesa') : (it.key === 'bomba_piscina' ? 'desligada' : 'apagada')) + pct;
   }
   _renderPanel() {
+    this._selUpd();   // balão de seleção acompanha o estado
     if (!this._tiles) return;
     const now = Date.now();
     for (const [k, t] of Object.entries(this._tiles)) {
@@ -4854,12 +4889,13 @@ export class Casa3DCard extends HTMLElement {
     let dirty = this._walkOn ? this._walk.update(dt) : this._orbit.update(dt);
     if (this._walkOn && this._doorsTick(dt)) dirty = true;   // portas abrindo/fechando na visão de pessoa
     if (this._walkOn && this._mkTick(t)) dirty = true;        // marcador do destino pulsando
+    if (this._walkOn && this._orbit.moving) this._walkHint.classList.remove('show');   // primeiro passo / olhada: a dica de comandos sai
     const k = 1 - Math.exp(-dt * 7);
     // Ambiente dia/noite — em "auto" segue a elevação do sol (transição suave no crepúsculo)
     this._updateTime();
     const elev = this._sunInfo ? this._sunInfo.elevation : -20;
     const nightGoal = this._mode === 'night' ? 1 : this._mode === 'day' ? 0 : clamp((6 - elev) / 10, 0, 1);
-    if (this._mode === 'auto' && this._night !== (nightGoal > 0.5)) { this._night = nightGoal > 0.5; this._nvBtn.disabled = !this._night; this._nvBtn.style.opacity = this._night ? '' : '.55'; }
+    if (this._mode === 'auto' && this._night !== (nightGoal > 0.5)) { this._night = nightGoal > 0.5; this._nvAvail(this._night); }
     if (this._nightLevel === undefined) this._nightLevel = nightGoal;
     if (Math.abs(this._nightLevel - nightGoal) > 0.002) { this._nightLevel += (nightGoal - this._nightLevel) * k; dirty = true; this._needShadow = true; }
     else if (this._nightLevel !== nightGoal) { this._nightLevel = nightGoal; dirty = true; this._needShadow = true; }
@@ -4890,7 +4926,8 @@ export class Casa3DCard extends HTMLElement {
     if (!this._lastSunPos || this._lastSunPos.distanceToSquared(this._sun.position) > 0.01) { this._lastSunPos = this._sun.position.clone(); this._needShadow = true; dirty = true; }
     const dusk = this._mode === 'auto' ? clamp(1 - Math.abs(elev) / 9, 0, 1) * 0.95 : 0;
     this._skyDusk.material.opacity = dusk;
-    this._skyDay.material.opacity = (1 - nl) * (1 - dusk * 0.85); this._stars.material.opacity = nl * 0.9;
+    this._skyDay.material.opacity = (1 - nl) * (1 - dusk * 0.85);
+    this._groundMat.color.setHex(0xc9ced6).lerp(new THREE.Color(0x151a24), L(nl, nl * 0.75, nv));   // chão chapado cinza-claro neutro (sem cara de grama): escurece à noite (menos com a Visão noturna)
     this._hemi.color.lerp(new THREE.Color(0xffb27a), dusk * 0.5 * (1 - nl));
     this._scene.fog.color.setHex(0xd6e4f2).lerp(new THREE.Color(0xf0a070), dusk * 0.6).lerp(new THREE.Color(0x0a0f1e), nl);
     if (this._envDay) {

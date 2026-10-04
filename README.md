@@ -3,9 +3,29 @@
 Demo: https://lgrsv.github.io/casa-chefe/ · Repositório: https://github.com/LGRSV/casa-chefe
 
 Modelo 3D interativo da sua casa (Three.js) ligado às entidades do Home Assistant:
-gira, dá zoom, e cada cômodo acende conforme o interruptor real. Clicar no cômodo,
-na luminária ou no chip alterna a entidade. Substitui o `picture-elements` com PNGs
-da vista "3D" por uma cena de verdade.
+gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no cômodo ou
+na luminária seleciona (2º toque alterna); o bloco do painel alterna direto. Substitui o
+`picture-elements` com PNGs da vista "3D" por uma cena de verdade.
+
+## Novidades da v1.5.1 — menos toque sem querer, funções à vista
+
+- **Toque seleciona, 2º toque executa**: tocar num cômodo, luminária ou aparelho na maquete (ou num
+  aparelho no modo Pessoa) não liga/desliga mais na hora — realça o alvo e mostra um balão perto do
+  dedo ("Sala / Cozinha · apagada" + **Acender**/**Apagar**). Tocar de novo no mesmo alvo em até 5 s,
+  ou no botão do balão, executa; tocar em outro lugar ou Esc limpa, e o balão some sozinho em 5 s.
+  Os blocos do painel continuam alternando direto.
+- **Bonequinho com nome**: o botão mostra **Andar** ao lado do ícone (no celular, só o ícone). No
+  primeiro acesso uma dica aponta para ele até ser usado, a Pessoa abrir ou a dica ser fechada. As
+  dicas de comandos (maquete e Pessoa) somem no primeiro gesto, não mais por tempo.
+- **Clima minimalista**: no título, ao lado do relógio, só ícone + temperatura; cidade, condição,
+  sensação, vento e hora da atualização ficam no topo do menu **☰ Opções**.
+- **Visão noturna** de dia mostra "só à noite" no item do menu, em vez de só ficar cinza.
+- **Cena mais limpa e leve**: sem estrelas, sem rua/calçada; em volta do lote, um chão liso de cor
+  chapada que escurece à noite. A Pessoa anda só dentro do lote e começa logo depois do portãozinho.
+- Demo: tocar nos blocos de sensor mostra o estado ("Presença: alguém no quarto", "Iluminância:
+  18 lx", "Sandro: em casa"); **Conectar ao HA** virou passo a passo, aceita o endereço como vier
+  (sem https://, com /lovelace/0…), mostra o link **Criar token no seu HA ↗** e tem **Testar**, que
+  diz se o endereço não responde, se o token foi recusado ou quantas entidades encontrou.
 
 ## Novidades da v1.5.0 — painel lateral, cômodos reais e menu de opções
 
@@ -29,9 +49,8 @@ da vista "3D" por uma cena de verdade.
   Recentrar / Ir para… / Pessoa / Painel; pelo teclado o foco vai ao 1º item e ↑/↓ andam entre eles.
   O **bonequinho** continua fora do menu, ao lado do botão (é arrastado até a maquete), e no modo
   Pessoa o atalho **Ir para…** aparece no topo.
-- **Clima** foi para baixo do cartão do título (canto superior esquerdo) — o único canto livre em
-  todos os modos: à direita fica o painel, embaixo à esquerda o joystick da Pessoa. Agora fica
-  sempre visível.
+- **Clima** foi para baixo do cartão do título (canto superior esquerdo). Na v1.5.1 encolheu para
+  ícone + temperatura no próprio título, com os detalhes no menu.
 - Acessibilidade: além de `prefers-reduced-motion`, o cartão respeita
   `prefers-reduced-transparency` (superfícies quase sólidas, sem desfoque) e
   `prefers-contrast: more` (fundo sólido e bordas claras).
@@ -47,7 +66,7 @@ Trazido da [Igreja 3D](https://github.com/LGRSV/igreja-3d-v1) e adaptado à plan
   na água (LED) ou na bomba continua ligando/desligando. **Esc** sai.
 - **Bonequinho**: arraste o ícone âmbar até um cômodo da maquete e solte para entrar ali
   (o cômodo sob o cursor fica realçado e com o nome). Um toque simples nele, ou o botão
-  **Ir para…** no modo Pessoa, abre a lista de cômodos (Casa, Área externa, Rua).
+  **Ir para…** no modo Pessoa, abre a lista de cômodos (Casa, Área externa).
 - **Portas que abrem andando**: as 6 portas internas abrem sozinhas quando a pessoa chega de
   frente (a maçaneta desce antes de a folha sair do batente), giram para o lado livre e fecham
   2,5 s depois. **Enter/F** ou clicar na folha abre/fecha na hora. Fora do modo Pessoa ficam
@@ -109,8 +128,8 @@ panel: true           # painel lateral aberto ao iniciar (false = recolhido)
 roof: false           # começa com o telhado visível (Opções › Telhado alterna)
 telhado_pessoa: true  # na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
 quality: alta         # 'leve' = sombras menores e menos luzes com sombra (~40 MB em vez de ~120 MB de GPU)
-weather: true         # widget de clima ao vivo embaixo do título (Open-Meteo, sem chave)
-weather_city: 'Palmas, TO'   # nome mostrado no widget
+weather: true         # clima ao vivo: ícone + temperatura no título, detalhes no menu (Open-Meteo, sem chave)
+weather_city: 'Palmas, TO'   # nome mostrado no menu
 car_color: '#f3f3f0'  # cor do up! TSI na garagem (branco)
 timezone: America/Sao_Paulo      # relógio do cartão (horário de Brasília)
 latitude: -10.2                  # posição do sol (o HA fornece a sua via hass.config;
@@ -160,11 +179,10 @@ quiser trocar alguma coisa.
   para onde a frente da casa aponta, para o sol nascer do lado certo.
 - **Telhado**: opção do menu que cobre a casa com telhado de telha cerâmica (e forro), para a vista
   externa; desligado, volta a vista de casinha de boneca.
-- **Rua**: calçada, meio-fio e asfalto na frente do lote, só para dar contexto.
-- **Clima ao vivo**: widget embaixo do título (canto superior esquerdo) com temperatura, condição, sensação
-  térmica e vento — dados reais da [Open-Meteo](https://open-meteo.com/) (gratuita, sem
+- **Clima ao vivo**: ícone + temperatura no título, ao lado do relógio; cidade, condição, sensação
+  térmica, vento e hora da atualização no topo do menu ☰ Opções ("Clima indisponível" sem rede) — dados reais da [Open-Meteo](https://open-meteo.com/) (gratuita, sem
   chave), atualizados a cada 15 min. Usa `latitude`/`longitude` do YAML (padrão: Palmas-TO).
-  No celular fica compacto (ícone, temperatura e condição). Desative com
+  Desative com
   `weather: false`, ou troque a cidade mudando as coordenadas + `weather_city`.
   **Não funciona dentro do preview do Claude Artifact** (o sandbox do artifact bloqueia
   requisições de rede a domínios externos) — funciona normalmente no GitHub Pages e no
