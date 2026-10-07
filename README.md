@@ -9,7 +9,7 @@ na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloc
 
 ## Novidades da v1.9.0 — visual do app Casa da Apple
 
-- **Cara de app Casa (iOS, modo escuro)**: cores de sistema da Apple, escala de texto do iOS, bloco **ligado claro com o ícone num círculo âmbar** e desligado escuro, controle segmentado, interruptor e barra de brilho grossa no estilo iPhone, menu ☰ estilo iOS, folha com cantos de 28 e alça. Fonte do sistema também dentro do HA (troque com `--casa3d-font` se quiser).
+- **Cara de app Casa (iOS, modo escuro)**: cores de sistema da Apple, escala de texto do iOS, bloco **ligado claro com o ícone num círculo âmbar** e desligado escuro, controle segmentado, interruptor e barra de brilho grossa no estilo iPhone, menu ☰ estilo iOS, folha com cantos de 28 e alça. Fonte: a do sistema nos aparelhos Apple (SF), inclusive dentro do HA; nos outros, a do tema do HA (troque com `--casa3d-font` se quiser).
 - **Ícones Phosphor** (MIT; SF Symbols não podem ser usados fora de apps Apple): traço vazado quando desligado, preenchido quando ligado.
 - **Interruptor «Tudo»** no lugar de Ligar/Desligar tudo, no bloco e no cômodo: ligado se qualquer aparelho do grupo está ligado; tocar desliga tudo, tocar de novo liga.
 - **Vidro desfocado só onde aguenta**: aparelho com GPU dedicada no nível alta; o resto fica opaco (mais leve). Se o aparelho apertar, o cartão tira o vidro antes de baixar a resolução.
