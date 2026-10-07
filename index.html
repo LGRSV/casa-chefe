@@ -2818,13 +2818,13 @@ button[aria-pressed="true"] { background: var(--on-bg); color: var(--on); }
 canvas.walk { cursor: crosshair; }
 canvas.walk.pick { cursor: pointer; }
 /* balão do aparelho tocado (v1.8.1, como na Igreja): nome, estado e a ação; Acender/Ligar âmbar cheio, Apagar/Desligar/Detalhes grafite */
-.sel { position: absolute; left: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 14px; border-radius: 16px; white-space: nowrap;
-  background: var(--glass); border: 1px solid var(--line); box-shadow: 0 10px 28px rgba(0, 0, 0, .45); animation: fadeIn .16s ease-out; }
-.sel[hidden] { display: none; }
-.sel::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--glass); }
-.sel.below::after { bottom: auto; top: -7px; border: 7px solid transparent; border-top: 0; border-bottom-color: var(--glass); }   /* aberto embaixo do ponto: a ponta sobe */
+.sel { position: absolute; left: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 16px); box-sizing: border-box; padding: 6px 6px 6px 14px; border-radius: 16px; white-space: nowrap;
+  background: var(--glass-solid); border: 1px solid var(--line); box-shadow: 0 10px 28px rgba(0, 0, 0, .45); animation: fadeIn .16s ease-out; }   /* sólido: os rótulos da maquete não transparecem */
+.sel[hidden] { display: none; } .sel > span { min-width: 0; } .sel b, .sel small { overflow: hidden; text-overflow: ellipsis; }   /* texto longo: reticências; o botão fica inteiro */
+.sel::after { content: ""; position: absolute; z-index: -1; left: calc(50% + var(--ax, 0px)); bottom: -6px; width: 11px; height: 11px; margin-left: -6px; background: var(--glass-solid); border: solid var(--line); border-width: 0 1px 1px 0; transform: rotate(45deg); }   /* ponta com o mesmo fio do corpo, por baixo do conteúdo */
+.sel.below::after { bottom: auto; top: -6px; border-width: 1px 0 0 1px; }   /* aberto embaixo do ponto: a ponta sobe */
 .sel b { display: block; font-size: 13px; color: var(--ink); } .sel small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--ink-2); }
-.sel button { min-width: 44px; min-height: 44px; padding: 0 16px; border-radius: 11px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }
+.sel button { flex: none; min-width: 44px; min-height: 34px; padding: 0 14px; border-radius: 11px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }
 .sel button:hover { background: var(--fill-3); } .sel button.go { background: var(--on); color: var(--on-ink); border-color: var(--on); }
 .peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--on); touch-action: none; cursor: grab; padding: 8px 10px; }   /* o bonequinho continua âmbar (o mesmo --on) */
 /* dica de primeiro acesso apontando para o bonequinho (some quando ele é usado ou ao fechar) */
@@ -2904,11 +2904,15 @@ canvas.walk.pick { cursor: pointer; }
 .zone button i { font-style: normal; font-size: 13px; letter-spacing: 0; color: var(--ink-3); }   /* "›": leva ao cômodo */
 .zone button:not(:disabled):hover, .zone button:not(:disabled):hover i { color: var(--ink); } .zone button:disabled { cursor: default; }
 .zone .zn { order: 3; letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }   /* contagem em texto: neutra */
-.zone[hidden], .tile[hidden], .blk[hidden] { display: none; }
-/* bloco (v1.8.1): Casa · Área externa — nome, "N de M ligados" e uma ação (a mesma do cômodo); os cômodos dele embaixo, sem vão */
-.blk { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0 2px; font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: var(--ink); }
+.zone[hidden], .tile[hidden], .blk[hidden], .foot[hidden], .sect[hidden] { display: none; }
+/* bloco (v1.8.1): Casa · Área externa — numa linha, nome, "N de M ligados" e uma ação (a mesma do cômodo); os cômodos dele embaixo, sem vão */
+.blk { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0 2px; color: var(--ink); }
 :not([hidden]) ~ .blk { margin-top: 14px; } .blk + .zone { margin-top: 0; }   /* vão só entre blocos à vista */
-.blk .bt { flex: 1; min-width: 0; } .blk b { display: block; font-weight: inherit; } .blk small { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.blk .bt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }   /* coluna estreita: a contagem desce */
+.blk b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; } .blk small { white-space: nowrap; font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.blk .all button { position: relative; min-height: 30px; padding: 0 12px; } .blk .all button::after { content: ""; position: absolute; inset: -7px 0; }   /* 30 px à vista, alvo de 44 */
+.foot { grid-column: 1 / -1; height: 1px; margin: 10px 2px 3px; background: var(--line-2); }   /* Sandro, no fim: um fio, não um 3º bloco */
+.autos > .sect { margin: 0 2px; } .autos > .sect:not(:first-child) { margin-top: 12px; } .autos > .sect + .zone { margin-top: 0; } .sect[hidden] + .autos { margin-top: 18px; }   /* Automações · bloco → cômodo */
 .tile.wide { grid-column: 1 / -1; } .dock.room .tile.wide { grid-column: auto; } .tile small .sv { font-weight: 500; }   /* aparelho de mais de um cômodo: linha inteira, cabe o "também …" */
 /* bloco compacto (ícone à esquerda, nome e estado à direita) — cabe duas colunas na lateral */
 .tile { position: relative; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 9px; min-height: 64px; padding: 9px 9px 9px 10px; border-radius: 14px; text-align: left; color: var(--ink);
@@ -3027,7 +3031,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 /* cômodo tocado (v1.6.1): o painel lateral focado nele — no lugar das abas e do filtro, "‹ Todos os cômodos", nome, "N de M ligados" e
    Ligar/Desligar tudo; embaixo dos blocos, as automações do cômodo e "Entrar aqui" */
 .rhead { flex: none; margin: 0 12px 10px; }
-.dock:not(.room) .rhead, .dock:not(.room) .rfoot, .dock.room .tabs, .dock.room .zonebar, .dock.room .zone, .dock.room .blk, .dock.room .tile .sv { display: none; }
+.dock:not(.room) .rhead, .dock:not(.room) .rfoot, .dock.room .tabs, .dock.room .zonebar, .dock.room .zone, .dock.room .blk, .dock.room .foot, .dock.room .tile .sv { display: none; }
 .dock.room .rhead { display: flex; align-items: center; gap: 6px; }   /* [‹] [nome + N de M] [uma ação] */
 .rhead .rback { flex: none; width: 32px; height: 32px; margin-left: -8px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--ink-2); } .rhead .rback svg { width: 18px; height: 18px; }
 .rhead .rback:hover { color: var(--ink); background: var(--fill-2); }
@@ -3091,7 +3095,7 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
   .phead .collapse::after { content: ""; position: absolute; inset: -6px; } .phead .count { min-height: 36px; }   /* círculo de 32 px, alvo de 44 */
   .tabs button[role="tab"] { position: relative; min-height: 40px; } .tabs button[role="tab"]::after { content: ""; position: absolute; inset: -2px 0; }   /* alvo de 44 px (o vão do trilho) */
   .zonebar button { min-height: 34px; } .zonebar button::after { content: ""; position: absolute; inset: -6px 0; }   /* alvo de 46 px sem cobrir o vizinho */
-  .rhead .rback, .all button, .rfoot .enter { min-height: 44px; } .rhead .rback { width: 44px; }
+  .rhead .rback, .all button, .rfoot .enter, .sel button { min-height: 44px; } .rhead .rback { width: 44px; }
   .zone button { min-height: 44px; margin: -12px 0; }
   .tile .more::after { inset: -10px; }
 }
@@ -4791,7 +4795,7 @@ export class Casa3DCard extends HTMLElement {
     const t = this._tapRoom(e, hit), s = this._sel;
     if (t && t.key && !this._topView) {
       if (s && s.key === t.key && performance.now() - s.at < 5000) return this._selAct();
-      this._showRoom(t.r, t.key); return this._select({ key: t.key, room: t.r.label, p: hit.point.clone(), at: performance.now() });
+      this._showRoom(t.r, t.key, true); return this._select({ key: t.key, room: t.r.label, p: hit.point.clone(), at: performance.now() });   // o painel não abre nem muda de altura: o aparelho fica sob o dedo
     }
     this._select(null);
     if (t) this._showRoom(t.r, t.key); else if (!this._topView) this._showRoom(null);
@@ -4799,13 +4803,14 @@ export class Casa3DCard extends HTMLElement {
   _select(sel) {
     const b = this._selEl; if (!b) return;
     if (!sel && b.contains(this.shadowRoot.activeElement)) this._canvas.focus({ preventScroll: true });   // o foco no botão do balão volta à maquete
-    this._sel = sel; b.hidden = !sel; this._selTxt = '';
-    if (sel) this._selRender();
+    const band = this._selBand; this._sel = sel; b.hidden = !sel; this._selTxt = '';
+    this._selBand = sel ? band || (this._vb && [this._pNow || 0, ...this._vb]) : null;   // balão aberto: a faixa da cena fica parada (_resize) e o 2º toque cai no mesmo aparelho
+    if (sel) this._selRender(); else if (band) this._resize(true);   // fechou: a cena volta à faixa de verdade, deslizando
   }
   _selRender() {   // também a cada atualização do HA (_renderPanel): só reescreve o que mudou, e o aria-live não repete
     const s = this._sel; if (!s) return;
     const it = ITEMS.find((i) => i.key === s.key), st = this._state[s.key], on = !!(st && st.on);
-    const txt = [it.short || it.label, `${s.room} · ${this._stateText(it, st)}`, it.kind === 'sensor' ? 'Detalhes' : it.kind === 'light' ? (on ? 'Apagar' : 'Acender') : (on ? 'Desligar' : 'Ligar')];   // "Luz" · "Quarto · acesa", como o bloco do painel
+    const txt = [it.short || it.label, `${s.room} · ${this._stateText(it, st, true)}`, it.kind === 'sensor' ? 'Detalhes' : it.kind === 'light' ? (on ? 'Apagar' : 'Acender') : (on ? 'Desligar' : 'Ligar')];   // "Luz" · "Quarto · acesa", como o bloco do painel
     if (txt.join('|') === this._selTxt) return;
     this._selTxt = txt.join('|'); [this._selName.textContent, this._selState.textContent, this._selBtn.textContent] = txt; this._selEl.setAttribute('aria-label', `${txt[0]}, ${s.room}`);
     this._selBtn.classList.toggle('go', it.kind !== 'sensor' && !on);   // Acender/Ligar: âmbar cheio · Apagar/Desligar/Detalhes: grafite
@@ -4817,9 +4822,10 @@ export class Casa3DCard extends HTMLElement {
     const s = this._sel; if (!s) return;
     this._camera.updateMatrixWorld();
     const v = s.p.clone().project(this._camera), W = this._canvas.clientWidth, H = this._canvas.clientHeight, [bw, bh] = this._selWH || [200, 56], b = this._selEl;
-    const px = (v.x + 1) / 2 * W, py = (1 - v.y) / 2 * H, P = this._pNow || 0, B = this._vb ? this._vb[0] : 0, x = clamp(px, P + 8 + bw / 2, W - 8 - bw / 2), below = py - 14 - bh < (this._hudH || 58);
+    const px = (v.x + 1) / 2 * W, py = (1 - v.y) / 2 * H, P = this._pNow || 0, B = this._vb ? this._vb[0] : 0, m = (P + W) / 2, below = py - 14 - bh < (this._hudH || 58);
+    const x = clamp(px, Math.min(P + 8 + bw / 2, m), Math.max(W - 8 - bw / 2, m));   // mais largo que a faixa: centrado nela
     b.style.transform = `translate(${x.toFixed(1)}px, ${py.toFixed(1)}px) translate(-50%, ${below ? '14px' : 'calc(-100% - 14px)'})`;
-    b.style.setProperty('--ax', `${clamp(px - x, 18 - bw / 2, bw / 2 - 18).toFixed(1)}px`); b.classList.toggle('below', below);
+    b.style.setProperty('--ax', `${clamp(px - x, 24 - bw / 2, bw / 2 - 24).toFixed(1)}px`); b.classList.toggle('below', below);
     b.style.visibility = v.z > 1 || px < P || px > W || py < 0 || py > H - B ? 'hidden' : '';   // B: a folha do celular por cima
   }
   _selAct() { const k = this._sel && this._sel.key; if (!k) return; this._select(null); this._toggleItem(k); this._flashRow(k); }
@@ -4834,10 +4840,10 @@ export class Casa3DCard extends HTMLElement {
   // Painel contextual (v1.6.1): o painel lateral focado no cômodo r (null = visão geral, com abas e filtros). Abre o painel recolhido —
   // menos na Pessoa com a coluna por cima da vista (celular): a gaveta cobriria o joystick no meio do passeio; o cômodo fica pronto
   // e a aba "Painel" da borda passa a mostrar o nome dele.
-  _showRoom(r, key) {
+  _showRoom(r, key, stay) {   // stay: 1º toque num aparelho — o cômodo entra no painel como está (recolhido, espiada…), sem abrir nem mudar a altura
     r = r || null; const d = this._dock, ch = r !== this._room;
     if (ch) {
-      this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null; this._select(null);   // o balão é do cômodo de antes
+      this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null; if (!stay) this._select(null);   // o balão é do cômodo de antes (no stay o _onClick já troca)
       this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
       if (r) {
         this._rTitle.textContent = r.label; this._showTab('ctl');
@@ -4849,8 +4855,8 @@ export class Casa3DCard extends HTMLElement {
     }
     if (r) { const bl = this._topView && !this._backBtn.hidden ? this._backBtn.getAttribute('aria-label') : 'Todos os cômodos'; this._rBack.setAttribute('aria-label', bl); this._rBack.title = bl; }   // o mesmo voltar do topo (o 2º toque muda ele sem trocar de cômodo)
     this._roomHl(r);
-    if (r && !this._panelOpen && !(this._walkOn && this._sideOverlay)) this._setPanel(true);
-    else { this._renderPanel(); if (r || ch) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
+    if (r && !this._panelOpen && !stay && !(this._walkOn && this._sideOverlay)) this._setPanel(true);
+    else { this._renderPanel(); if ((r || ch) && !stay) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
     if (key) this._flashRow(key);
   }
   // realce azul do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
@@ -4904,7 +4910,7 @@ export class Casa3DCard extends HTMLElement {
     const m = Math.max(1, Math.round((t.at - now) / 60000)); return ` · desliga em ${m} min`;
   }
   _setPanel(open, snap = 'half') {
-    this._panelOpen = !!open;
+    this._panelOpen = !!open; this._selBand = null;   // abrir/recolher reenquadra a cena mesmo com o balão aberto
     const d = this._dock, a = this.shadowRoot.activeElement;
     cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sprX = 0;
     clearTimeout(this._dockT); d.classList.remove('closing');
@@ -4988,6 +4994,7 @@ export class Casa3DCard extends HTMLElement {
   // leva a folha a uma altura com a mola (ou direto, sem animação); a câmera reenquadra quando ela assenta
   _snapTo(n, v = 0, now = this._reduced) {   // now: sem mola (menos movimento, Tab)
     const d = this._dock; if (!this._sheet || !this._panelOpen || d.hidden) return;
+    this._selBand = null;   // mudar a altura reenquadra a cena mesmo com o balão aberto
     if (n !== 'full') for (const t of Object.values(this._panes)) t.pane.scrollTop = 0;   // fora da cheia a lista volta ao topo (o clip guardaria o deslocamento e ele voltaria num salto)
     d.dataset.snap = n; this._grab.setAttribute('aria-expanded', n !== 'peek' ? 'true' : 'false');
     if (now) { cancelAnimationFrame(this._sprRaf); this._sprRaf = 0; this._sideX(this._snaps()[n]); this._resize(); return; }
@@ -5152,24 +5159,23 @@ export class Casa3DCard extends HTMLElement {
       ['Piscina', ['led_piscina', 'bomba_piscina']],
     ];
     this._zones = ROOMS.map(([title, keys]) => ({ title, keys })); this._zone = ''; this._onKeep = new Set();
-    // v1.8.1: blocos (Casa · Área externa, os da Vista de cima) → cômodos → aparelhos. Cada aparelho uma vez, no 1º cômodo dele (a luz
-    // externa na Varanda, "também Jardim e Quintal"). Sandro não é aparelho nem cômodo: vai ao rodapé "Pessoas", fora das contas e do "tudo"
-    this._groups = []; const done = new Set(), list = new Intl.ListFormat('pt-BR');
-    const blockHead = (label, keys, act) => {   // [nome + "N de M ligados"] [Ligar tudo ou Desligar tudo do bloco]
-      const bh = document.createElement('div'); bh.className = 'blk'; grid.appendChild(bh);
-      bh.innerHTML = `<div class="bt"><b role="heading" aria-level="2"></b>${act ? '<small></small>' : ''}</div>${act ? '<div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>' : ''}`;
-      bh.querySelector('b').textContent = label; const all = bh.querySelector('.all');
-      if (all) { all.setAttribute('aria-label', label); all.firstChild.addEventListener('click', () => this._allSet(keys, true)); all.lastChild.addEventListener('click', () => this._allSet(keys, false)); }
-      this._groups.push({ zh: bh, zn: bh.querySelector('small'), keys, all });
-    };
+    // v1.8.1: blocos (Casa · Área externa, os da Vista de cima) → cômodos → aparelhos. Cada aparelho uma vez, num cômodo do bloco que ele
+    // mais serve: a luz externa ilumina Jardim e Quintal (e a Varanda) → Área externa › Jardim, "também Varanda e Quintal", e o "Desligar
+    // tudo" de lá a apaga. Sandro não é aparelho nem cômodo: fica no fim, sob um fio, fora das contas e do "tudo"
+    this._groups = []; const home = {}, list = new Intl.ListFormat('pt-BR');
+    for (const it of ITEMS) {
+      const rs = this._roomsAll().filter((r) => this._roomKeys(r).includes(it.key)), n = (r) => rs.filter((q) => q.block === r.block).length;
+      if (rs.length) home[it.key] = rs.reduce((a, r) => (n(r) > n(a) ? r : a));   // empate: o 1º na ordem dos PLACES
+    }
     for (const b of this._places) {
-      const rooms = b.rooms.map((r) => { const ks = this._roomKeys(r).filter((k) => !done.has(k)); ks.forEach((k) => done.add(k)); return [r, ks]; }).filter(([, ks]) => ks.length);   // sem nada próprio (Quarto Casal, Jardim, Quintal, Dispensa): sem grupo
-      blockHead(b.label, rooms.flatMap(([, ks]) => ks), true);
+      const rooms = b.rooms.map((r) => [r, this._roomKeys(r).filter((k) => home[k] === r)]).filter(([, ks]) => ks.length);   // sem nada próprio (Quarto Casal, Varanda, Quintal, Dispensa): sem grupo
+      const keys = rooms.flatMap(([, ks]) => ks), bh = document.createElement('div'); bh.className = 'blk'; grid.appendChild(bh);   // [nome  N de M ligados] [Ligar tudo ou Desligar tudo do bloco]
+      bh.innerHTML = '<div class="bt"><b role="heading" aria-level="2"></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>';
+      const ba = bh.querySelector('.all'); bh.querySelector('b').textContent = b.label; ba.setAttribute('aria-label', b.label);
+      ba.firstChild.addEventListener('click', () => this._allSet(keys, true)); ba.lastChild.addEventListener('click', () => this._allSet(keys, false));
+      this._groups.push({ zh: bh, zn: bh.querySelector('small'), keys, all: ba });
       for (const [r, ks] of rooms) {
-        const zh = document.createElement('div'); zh.className = 'zone'; zh.dataset.room = r.label; zh.setAttribute('role', 'heading'); zh.setAttribute('aria-level', '3');
-        const zt = document.createElement('button'); zt.className = 'zt'; zt.textContent = r.label; zt.insertAdjacentHTML('beforeend', '<i aria-hidden="true">›</i>'); zt.title = `Abrir ${r.label}`;
-        zt.addEventListener('click', () => (this._topView ? this._navTo(2, r.block, r) : this._showRoom(r)));
-        const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); grid.appendChild(zh); this._groups.push({ zh, zn, keys: ks });
+        const zh = this._zoneHead(r); grid.appendChild(zh); this._groups.push({ zh, zn: zh.lastChild, keys: ks });
         for (const k of ks) {
           grid.appendChild(this._makeTile(ITEMS.find((i) => i.key === k), r.label));
           const o = this._roomsAll().filter((q) => q !== r && this._roomKeys(q).includes(k)).map((q) => q.label); if (!o.length) continue;   // serve a outros cômodos: diz quais
@@ -5178,8 +5184,8 @@ export class Casa3DCard extends HTMLElement {
         }
       }
     }
-    const rest = ITEMS.filter((i) => !done.has(i.key));   // Sandro
-    if (rest.length) { blockHead('Pessoas', rest.map((i) => i.key), false); for (const it of rest) grid.appendChild(this._makeTile(it, 'Pessoas')); }
+    const rest = ITEMS.filter((i) => !home[i.key]);   // Sandro
+    if (rest.length) { const f = document.createElement('div'); f.className = 'foot'; f.setAttribute('role', 'separator'); grid.appendChild(f); this._groups.push({ zh: f, keys: rest.map((i) => i.key) }); for (const it of rest) grid.appendChild(this._makeTile(it, 'Casa')); }
     grid.appendChild(this._detail);
     this._rFoot = document.createElement('div'); this._rFoot.className = 'rfoot'; this._panes.ctl.pane.appendChild(this._rFoot);   // automações do cômodo + Entrar aqui
     this._rEnter = document.createElement('button'); this._rEnter.className = 'enter'; this._rEnter.innerHTML = `${iconSvg('person')}<span>Entrar aqui</span>`;
@@ -5188,7 +5194,7 @@ export class Casa3DCard extends HTMLElement {
     // Automações: rotinas rápidas do cartão + automações do HA (descobertas sozinhas)
     const h1 = document.createElement('div'); h1.className = 'sect'; h1.textContent = 'Rotinas rápidas'; this._panes.scn.pane.appendChild(h1);
     const rgrid = document.createElement('div'); rgrid.className = 'tiles routines'; this._panes.scn.pane.appendChild(rgrid);
-    const h2 = document.createElement('div'); h2.className = 'sect'; h2.innerHTML = 'Automações do Home Assistant <small>ligar/desligar · executar agora</small>'; this._panes.scn.pane.appendChild(h2);
+    const h2 = this._autoHead = document.createElement('div'); h2.className = 'sect'; h2.innerHTML = 'Automações do Home Assistant <small>ligar/desligar · executar agora</small>'; this._panes.scn.pane.appendChild(h2);
     this._autoList = document.createElement('div'); this._autoList.className = 'autos'; this._panes.scn.pane.appendChild(this._autoList);
     for (const sc of SCENES) {
       const b = document.createElement('button'); b.className = 'tile routine';
@@ -5254,6 +5260,13 @@ export class Casa3DCard extends HTMLElement {
   // aparelhos ligados agora (sensor e pessoa não contam)
   _onKeys() { return ITEMS.filter((i) => i.kind !== 'sensor' && this._state[i.key] && this._state[i.key].on).map((i) => i.key); }
   _hasDetail(it) { return it.kind !== 'sensor'; }
+  // "Quarto ›  1 de 3 ligados": abre o cômodo (na Vista de cima, aproxima ele) — na aba Cômodos e na Automações
+  _zoneHead(r) {
+    const zh = document.createElement('div'); zh.className = 'zone'; zh.dataset.room = r.label; zh.setAttribute('role', 'heading'); zh.setAttribute('aria-level', '3');
+    const zt = document.createElement('button'); zt.className = 'zt'; zt.textContent = r.label; zt.insertAdjacentHTML('beforeend', '<i aria-hidden="true">›</i>'); zt.title = `Abrir ${r.label}`;
+    zt.addEventListener('click', () => (this._topView ? this._navTo(2, r.block, r) : this._showRoom(r)));
+    const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); return zh;
+  }
   _makeTile(it, room) {
     const tile = document.createElement('button'); tile.className = 'tile'; tile.dataset.key = it.key; tile.dataset.kind = it.kind; tile.setAttribute('aria-pressed', 'false');
     const top = document.createElement('span'); top.className = 'top';
@@ -5424,21 +5437,23 @@ export class Casa3DCard extends HTMLElement {
   }
   _renderAutos(now = Date.now()) {
     const el = this._autoList; if (!el) return;
-    el.innerHTML = '';
+    el.innerHTML = ''; this._autoHead.hidden = false;
     if (!this._autos.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = this._hass ? 'Nenhuma automação encontrada no Home Assistant.' : 'As automações do HA aparecem aqui quando o cartão está no Home Assistant.'; el.appendChild(e); return; }
-    // v1.8.1: por bloco → cômodo (o nome casado pelo _roomAutos), cada uma uma vez; o resto em "Outras"
-    const seen = new Set(), head = (cls, label) => { const h = document.createElement('div'); h.className = cls; h.setAttribute('role', 'heading'); h.setAttribute('aria-level', cls === 'blk' ? '2' : '3'); h.textContent = label; el.appendChild(h); };
+    // v1.8.1: por bloco → cômodo (o nome casado pelo _roomAutos), cada uma uma vez; o resto em "Outras". Dois níveis só: o rótulo da seção
+    // vira o do bloco ("Automações · Casa") e o cômodo é o mesmo "Quarto ›" da aba Cômodos, que abre ele
+    const seen = new Set(), sect = (t) => { const h = document.createElement('div'); h.className = 'sect'; h.setAttribute('role', 'heading'); h.setAttribute('aria-level', '2'); h.textContent = t; el.appendChild(h); };
     for (const b of this._places) {
       let first = true;
       for (const r of b.rooms) {
         const l = this._roomAutos(r).filter((a) => !seen.has(a)); if (!l.length) continue;
-        if (first) { head('blk', b.label); first = false; }
-        head('zone', r.label); for (const a of l) { seen.add(a); el.appendChild(this._autoRow(a, now)); }
+        if (first) { sect(`Automações · ${b.label}`); first = false; }   // sem a dica "ligar/desligar · executar agora": cabe numa linha na coluna
+        el.appendChild(this._zoneHead(r)); for (const a of l) { seen.add(a); el.appendChild(this._autoRow(a, now)); }
       }
     }
     const rest = this._autos.filter((a) => !seen.has(a));
-    if (rest.length && seen.size) head('blk', 'Outras');
+    if (rest.length && seen.size) sect('Outras automações');
     for (const a of rest) el.appendChild(this._autoRow(a, now));
+    this._autoHead.hidden = !!seen.size;   // agrupadas: o rótulo de cada bloco toma o lugar deste
   }
   // linha de automação (ligar/desligar · executar agora) — na aba Automações e no painel do cômodo
   _autoRow(a, now) {
@@ -5506,7 +5521,8 @@ export class Casa3DCard extends HTMLElement {
     // Na folha de baixo (celular/tablet em pé), na faixa entre o cabeçalho (T) e a parte VISÍVEL dela (B)
     const open = this._panelOpen && this._dock && !this._dock.hidden;
     if (open && this._sheet && !this._sprRaf && !this._dragging && this._dock.dataset.snap) this._sideX(this._snaps()[this._dock.dataset.snap]);   // conteúdo mudou de altura: fica no mesmo detente
-    const P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._sheet ? Math.max(0, this._wrap.clientHeight - this._dock.offsetTop - (this._sprRaf ? this._sprGoal() : this._sprX || 0)) : 0, T = B ? this._hudH || 0 : 0;
+    let P = open && !this._sideOverlay ? this._sideW + 20 : 0, B = open && this._sheet ? Math.max(0, this._wrap.clientHeight - this._dock.offsetTop - (this._sprRaf ? this._sprGoal() : this._sprX || 0)) : 0, T = B ? this._hudH || 0 : 0;
+    const fz = this._selBand; if (fz && fz[3] === w && fz[4] === h) [P, B, T] = fz;   // balão aberto: o painel mudou de conteúdo, a cena fica onde o dedo está
     const p0 = this._pNow, vh = Math.max(160, h - B - T); this._vb = [B, T, w, h]; this._viewP(P);   // já na faixa final: o _resetView enquadra por ela
     const u = 2 * Math.tan(this._camera.fov * Math.PI / 360) / vh;   // rótulos (sem perspectiva): px de tela → escala
     for (const s of this._labels || []) s.scale.set(s.userData.px[0] * u, s.userData.px[1] * u, 1);
