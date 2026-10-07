@@ -7,6 +7,11 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.8.1 — painel em 2 blocos e ligar/desligar tocando nos objetos
+
+- **Painel em 2 blocos**: **Casa** (Quarto, Sala / Cozinha, Balcão, Varanda) e **Área externa** (Piscina, Jardim, Banheiro, Garagem…), cada um com «N de M ligados» e Ligar/Desligar tudo do bloco; dentro, os cômodos (tocar abre o cômodo) e os aparelhos, cada um uma vez só (a luz externa fica no Jardim, «também Varanda e Quintal»). A aba Automações segue a mesma divisão, com «Outras automações» no fim.
+- **2 toques nos objetos da maquete** (luminária, LED, TV, ar, bomba), como na Igreja: o 1º toque mostra um balão com nome, estado e o botão; o 2º toque no mesmo ponto (em até 5 s) ou o botão liga/desliga. A cena fica parada enquanto o balão está aberto, para o 2º toque acertar o mesmo objeto. Tocar no vazio ou Esc fecha. Na Vista de cima, dentro do cômodo, 1 toque no aparelho já alterna.
+
 ## Novidades da v1.8.0 — painel à esquerda, ajustável, com paleta própria e mais leve
 
 - **Paleta âmbar + grafite**: âmbar só no que está ligado (bloco, «Ligar tudo», selo «Ligados»), grafite no desligado e na estrutura («Desligar tudo», «Entrar aqui», abas, navegação), azul suave nos ajustes (brilho, modo do ar, «desligar em»). Contraste medido: texto ≥ 4,5:1 e ícone ≥ 3:1; «mais contraste» e «menos transparência» só trocam as cores.
