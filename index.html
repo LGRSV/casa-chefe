@@ -173,42 +173,70 @@ export const ITEMS = [
   { key: 'pessoa', label: 'Sandro', kind: 'sensor', icon: 'person' },
 ];
 
-// Ícones dos chips (SVG inline, 16px, traço)
+/* Ícones: Phosphor Icons 2.1.1 (@phosphor-icons/core), viewBox 0 0 256 256, path data embutido.
+ * MIT License
+ *
+ * Copyright (c) 2023 Phosphor Icons
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+// Ícones (Phosphor 2.1.1, viewBox 256): r = regular (desligado, navegação), f = fill (ligado; o CSS troca)
 const ICONS = {
-  bulb: '<path d="M8 1.6a4.4 4.4 0 0 0-2.5 8c.4.3.6.7.6 1.2v.9h3.8v-.9c0-.5.2-.9.6-1.2a4.4 4.4 0 0 0-2.5-8z"/><path d="M6.4 13.6h3.2M7 15.2h2"/>',
-  led:  '<rect x="1.5" y="5.5" width="13" height="5" rx="2.5"/><circle cx="4.5" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="11.5" cy="8" r=".9" fill="currentColor" stroke="none"/>',
-  pool: '<path d="M1.5 6.3c2 0 2 1.6 4 1.6s2-1.6 4-1.6 2 1.6 4 1.6M1.5 10.6c2 0 2 1.6 4 1.6s2-1.6 4-1.6 2 1.6 4 1.6"/><path d="M5 6V3.2a1.2 1.2 0 0 1 2.4 0M9.5 6V3.2a1.2 1.2 0 0 1 2.4 0"/>',
-  pump: '<circle cx="6.8" cy="9.2" r="4"/><path d="M10.8 9.2h3.6M6.8 2.4v2.8M5.2 9.2h3.2"/>',
-  ac:   '<rect x="1.5" y="3.2" width="13" height="6" rx="1.4"/><path d="M4 6.2h8M4.2 12v1.6M8 12v2.6M11.8 12v1.6"/>',
-  tv:   '<rect x="1.5" y="2.6" width="13" height="8.8" rx="1.2"/><path d="M5.6 14h4.8M8 11.4V14"/>',
-  home: '<path d="M2.5 8.2 8 3.2l5.5 5M4 7v6.3h8V7"/>',
-  moon: '<path d="M13 9.6A5.2 5.2 0 0 1 6.4 3a5.4 5.4 0 1 0 6.6 6.6z"/>',
-  film: '<rect x="2" y="3" width="12" height="10" rx="1.2"/><path d="M5 3v10M11 3v10M2 6h3M2 10h3M11 6h3M11 10h3"/>',
-  power: '<path d="M8 2.5v5.5"/><path d="M4.6 4.6a4.8 4.8 0 1 0 6.8 0"/>',
-  panel: '<rect x="1.5" y="2.5" width="13" height="11" rx="1.4"/><path d="M6.5 2.5v11M3 6h2M3 8.5h2"/>',
-  // menu de opções (v1.5)
-  menu: '<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>',
-  tag: '<path d="M2 2.5h5.3l6.2 6.2-4.8 4.8L2.5 7.3z"/><circle cx="5" cy="5.3" r="1" fill="currentColor" stroke="none"/>',
-  roof: '<path d="M1.5 8.5 8 3l6.5 5.5"/><path d="M3.5 7v6.5h9V7"/><path d="M11 3.2v2.3"/>',
-  target: '<circle cx="8" cy="8" r="5.2"/><circle cx="8" cy="8" r="1.6"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>',
-  plan: '<rect x="2" y="2" width="12" height="12" rx="1.2"/><path d="M2 7.5h5.5V14M7.5 2v2.6M10.6 7.5H14"/>',
-  pin: '<path d="M8 14.5s4.6-4.4 4.6-8a4.6 4.6 0 0 0-9.2 0c0 3.6 4.6 8 4.6 8z"/><circle cx="8" cy="6.5" r="1.7"/>',
-  chevl: '<path d="M10 3 5 8l5 5"/>',
-  chevr: '<path d="M6 3l5 5-5 5"/>',
-  play: '<path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/>',
-  motion: '<circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/><path d="M4.6 4.6a4.8 4.8 0 0 0 0 6.8M11.4 4.6a4.8 4.8 0 0 1 0 6.8M2.4 2.4a8 8 0 0 0 0 11.2M13.6 2.4a8 8 0 0 1 0 11.2"/>',
-  lux: '<circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>',
-  person: '<circle cx="8" cy="5" r="2.6"/><path d="M2.8 14a5.2 5.2 0 0 1 10.4 0"/>',
-  auto: '<path d="M8.8 1.8 4.2 9h3.4l-.9 5.2L11.8 7H8.4z"/>',
-  timer: '<circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M6 1.8h4"/>',
-  pause: '<path d="M5.5 3.5v9M10.5 3.5v9" stroke-width="2"/>',
-  sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>',
-  cloudsun: '<circle cx="4.6" cy="4.6" r="2" /><path d="M4.6 1v1M4.6 8.2v1M1 4.6h1M8.2 4.6h1M1.9 1.9l.8.8M6.5 6.5l.8.8M1.9 7.3l.8-.8"/><path d="M5.6 13.4h5.9a2.5 2.5 0 0 0 .5-4.95 3.4 3.4 0 0 0-6.3-1.6A2.7 2.7 0 0 0 3 9.2a2.5 2.5 0 0 0 .3 5.0h.1"/>',
-  cloud: '<path d="M4.4 13h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 9.1 2.7 2.7 0 0 0 4.4 13z"/>',
-  fog: '<path d="M4 6.6h7.3a2.4 2.4 0 0 0 .5-4.75A3.2 3.2 0 0 0 5.7 .95 2.6 2.6 0 0 0 1.9 3.3 2.5 2.5 0 0 0 4 6.6z"/><path d="M2 9.4h12M2 12h12"/>',
-  rain: '<path d="M4.4 8.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 4.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M4.6 10.4 3.6 13M8 10.4 7 13M11.4 10.4l-1 2.6"/>',
-  storm: '<path d="M4.4 7.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 3.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M8.6 9.2 6.4 12.4h2.3L7 15"/>',
-  snow: '<path d="M4.4 8.3h7.3a2.6 2.6 0 0 0 .5-5.15 3.5 3.5 0 0 0-6.6-1.5A2.8 2.8 0 0 0 2 4.4a2.7 2.7 0 0 0 2.4 3.9z"/><path d="M5 10.6v3M3.6 12.1h2.8M10.6 10.6v3M9.2 12.1h2.8"/>',
+  bulb: { r: 'M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z', f: 'M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-32.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z' },
+  led: { r: 'M247.35,148.85l-48-112A8,8,0,0,0,192,32H64a8,8,0,0,0-7.35,4.85l-48,112A8,8,0,0,0,16,160H120v48H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V160h56v32a8,8,0,0,0,16,0V160h32a8,8,0,0,0,7.35-11.15ZM28.13,144,69.28,48H186.72l41.15,96Z', f: 'M246.68,156.4A8,8,0,0,1,240,160H208v32a8,8,0,0,1-16,0V160H136v48h24a8,8,0,0,1,0,16H96a8,8,0,0,1,0-16h24V160H16a8,8,0,0,1-7.35-11.15l48-112A8,8,0,0,1,64,32H192a8,8,0,0,1,7.35,4.85l48,112A8,8,0,0,1,246.68,156.4Z' },
+  pool: { r: 'M88,149.39a8,8,0,0,0,8-8V128h64v15.29a8,8,0,0,0,16,0V32a8,8,0,0,0-16,0V48H96V32a8,8,0,0,0-16,0V141.39A8,8,0,0,0,88,149.39ZM96,112V96h64v16Zm64-48V80H96V64ZM24,168a8,8,0,0,1,8-8c14.42,0,22.19,5.18,28.44,9.34C66,173.06,70.42,176,80,176s14-2.94,19.56-6.66c6.24-4.16,14-9.34,28.43-9.34s22.2,5.18,28.44,9.34c5.58,3.72,10,6.66,19.57,6.66s14-2.94,19.56-6.66c6.25-4.16,14-9.34,28.44-9.34a8,8,0,0,1,0,16c-9.58,0-14,2.94-19.56,6.66-6.25,4.16-14,9.34-28.44,9.34s-22.2-5.18-28.44-9.34C142,178.94,137.57,176,128,176s-14,2.94-19.56,6.66c-6.24,4.16-14,9.34-28.43,9.34s-22.19-5.18-28.44-9.34C46,178.94,41.58,176,32,176A8,8,0,0,1,24,168Zm208,40a8,8,0,0,1-8,8c-9.58,0-14,2.94-19.56,6.66-6.25,4.16-14,9.34-28.44,9.34s-22.2-5.18-28.44-9.34C142,218.94,137.57,216,128,216s-14,2.94-19.56,6.66c-6.24,4.16-14,9.34-28.43,9.34s-22.19-5.18-28.44-9.34C46,218.94,41.58,216,32,216a8,8,0,0,1,0-16c14.42,0,22.19,5.18,28.44,9.34C66,213.06,70.42,216,80,216s14-2.94,19.56-6.66c6.24-4.16,14-9.34,28.43-9.34s22.2,5.18,28.44,9.34c5.58,3.72,10,6.66,19.57,6.66s14-2.94,19.56-6.66c6.25-4.16,14-9.34,28.44-9.34A8,8,0,0,1,232,208Z', f: 'M24,168a8,8,0,0,1,8-8c14.42,0,22.19,5.18,28.44,9.34C66,173.06,70.42,176,80,176s14-2.94,19.56-6.66c6.24-4.16,14-9.34,28.43-9.34s22.2,5.18,28.44,9.34c5.58,3.72,10,6.66,19.57,6.66s14-2.94,19.56-6.66c6.25-4.16,14-9.34,28.44-9.34a8,8,0,0,1,0,16c-9.58,0-14,2.94-19.56,6.66-6.25,4.16-14,9.34-28.44,9.34s-22.2-5.18-28.44-9.34C142,178.94,137.57,176,128,176s-14,2.94-19.56,6.66c-6.24,4.16-14,9.34-28.43,9.34s-22.19-5.18-28.44-9.34C46,178.94,41.58,176,32,176A8,8,0,0,1,24,168Zm200,32c-14.42,0-22.19,5.18-28.44,9.34C190,213.06,185.58,216,176,216s-14-2.94-19.57-6.66c-6.24-4.16-14-9.34-28.44-9.34s-22.19,5.18-28.43,9.34C94,213.06,89.57,216,80,216s-14-2.94-19.56-6.66C54.19,205.18,46.42,200,32,200a8,8,0,0,0,0,16c9.58,0,14,2.94,19.56,6.66,6.25,4.16,14,9.34,28.44,9.34s22.19-5.18,28.43-9.34c5.58-3.72,10-6.66,19.56-6.66s14,2.94,19.57,6.66c6.24,4.16,14,9.34,28.44,9.34s22.19-5.18,28.44-9.34c5.57-3.72,10-6.66,19.56-6.66a8,8,0,0,0,0-16ZM80,141.39V32a8,8,0,0,1,16,0v8h64V32a8,8,0,0,1,16,0V143.29a8,8,0,0,1-16,0V136H96v5.39a8,8,0,0,1-16,0ZM96,72a8,8,0,0,0,8,8h48a8,8,0,0,0,0-16H104A8,8,0,0,0,96,72Zm0,32a8,8,0,0,0,8,8h48a8,8,0,0,0,0-16H104A8,8,0,0,0,96,104Z' },
+  pump: { r: 'M174,47.75a254.19,254.19,0,0,0-41.45-38.3,8,8,0,0,0-9.18,0A254.19,254.19,0,0,0,82,47.75C54.51,79.32,40,112.6,40,144a88,88,0,0,0,176,0C216,112.6,201.49,79.32,174,47.75ZM128,216a72.08,72.08,0,0,1-72-72c0-57.23,55.47-105,72-118,16.53,13,72,60.75,72,118A72.08,72.08,0,0,1,128,216Zm55.89-62.66a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z', f: 'M174,47.75a254.19,254.19,0,0,0-41.45-38.3,8,8,0,0,0-9.18,0A254.19,254.19,0,0,0,82,47.75C54.51,79.32,40,112.6,40,144a88,88,0,0,0,176,0C216,112.6,201.49,79.32,174,47.75Zm9.85,105.59a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z' },
+  ac: { r: 'M223.77,150.09a8,8,0,0,1-5.86,9.68l-24.64,6,6.46,24.11a8,8,0,0,1-5.66,9.8A8.25,8.25,0,0,1,192,200a8,8,0,0,1-7.72-5.93l-7.72-28.8L136,141.86v46.83l21.66,21.65a8,8,0,0,1-11.32,11.32L128,203.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L120,188.69V141.86L79.45,165.27l-7.72,28.8A8,8,0,0,1,64,200a8.25,8.25,0,0,1-2.08-.27,8,8,0,0,1-5.66-9.8l6.46-24.11-24.64-6a8,8,0,0,1,3.82-15.54l29.45,7.23L112,128,71.36,104.54l-29.45,7.23A7.85,7.85,0,0,1,40,112a8,8,0,0,1-1.91-15.77l24.64-6L56.27,66.07a8,8,0,0,1,15.46-4.14l7.72,28.8L120,114.14V67.31L98.34,45.66a8,8,0,0,1,11.32-11.32L128,52.69l18.34-18.35a8,8,0,0,1,11.32,11.32L136,67.31v46.83l40.55-23.41,7.72-28.8a8,8,0,0,1,15.46,4.14l-6.46,24.11,24.64,6A8,8,0,0,1,216,112a7.85,7.85,0,0,1-1.91-.23l-29.45-7.23L144,128l40.64,23.46,29.45-7.23A8,8,0,0,1,223.77,150.09Z', f: 'M227.65,149.14a12,12,0,0,1-8.79,14.51l-20.67,5.08,5.4,20.16a12,12,0,0,1-23.18,6.22l-7.29-27.2L140,148.78V187l20.48,20.48a12,12,0,0,1-17,17L128,209l-15.51,15.52a12,12,0,0,1-17-17L116,187V148.78L82.88,167.91l-7.29,27.2a12,12,0,0,1-23.18-6.22l5.4-20.16-20.67-5.08a12,12,0,1,1,5.72-23.3l27.89,6.85L104,128,70.75,108.8l-27.89,6.85A11.8,11.8,0,0,1,40,116a12,12,0,0,1-2.85-23.65l20.67-5.08-5.4-20.16a12,12,0,0,1,23.18-6.22l7.29,27.2L116,107.21V69L95.52,48.48a12,12,0,0,1,17-17L128,47l15.51-15.52a12,12,0,1,1,17,17L140,69v38.24l33.12-19.12,7.29-27.2a12,12,0,0,1,23.18,6.22l-5.4,20.16,20.67,5.08A12,12,0,0,1,216,116a11.8,11.8,0,0,1-2.87-.35l-27.89-6.85L152,128l33.25,19.2,27.89-6.85A12,12,0,0,1,227.65,149.14Z' },
+  tv: { r: 'M216,64H147.31l34.35-34.34a8,8,0,1,0-11.32-11.32L128,60.69,85.66,18.34A8,8,0,0,0,74.34,29.66L108.69,64H40A16,16,0,0,0,24,80V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,136H40V80H216V200Z', f: 'M216,64H147.31l34.35-34.34a8,8,0,1,0-11.32-11.32L128,60.69,85.66,18.34A8,8,0,0,0,74.34,29.66L108.69,64H40A16,16,0,0,0,24,80V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,136H40V80H216V200ZM200,100v80a4,4,0,0,1-4,4H60a4,4,0,0,1-4-4V100a4,4,0,0,1,4-4H196A4,4,0,0,1,200,100Z' },
+  motion: { r: 'M128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Zm73.71,7.14a80,80,0,0,1-14.08,22.2,8,8,0,0,1-11.92-10.67,63.95,63.95,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67,80.08,80.08,0,0,1,14.08,84.47ZM69,103.09a64,64,0,0,0,11.26,67.58,8,8,0,0,1-11.92,10.67,79.93,79.93,0,0,1,0-106.67A8,8,0,1,1,80.29,85.34,63.77,63.77,0,0,0,69,103.09ZM248,128a119.58,119.58,0,0,1-34.29,84,8,8,0,1,1-11.42-11.2,103.9,103.9,0,0,0,0-145.56A8,8,0,1,1,213.71,44,119.58,119.58,0,0,1,248,128ZM53.71,200.78A8,8,0,1,1,42.29,212a119.87,119.87,0,0,1,0-168,8,8,0,1,1,11.42,11.2,103.9,103.9,0,0,0,0,145.56Z', f: 'M168,128a40,40,0,1,1-40-40A40,40,0,0,1,168,128Zm40,0a79.74,79.74,0,0,0-20.37-53.33,8,8,0,1,0-11.92,10.67,64,64,0,0,1,0,85.33,8,8,0,0,0,11.92,10.67A79.79,79.79,0,0,0,208,128ZM80.29,85.34A8,8,0,1,0,68.37,74.67a79.94,79.94,0,0,0,0,106.67,8,8,0,0,0,11.92-10.67,63.95,63.95,0,0,1,0-85.33Zm158.28-4A119.48,119.48,0,0,0,213.71,44a8,8,0,1,0-11.42,11.2,103.9,103.9,0,0,1,0,145.56A8,8,0,1,0,213.71,212,120.12,120.12,0,0,0,238.57,81.29ZM32.17,168.48A103.9,103.9,0,0,1,53.71,55.22,8,8,0,1,0,42.29,44a119.87,119.87,0,0,0,0,168,8,8,0,1,0,11.42-11.2A103.61,103.61,0,0,1,32.17,168.48Z' },
+  lux: { r: 'M120,40V32a8,8,0,0,1,16,0v8a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-8-8A8,8,0,0,0,50.34,61.66Zm0,116.68-8,8a8,8,0,0,0,11.32,11.32l8-8a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l8-8a8,8,0,0,0-11.32-11.32l-8,8A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l8,8a8,8,0,0,0,11.32-11.32ZM40,120H32a8,8,0,0,0,0,16h8a8,8,0,0,0,0-16Zm88,88a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-8A8,8,0,0,0,128,208Zm96-88h-8a8,8,0,0,0,0,16h8a8,8,0,0,0,0-16Z', f: 'M120,40V32a8,8,0,0,1,16,0v8a8,8,0,0,1-16,0Zm8,24a64,64,0,1,0,64,64A64.07,64.07,0,0,0,128,64ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-8-8A8,8,0,0,0,50.34,61.66Zm0,116.68-8,8a8,8,0,0,0,11.32,11.32l8-8a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l8-8a8,8,0,0,0-11.32-11.32l-8,8A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l8,8a8,8,0,0,0,11.32-11.32ZM40,120H32a8,8,0,0,0,0,16h8a8,8,0,0,0,0-16Zm88,88a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-8A8,8,0,0,0,128,208Zm96-88h-8a8,8,0,0,0,0,16h8a8,8,0,0,0,0-16Z' },
+  person: { r: 'M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z', f: 'M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z' },
+  auto: { r: 'M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z', f: 'M213.85,125.46l-112,120a8,8,0,0,1-13.69-7l14.66-73.33L45.19,143.49a8,8,0,0,1-3-13l112-120a8,8,0,0,1,13.69,7L153.18,90.9l57.63,21.61a8,8,0,0,1,3,12.95Z' },
+  home: { r: 'M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z' },
+  moon: { r: 'M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z' },
+  film: { r: 'M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,88h80v80H40Zm96-16V56h32V72Zm-16,0H88V56h32Zm0,112v16H88V184Zm16,0h32v16H136Zm0-16V88h80v80Zm80-96H184V56h32ZM72,56V72H40V56ZM40,184H72v16H40Zm176,16H184V184h32v16Z' },
+  power: { r: 'M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z' },
+  timer: { r: 'M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z' },
+  menu: { r: 'M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z' },
+  tag: { r: 'M243.31,136,144,36.69A15.86,15.86,0,0,0,132.69,32H40a8,8,0,0,0-8,8v92.69A15.86,15.86,0,0,0,36.69,144L136,243.31a16,16,0,0,0,22.63,0l84.68-84.68a16,16,0,0,0,0-22.63Zm-96,96L48,132.69V48h84.69L232,147.31ZM96,84A12,12,0,1,1,84,72,12,12,0,0,1,96,84Z' },
+  roof: { r: 'M240,208H224V136l2.34,2.34A8,8,0,0,0,237.66,127L139.31,28.68a16,16,0,0,0-22.62,0L18.34,127a8,8,0,0,0,11.32,11.31L32,136v72H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM48,120l80-80,80,80v88H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48Zm96,88H112V160h32Z' },
+  plan: { r: 'M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V96H40V56ZM40,112H96v88H40Zm176,88H112V112H216v88Z' },
+  target: { r: 'M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z' },
+  pin: { r: 'M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z' },
+  panel: { r: 'M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H80V200H40ZM216,200H96V56H216V200Z' },
+  walk: { r: 'M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.23,98.72-25.08,3.83,3.32,7.48,7,11,10.57C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z' },
+  chevl: { r: 'M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z' },
+  chevr: { r: 'M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z' },
+  play: { r: 'M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z' },
+  pause: { r: 'M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z' },
+  more: { r: 'M144,128a16,16,0,1,1-16-16A16,16,0,0,1,144,128ZM60,112a16,16,0,1,0,16,16A16,16,0,0,0,60,112Zm136,0a16,16,0,1,0,16,16A16,16,0,0,0,196,112Z' },
+  close: { r: 'M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z' },
+  sun: { r: 'M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm8,24a64,64,0,1,0,64,64A64.07,64.07,0,0,0,128,64ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z' },
+  cloudsun: { r: 'M164,72a76.2,76.2,0,0,0-20.26,2.73,55.63,55.63,0,0,0-9.41-11.54l9.51-13.57a8,8,0,1,0-13.11-9.18L121.22,54A55.9,55.9,0,0,0,96,48c-.59,0-1.16,0-1.74,0L91.37,31.71a8,8,0,1,0-15.75,2.77L78.5,50.82A56.1,56.1,0,0,0,55.23,65.67L41.61,56.14a8,8,0,1,0-9.17,13.11L46,78.77A55.55,55.55,0,0,0,40,104c0,.57,0,1.15,0,1.72L23.71,108.6a8,8,0,0,0,1.38,15.88,8.24,8.24,0,0,0,1.39-.12l16.32-2.88a55.74,55.74,0,0,0,5.86,12.42A52,52,0,0,0,84,224h80a76,76,0,0,0,0-152ZM92.92,120.76a52.14,52.14,0,0,0-31,4.17,40,40,0,0,1,66.62-44.17A76.26,76.26,0,0,0,92.92,120.76Z' },
+  cloud: { r: 'M160.06,40A88.1,88.1,0,0,0,81.29,88.67h0A87.48,87.48,0,0,0,72,127.73,8.18,8.18,0,0,1,64.57,136,8,8,0,0,1,56,128a103.66,103.66,0,0,1,5.34-32.92,4,4,0,0,0-4.75-5.18A64.09,64.09,0,0,0,8,152c0,35.19,29.75,64,65,64H160a88.09,88.09,0,0,0,87.93-91.48C246.11,77.54,207.07,40,160.06,40Z' },
+  fog: { r: 'M168,232a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h56A8,8,0,0,1,168,232Zm-40-32a8,8,0,0,0-8-8H72a8,8,0,0,0,0,16h48A8,8,0,0,0,128,200Zm56-8H160a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Zm47.87-96.45a76,76,0,0,0-151.78.73A8.18,8.18,0,0,1,72,104l-.6,0A8.14,8.14,0,0,1,64,95.39a92.48,92.48,0,0,1,2.33-16.51,4,4,0,0,0-5-4.78A52.09,52.09,0,0,0,24,124.36C24.2,153.07,48.12,176,76.84,176H156A76.08,76.08,0,0,0,231.87,95.55Z' },
+  rain: { r: 'M158.66,196.44l-32,48a8,8,0,1,1-13.32-8.88l32-48a8,8,0,0,1,13.32,8.88ZM231.87,87.55a76,76,0,0,0-151.78.73A8.18,8.18,0,0,1,72,96l-.6,0A8.14,8.14,0,0,1,64,87.39a92.48,92.48,0,0,1,2.33-16.51,4,4,0,0,0-5-4.78A52.09,52.09,0,0,0,24,116.36C24.2,145.07,48.12,168,76.84,168h36.21L89.34,203.56a8,8,0,0,0,13.32,8.88L132.28,168H156A76.08,76.08,0,0,0,231.87,87.55Z' },
+  storm: { r: 'M156,168H132.53l-14.4,24H144a8,8,0,0,1,6.86,12.12l-24,40a8,8,0,0,1-13.72-8.24L129.87,208H104a8,8,0,0,1-6.86-12.12L113.87,168h-37C48.12,168,24.2,145.07,24,116.36A52.09,52.09,0,0,1,61.35,66.1a4,4,0,0,1,5,4.78A92.48,92.48,0,0,0,64,87.39,8.14,8.14,0,0,0,71.41,96l.6,0a8.18,8.18,0,0,0,8.08-7.72A76,76,0,1,1,156,168Z' },
+  snow: { r: 'M88,196a12,12,0,1,1-12-12A12,12,0,0,1,88,196Zm28,4a12,12,0,1,0,12,12A12,12,0,0,0,116,200Zm48-16a12,12,0,1,0,12,12A12,12,0,0,0,164,184ZM68,224a12,12,0,1,0,12,12A12,12,0,0,0,68,224Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,156,224ZM231.87,87.55a76,76,0,0,0-151.78.73A8.18,8.18,0,0,1,72,96l-.6,0A8.14,8.14,0,0,1,64,87.39a92.48,92.48,0,0,1,2.33-16.51,4,4,0,0,0-5-4.78A52.09,52.09,0,0,0,24,116.36C24.2,145.07,48.12,168,76.84,168H156A76.08,76.08,0,0,0,231.87,87.55Z' },
+  night: { r: 'M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm65.14,94.33A88.07,88.07,0,0,1,105.67,46.86a8,8,0,0,0-10.6-9.06A96,96,0,1,0,218.2,160.93a8,8,0,0,0-9.06-10.6Z' },
+  cloudnight: { r: 'M172,72a76.35,76.35,0,0,0-12.36,1A71.93,71.93,0,0,0,104.17,9.83a8,8,0,0,0-9.59,9.58A56.05,56.05,0,0,1,40,88a56.45,56.45,0,0,1-12.59-1.42,8,8,0,0,0-9.59,9.59,72.22,72.22,0,0,0,32.29,45.06A52,52,0,0,0,92,224h80a76,76,0,0,0,0-152ZM37.37,104c.87,0,1.75,0,2.63,0a72.08,72.08,0,0,0,72-72c0-.89,0-1.78,0-2.67a55.64,55.64,0,0,1,32,48.05A76.4,76.4,0,0,0,101,120.78a52.38,52.38,0,0,0-9-.78,51.69,51.69,0,0,0-30,9.59A56.22,56.22,0,0,1,37.37,104Z' },
 };
 
 // Códigos WMO (Open-Meteo) → ícone + descrição em pt-BR
@@ -264,7 +292,7 @@ function fmtRel(ts, now = Date.now()) {
   if (d < 45) return 'agora'; if (d < 3600) return `há ${Math.round(d / 60)} min`; if (d < 86400) return `há ${Math.round(d / 3600)} h`;
   const days = Math.round(d / 86400); return days === 1 ? 'ontem' : `há ${days} d`;
 }
-const iconSvg = (k) => `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ICONS.bulb}</svg>`;
+const iconSvg = (k, i = ICONS[k] || ICONS.bulb) => `<svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor" aria-hidden="true"><path${i.f ? ' class="r"' : ''} d="${i.r}"/>${i.f ? `<path class="f" d="${i.f}"/>` : ''}</svg>`;   // r = regular (desligado), f = fill (ligado; o CSS troca)
 
 // ---------------------------------------------------------------------------
 // Planta (metros). Aproximada a partir do render do Sweet Home 3D.
@@ -2726,89 +2754,102 @@ function roomGaragemJardim(ctx) {
 const CSS = `
 :host { display: block; position: relative; height: var(--casa3d-height, calc(100vh - 100px)); min-height: 360px;
   border-radius: var(--ha-card-border-radius, 12px); overflow: hidden; overflow: clip; background: #0a0f1e;   /* clip: foco e scrollIntoView não rolam o cartão */
-  font: 13px/1.35 var(--primary-font-family, -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif); color: var(--ink);
-  /* Paleta "âmbar + grafite" (v1.8): ligado = âmbar · desligado e estrutura = grafite · ajuste = azul suave · foco = azul-claro · indisponível = coral.
-     Contraste no pior fundo (vidro sobre a cena clara): texto ≥ 4,5:1, ícone e borda de controle ≥ 3:1 */
-  --glass: rgba(30, 30, 33, .96);        /* vidro do painel, sem blur (a .96 o blur não aparece e o compositor o refaz a cada quadro do WebGL) */
-  --glass-solid: #1c1c1f;                 /* menos transparência */
-  --raised: #2a2a2e;                      /* bloco desligado, folha de ajustes */
-  --fill: rgba(255, 255, 255, .07);       /* trilho de abas/segmentos, chip neutro */
-  --fill-2: rgba(255, 255, 255, .12);     /* botão neutro, chip do ícone */
-  --fill-3: rgba(255, 255, 255, .18);     /* segmento escolhido, trilho do interruptor desligado */
-  --line: rgba(255, 255, 255, .09);       /* fio de borda */
-  --line-2: rgba(255, 255, 255, .16);     /* borda sob o mouse / de controle */
-  --ink: #f5f5f7; --ink-2: #b6b6bd; --ink-3: #a3a3ab;   /* texto 1º 13,9:1 · 2º 7,5:1 · 3º 4,6:1 */
+  font: 13px/1.35 var(--casa3d-font, -apple-system, BlinkMacSystemFont, var(--primary-font-family, "Segoe UI", Roboto, system-ui, sans-serif)); color: var(--ink);   /* SF nos aparelhos Apple; nos outros, a fonte do tema do HA */
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  /* Paleta v1.9: cores de sistema do iOS escuro (referência: app Casa do iOS 17/18, sem Liquid Glass). Ligado = âmbar · estrutura = grafite ·
+     foco e seleção = azul · indisponível = vermelho. Contraste no pior fundo: texto ≥ 4,5:1, ícone e controle ≥ 3:1 */
+  --glass: #1c1c1e;                       /* coluna e folha (secondarySystemBackground), opaca; vidro só no .wrap.glass */
+  --glass-solid: #1c1c1e;                 /* menos transparência */
+  --raised: #2c2c2e;                      /* bloco desligado, lista agrupada, ajustes (tertiarySystemBackground) */
+  --fill: rgba(118, 118, 128, .24);       /* trilho do segmentado, círculo do ícone, cápsulas */
+  --fill-2: rgba(120, 120, 128, .32);     /* botão neutro */
+  --fill-3: rgba(120, 120, 128, .36);     /* interruptor desligado, trilho do slider */
+  --line: rgba(84, 84, 88, .65);          /* separator */
+  --line-2: rgba(235, 235, 245, .18);     /* quaternaryLabel */
+  --ink: #fff; --ink-2: rgba(235, 235, 245, .6); --ink-3: rgba(235, 235, 245, .6);   /* label · secondaryLabel 5,95:1 no #1c1c1e e 5,27:1 no #2c2c2e (o tertiaryLabel não chega a 4,5:1) */
   --on: #ffb547; --on-ink: #2b1800; --on-bg: rgba(255, 181, 71, .16); --on-line: rgba(255, 181, 71, .5);
   --off: var(--ink-3); --off-bg: var(--raised); --off-ink: var(--ink-2);
-  --adj: #8cbcff; --adj-ink: #c4dcff; --adj-bg: rgba(140, 188, 255, .16); --adj-line: rgba(140, 188, 255, .5);
-  --alert: #ff8f7e;                       /* indisponível */
-  --focus: #a6cfff;                       /* anel de foco e seleção: azul, porque âmbar quer dizer "ligado" */
-  --ease: cubic-bezier(.2, .8, .2, 1);
+  --alert: #ff6961;                       /* indisponível: systemRed de alto contraste (4,9:1 no #2c2c2e) */
+  --focus: #409cff;                       /* foco e seleção: systemBlue de alto contraste (âmbar quer dizer "ligado") */
+  --ease: cubic-bezier(.32, .72, 0, 1);   /* curva da folha do iOS */
+  --seg: #636366;                         /* polegar do segmentado */
+  --tile-on: #e5e5ea; --tile-on-ink: #000; --tile-on-ink-2: #545458;   /* bloco ligado: claro; nome 16,7:1 · estado 6,0:1 */
+  --mat-chrome: #1c1c1e; --mat-pop: #2c2c2e;   /* HUD · menu, balão, "Ir para…" (opacos fora do vidro) */
+  --blur: none; --blur-s: none;
+  --check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E");   /* Phosphor check (bold) */
   -webkit-tap-highlight-color: transparent; color-scheme: dark; }   /* sem o flash de toque do Android (o retorno é o :active) · controles nativos escuros */
 .wrap { position: absolute; inset: 0; }
+.wrap.glass { --glass: rgba(28, 28, 30, .78); --mat-chrome: rgba(28, 28, 30, .78); --mat-pop: rgba(44, 44, 46, .84); --blur: blur(30px) saturate(180%); --blur-s: blur(20px) saturate(180%);
+  --ink-2: rgba(235, 235, 245, .72); --ink-3: rgba(235, 235, 245, .72); }   /* vidro (nível alta, GPU dedicada; o governador o tira): o cinza sobe ("vibrancy"), 4,7:1 com a cena a 240 atrás */
 canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab; }
 canvas.pick { cursor: pointer; }
 canvas:active { cursor: grabbing; }
 .hud { position: absolute; left: 0; right: 0; display: flex; gap: 8px; padding: 10px; pointer-events: none; box-sizing: border-box; }
 .hud > * { pointer-events: auto; }
 .hud.top { top: 0; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
-.panel { background: rgba(30, 30, 33, .72); border: 1px solid var(--line); border-radius: 10px;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.title { padding: 10px 14px; display: flex; flex-direction: column; gap: 1px; }   /* 2 linhas: nome + clima · hora + luzes */
-.title b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
-.title .sub { color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel { background: var(--mat-chrome); border: 0; border-radius: 14px; backdrop-filter: var(--blur-s); -webkit-backdrop-filter: var(--blur-s);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 4px 16px rgba(0, 0, 0, .22); }   /* HUD: material de barra, fio claro de 0,5 px por dentro */
+.title { padding: 8px 14px; display: flex; flex-direction: column; gap: 1px; }   /* 2 linhas: nome + clima · hora + luzes */
+.title b { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -.025em; }
+.title .sub { color: var(--ink-2); font-size: 13px; line-height: 18px; letter-spacing: -.006em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .title .clock { color: var(--ink); font-weight: 600; }
 .title .clock .per { color: var(--on); }
 /* Clima (v1.5.1): só ícone + temperatura, à direita do nome; os detalhes ficam no topo do menu ☰ */
 .title .cline { display: flex; align-items: center; gap: 12px; }
-.title .wx { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
-.title .wx svg { width: 15px; height: 15px; color: var(--on); } .title .wx[hidden] { display: none; }
-.menu .mwx .wd { padding: 0 8px 4px; font-size: 12px; color: var(--ink); } .menu .mwx .wd small { display: block; font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+.title .wx { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font-size: 15px; font-weight: 500; letter-spacing: -.015em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.title .wx svg { width: 15px; height: 15px; color: var(--ink); } .title .wx[hidden] { display: none; }   /* âmbar só no que está ligado */
+.menu .mwx .wd { padding: 0 16px 10px; font-size: 15px; line-height: 20px; letter-spacing: -.015em; color: var(--ink); } .menu .mwx .wd small { display: block; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+.menu .mwx .wd small svg { width: 13px; height: 13px; vertical-align: -2px; }
 .hud > .lcol { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; pointer-events: none; }   /* coluna esquerda: título */
 .lcol > * { pointer-events: auto; }
 .btns { display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; align-items: center; flex: none; }
-/* Menu de opções (v1.5): um botão ☰ no topo abre a lista suspensa por seções; nasce do botão (canto superior direito) */
+/* Menu de opções (v1.5): um botão ☰ no topo abre a lista suspensa (pull-down do iOS, 250 pt): marca de verificação à esquerda, ícone à direita,
+   linhas de 44 no toque e 36 com mouse, seções separadas por faixa de 8; nasce do botão e volta para ele */
+.btn:hover { background: var(--raised); }   /* opaco: o fill translúcido mostraria a cena por baixo */
 .menubtn { display: inline-flex; align-items: center; gap: 7px; }
 .menubtn svg { width: 16px; height: 16px; flex: none; }
-.menubtn[aria-expanded="true"] { background: var(--fill-3); color: var(--ink); border-color: var(--line-2); }
-.menu { position: absolute; right: 10px; top: 56px; z-index: 8; width: min(272px, calc(100% - 20px)); max-height: calc(100% - 66px); overflow: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 4px 6px 6px;
-  border-radius: 14px; background: rgba(44, 44, 48, .98); border: 1px solid var(--line-2);   /* material mais leve que a coluna; sem blur (a .98 ele não aparece) */
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 1px 0 rgba(255, 255, 255, .1) inset;
-  transform-origin: top right; animation: menuIn .18s var(--ease); scrollbar-width: thin; scrollbar-color: var(--fill-3) transparent; }
+.menubtn[aria-expanded="true"] { background: #3a3a3c; color: var(--ink); }
+.menu { position: absolute; right: 10px; top: 56px; z-index: 8; width: min(250px, calc(100% - 20px)); max-height: calc(100% - 66px); overflow: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 0;
+  border-radius: 14px; background: var(--mat-pop); border: 0; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 10px 40px rgba(0, 0, 0, .45);
+  transform-origin: top right; animation: menuIn .32s var(--ease); scrollbar-width: thin; scrollbar-color: var(--fill-3) transparent; }
 .menu[hidden] { display: none; }
-@keyframes menuIn { from { opacity: 0; transform: scale(.96); } }   /* sem overshoot: nasce do botão */
+@keyframes menuIn { from { opacity: 0; scale: .9; } }   /* sem overshoot: nasce do botão */
+.menu.out, .sel.out { animation: popOut .15s ease-in forwards; pointer-events: none; }   /* sai pelo mesmo caminho: de volta ao botão / à ponta */
+@keyframes popOut { to { opacity: 0; scale: .9; } }
 .menubtn, .menu .mi, .menu .mseg button { transition: transform .1s ease-out, background .15s; }
-.menubtn:active, .menu .mi:active, .menu .mseg button:active { transform: scale(.97); }   /* retorno já no toque */
-.menu .msec { padding: 4px 0 6px; } .menu .msec + .msec { border-top: 1px solid var(--line); }
-.menu .mh { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; padding: 7px 8px 5px; }
-.menu .mi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 7px 8px; border-radius: 9px; text-align: left; font-size: 12.5px; color: var(--ink); }
-.menu .mi svg { width: 16px; height: 16px; flex: none; color: var(--ink-3); transition: color .2s; }
-.menu .mi .ml { flex: 1; min-width: 0; } .menu .mi .ml small { display: block; font-weight: 500; font-size: 10.5px; color: var(--ink-3); margin-top: 1px; }
+.menubtn:active, .menu .mseg button:active { transform: scale(.97); }   /* retorno já no toque */
+.menu .msec { padding: 0; } .menu .msec + .msec { border-top: 8px solid rgba(0, 0, 0, .22); }
+.menu .mh { padding: 10px 16px 4px; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); }
+.menu .mi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 11px 16px 11px 12px; border-radius: 0; text-align: left; font-size: 17px; line-height: 22px; font-weight: 400; letter-spacing: -.025em; color: var(--ink); }
+.menu .mi + .mi { box-shadow: inset 0 1px 0 var(--line); }
+.menu .mi::before { content: ""; flex: none; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--check) center / 16px no-repeat; mask: var(--check) center / 16px no-repeat; visibility: hidden; }   /* o lugar da marca fica reservado */
+.menu .mi[aria-pressed="true"]::before { visibility: visible; }
+.menu .mi svg { order: 2; width: 20px; height: 20px; flex: none; color: var(--ink); }   /* ícone à direita; o estado é a marca */
+.menu .mi .ml { flex: 1; min-width: 0; } .menu .mi .ml small { display: block; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); }
 .menu .mi:hover, .menu .mi[aria-pressed]:hover { background: var(--fill); }
+.menu .mi:active { background: var(--fill-3); }   /* realce da linha, sem encolher */
 .menu .mi[aria-pressed="true"] { background: transparent; color: var(--ink); }
-.menu .mi[aria-pressed="true"] svg { color: var(--on); }
 .menu .mi:disabled { cursor: default; } .menu .mi:disabled:hover { background: transparent; }
-/* toggles: interruptor desenhado no próprio item (estado vem do aria-pressed, como antes) */
-.menu .mi[aria-pressed]::after { content: ""; flex: none; width: 30px; height: 18px; box-sizing: border-box; border-radius: 999px; border: 1px solid var(--line-2);
-  background: radial-gradient(circle at 8px 50%, var(--ink) 5.5px, transparent 6px), var(--fill-3); transition: background .2s; }
-.menu .mi[aria-pressed="true"]::after { border-color: var(--on); background: radial-gradient(circle at 20px 50%, #fff 5.5px, transparent 6px), var(--on); }   /* o mesmo interruptor do painel: polegar branco, sem brilho */
-.menu .mi .go { flex: none; color: var(--ink-3); font-size: 15px; line-height: 1; }
-.menu .mseg { display: flex; gap: 2px; margin: 0 2px 4px; padding: 3px; border-radius: 10px; background: var(--fill); border: 1px solid var(--line); }
-.menu .mseg button { flex: 1; padding: 7px 6px; font-size: 12px; border-radius: 7px; color: var(--ink-2); }
-.menu .mseg button[aria-pressed="true"] { background: var(--fill-3); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
+@media (pointer: fine) { .menu .mi { min-height: 36px; padding-block: 8px; font-size: 15px; line-height: 20px; letter-spacing: -.015em; } .menu .mi .ml small { font-size: 12px; line-height: 16px; letter-spacing: 0; } }
+.menu .mseg { display: flex; margin: 4px 16px 10px; }
+.menu .mseg button { flex: 1; }
 button { appearance: none; border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; font-size: 12px;
-  padding: 6px 10px; border-radius: 7px; cursor: pointer; letter-spacing: .01em; }
+  padding: 6px 10px; border-radius: 7px; cursor: pointer; letter-spacing: -.006em; }
 button:hover { background: var(--fill); }
-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.hud .btn:focus-visible, .reopen:focus-visible, .pegdica button:focus-visible { box-shadow: 0 0 0 2px #000; }   /* sobre a cena: anel duplo (o azul encosta no preto, 7,4:1) */
 button[aria-pressed="true"] { background: var(--on-bg); color: var(--on); }
-.btn { padding: 9px 12px; }
+.btn { min-height: 36px; padding: 7px 14px; border-radius: 999px; font-size: 15px; line-height: 20px; letter-spacing: -.015em; }   /* cápsula, como os botões de barra do HIG */
+@media (pointer: coarse) { .btn { min-height: 44px; } }
+.back svg { width: 16px; height: 16px; margin: 0 2px 0 -4px; vertical-align: -3px; }   /* "‹ Planta" / "‹ Casa" */
 .wrap::before, .wrap::after { content: ""; position: absolute; left: 0; right: 0; height: 120px; pointer-events: none; }
 .wrap::before { top: 0; background: linear-gradient(rgba(6, 9, 18, .55), transparent); }
 .wrap::after { bottom: 0; background: linear-gradient(transparent, rgba(6, 9, 18, .6)); }
 .err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #ffb4b4; background: #0a0f1e; }
 /* Visão de pessoa (v1.4): joystick, aviso de comandos, bonequinho, "Ir para…" */
 .joy { position: absolute; left: 16px; bottom: 16px; width: 116px; height: 116px; border-radius: 50%; z-index: 4; touch-action: none; opacity: .85; cursor: grab;
-  background: radial-gradient(circle, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04)); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  background: radial-gradient(circle, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04)); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: var(--blur-s); -webkit-backdrop-filter: var(--blur-s); }
 .joy[hidden] { display: none; }
 .joy .knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; pointer-events: none;
   background: var(--on-line); border: 1px solid var(--on); box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
@@ -2817,22 +2858,26 @@ button[aria-pressed="true"] { background: var(--on-bg); color: var(--on); }
 .walkhint.show { opacity: 1; }
 canvas.walk { cursor: crosshair; }
 canvas.walk.pick { cursor: pointer; }
-/* balão do aparelho tocado (v1.8.1, como na Igreja): nome, estado e a ação; Acender/Ligar âmbar cheio, Apagar/Desligar/Detalhes grafite */
-.sel { position: absolute; left: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 16px); box-sizing: border-box; padding: 6px 6px 6px 14px; border-radius: 16px; white-space: nowrap;
-  background: var(--glass-solid); border: 1px solid var(--line); box-shadow: 0 10px 28px rgba(0, 0, 0, .45); animation: fadeIn .16s ease-out; }   /* sólido: os rótulos da maquete não transparecem */
+/* balão do aparelho tocado (v1.8.1, como na Igreja; popover do iOS na v1.9): nome, estado e a ação; Acender/Ligar âmbar cheio, Apagar/Desligar/Detalhes grafite.
+   A posição vem do _selPlace na propriedade translate: a escala da entrada e da saída nasce da ponta */
+.sel { position: absolute; left: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 16px); box-sizing: border-box; padding: 8px 8px 8px 14px; border-radius: 14px; white-space: nowrap;
+  background: var(--mat-pop); border: 0; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 10px 28px rgba(0, 0, 0, .45);
+  transform-origin: calc(50% + var(--ax, 0px)) calc(100% + 8px); animation: selIn .3s var(--ease); }   /* sólido fora do vidro: os rótulos da maquete não transparecem */
+.sel.below { transform-origin: calc(50% + var(--ax, 0px)) -8px; }
+@keyframes selIn { from { opacity: 0; scale: .9; } }
 .sel[hidden] { display: none; } .sel > span { min-width: 0; } .sel b, .sel small { overflow: hidden; text-overflow: ellipsis; }   /* texto longo: reticências; o botão fica inteiro */
-.sel::after { content: ""; position: absolute; z-index: -1; left: calc(50% + var(--ax, 0px)); bottom: -6px; width: 11px; height: 11px; margin-left: -6px; background: var(--glass-solid); border: solid var(--line); border-width: 0 1px 1px 0; transform: rotate(45deg); }   /* ponta com o mesmo fio do corpo, por baixo do conteúdo */
-.sel.below::after { bottom: auto; top: -6px; border-width: 1px 0 0 1px; }   /* aberto embaixo do ponto: a ponta sobe */
-.sel b { display: block; font-size: 13px; color: var(--ink); } .sel small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--ink-2); }
-.sel button { flex: none; min-width: 44px; min-height: 34px; padding: 0 14px; border-radius: 11px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }
-.sel button:hover { background: var(--fill-3); } .sel button.go { background: var(--on); color: var(--on-ink); border-color: var(--on); }
+.sel::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -8px; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top-color: var(--mat-pop); }   /* ponta de 16×8 */
+.sel.below::after { top: -8px; bottom: auto; border: 8px solid transparent; border-top: 0; border-bottom-color: var(--mat-pop); }   /* aberto embaixo do ponto: a ponta sobe */
+.sel b { display: block; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.015em; color: var(--ink); } .sel small { display: block; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+.sel button { flex: none; min-height: 32px; padding: 6px 14px; border-radius: 999px; background: var(--fill-2); color: var(--ink); font-size: 15px; line-height: 20px; letter-spacing: -.015em; transition: transform .1s ease-out, background-color .2s; }
+.sel button:hover { background: var(--fill-3); } .sel button.go { background: var(--on); color: var(--on-ink); }
 .peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--on); touch-action: none; cursor: grab; padding: 8px 10px; }   /* o bonequinho continua âmbar (o mesmo --on) */
 /* dica de primeiro acesso apontando para o bonequinho (some quando ele é usado ou ao fechar) */
-.pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 36px 9px 12px; font-size: 12px; line-height: 1.35; color: var(--ink); background: rgba(44, 44, 48, .96); }
-.pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: inherit; border: solid var(--line); border-width: 1px 0 0 1px; transform: rotate(45deg); }
+.pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 36px 9px 12px; font-size: 13px; line-height: 18px; color: var(--ink); }
+.pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: inherit; transform: rotate(45deg); }
 .pegdica button { position: absolute; top: -2px; right: -2px; padding: 10px 12px; font-size: 14px; color: var(--ink-2); }
 .pegdica.lado { transform: translateY(-50%); }   /* desktop: à esquerda dos botões, apontando para eles (não cobre o painel) */
-.pegdica.lado::before { top: 50%; right: -6px; margin-top: -5px; border-width: 1px 1px 0 0; }
+.pegdica.lado::before { top: 50%; right: -6px; margin-top: -5px; }
 .wrap.side .pegdica:not(.lado) { display: none; }   /* celular com a folha aberta: ela cobriria a faixa da cena */
 .peg[hidden], .btns > button[hidden] { display: none; }
 .peg[aria-pressed="true"] { background: var(--on-bg); }
@@ -2842,21 +2887,22 @@ canvas.walk.pick { cursor: pointer; }
 .pegtip { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; padding: 5px 9px; font-size: 12px; font-weight: 600; color: var(--on); white-space: nowrap; }
 .pegtip[hidden] { display: none; }
 .goto { position: absolute; right: 10px; top: var(--side-top, 58px); z-index: 6; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 8px 10px 10px; overscroll-behavior: contain; box-sizing: border-box; }
+.goto, .pegdica { background: var(--mat-pop); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
 .goto[hidden] { display: none; }
 .wrap.side .goto { width: min(340px, calc(100% - var(--side-w, 340px) - 30px)); }   /* coluna aberta à esquerda: a lista fica à direita, sem cruzar */
-.goto .gh { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; padding: 2px 2px 6px; }
-.goto .gt { font-size: 11px; color: var(--ink-2); font-weight: 700; margin: 8px 2px 4px; }
-.goto .grow { display: flex; flex-wrap: wrap; gap: 5px; }
-.goto .grow button { background: var(--fill); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
-.goto .grow button:hover { background: var(--fill-2); color: var(--ink); }
+.goto .gh { font-size: 13px; line-height: 18px; color: var(--ink-2); padding: 2px 2px 6px; }
+.goto .gt { font-size: 13px; color: var(--ink-2); font-weight: 600; margin: 10px 2px 6px; }
+.goto .grow { display: flex; flex-wrap: wrap; gap: 6px; }
+.goto .grow button { background: var(--fill-2); border-radius: 999px; padding: 7px 14px; font-size: 15px; line-height: 20px; }
+.goto .grow button:hover { background: var(--fill-3); color: var(--ink); }
 .fade { position: absolute; inset: 0; background: #06090f; opacity: 0; pointer-events: none; z-index: 5; }
 @media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 40px; } .goto, .wrap.side .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
 @media (max-width: 640px) { .joy { width: 104px; height: 104px; left: 14px; bottom: 14px; } .walkhint { bottom: 130px; } }
-/* Painel lateral (v1.5) — coluna de vidro grafite à esquerda; âmbar só no que está ligado, azul suave nos ajustes (tokens no :host).
+/* Painel lateral (v1.5) — coluna grafite à esquerda (barra lateral flutuante do iPadOS); âmbar só no que está ligado (tokens no :host).
    --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo do título, ou dos botões se eles invadirem a faixa) */
 .dock { position: absolute; top: var(--side-top, 58px); left: 10px; bottom: auto; max-height: calc(100% - var(--side-top, 58px) - 10px); width: var(--side-w, 340px); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; z-index: 4; touch-action: pan-y;
-  border-radius: 22px; border: 1px solid var(--line); background: var(--glass);   /* vidro grafite opaco: sem backdrop-filter (o none vence o blur do .panel) */
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .06) inset; backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-radius: 28px; border: 0; background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);   /* raio 28: concêntrico com o bloco (18 + 12 de margem) */
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .1), 0 8px 40px rgba(0, 0, 0, .38);
   animation: dockIn .3s var(--ease) backwards; }
 .dock[hidden] { display: none; }
 .dock.closing { animation: dockOut .2s ease-in forwards; pointer-events: none; }
@@ -2867,207 +2913,210 @@ canvas.walk.pick { cursor: pointer; }
 @keyframes paneIn { from { opacity: 0; } }   /* troca de aba: só esmaece */
 @keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
 @keyframes flashPulse { 0% { box-shadow: 0 0 0 0 var(--focus); } 100% { box-shadow: 0 0 0 14px transparent; } }
-/* cabeçalho da coluna: contador de luzes + recolher (←); abaixo, as abas em segmento de largura igual */
-.phead { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; flex: none; }
+/* cabeçalho da coluna: cápsula do que está ligado (como "Luzes · 4 acesas" do Home) + recolher; abaixo, as abas em segmento de largura igual */
+.phead { display: flex; align-items: center; gap: 8px; padding: 12px; flex: none; }
 .phead .spacer { flex: 1; }
-.phead .count { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 5px 11px 5px 9px; border-radius: 999px; background: var(--fill); border: 1px solid var(--line); color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.phead .count { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 6px 12px 6px 10px; border-radius: 999px; background: var(--fill); color: var(--ink-2); font-size: 13px; line-height: 18px; font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .phead .count svg { width: 14px; height: 14px; color: var(--off); transition: color .2s; }
 .phead .count.lit svg { color: var(--on); }   /* a lâmpada acende; sem brilho */
-.phead .count b { color: var(--ink); font-weight: 700; }
+.phead .count b { color: var(--ink); font-weight: 600; }
 .phead .count:not(.lit):not(.any) { color: var(--ink-3); }   /* "Tudo desligado" em cinza */
-.phead .count:hover { border-color: var(--line-2); }
+.phead .count:hover { background: var(--fill-2); }
 .phead .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* só leitor de tela */
-.phead .collapse { position: relative; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: var(--fill); color: var(--ink-2); flex: none; }
+.phead .collapse { position: relative; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: var(--fill); color: var(--ink-2); flex: none; }
 .phead .collapse:hover { background: var(--fill-2); color: var(--ink); }
-.tabs { display: flex; gap: 3px; margin: 0 12px 10px; padding: 3px; border-radius: 12px; background: var(--fill); border: 1px solid var(--line); flex: none; }
-.tabs button[role="tab"] { flex: 1; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 6px; font-size: 12px; border-radius: 9px; color: var(--ink-2); transition: background-color .2s, color .2s; }
+/* UISegmentedControl (abas, Ligados/Todos, modo do ar, "desligar em", Auto/Dia/Noite): trilho raio 9, polegar #636366 raio 7 com 2 px de folga, 13 pt.
+   O escolhido em semibold, com um fio claro (3,4:1 contra o trilho: a cor sozinha não chega a 3:1) */
+.tabs, .zonebar, .seg2, .menu .mseg { gap: 0; padding: 2px; border: 0; border-radius: 9px; background: var(--fill); }
+.tabs button[role="tab"], .zonebar button, .seg2 button, .menu .mseg button { min-height: 28px; padding: 4px 10px; border-radius: 7px; font-size: 13px; line-height: 20px; font-weight: 500; letter-spacing: -.006em; color: var(--ink); transition: background-color .2s, box-shadow .2s; }
+.tabs button[aria-selected="true"], .zonebar button[aria-pressed="true"], .seg2 button[aria-pressed="true"], .menu .mseg button[aria-pressed="true"] {
+  background: var(--seg); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+.tabs { display: flex; margin: 0 12px 12px; flex: none; }
+.tabs button[role="tab"] { flex: 1; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding-inline: 4px; }
 .tabs button[role="tab"] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tabs button[role="tab"] svg { display: none; }   /* coluna estreita (v1.6): só o texto */
-.tabs button[role="tab"]:hover { color: var(--ink); }
-.tabs button[aria-selected="true"] { background: var(--fill-3); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
 .pane { flex: 0 1 auto; min-height: 0; overflow: auto; padding: 12px 12px 14px; display: none; touch-action: pan-y; overscroll-behavior: contain;
   -webkit-mask-image: linear-gradient(transparent, #000 12px); mask-image: linear-gradient(transparent, #000 12px);   /* degradê na borda de cima em vez de linha de 1 px */ scrollbar-width: thin; scrollbar-color: var(--fill-3) transparent; }
 .pane.active { display: block; animation: paneIn .2s var(--ease); }
 .pane.top { -webkit-mask-image: none; mask-image: none; }   /* degradê só depois de rolar: sem camada de máscara parada */
-/* Ligados · Todos: filtro compacto à esquerda, menor que as abas, com selo âmbar (a planta é o filtro por cômodo) */
-.zonebar { display: flex; width: max-content; max-width: 100%; box-sizing: border-box; gap: 2px; margin: 0 0 12px; padding: 2px; border-radius: 10px; background: var(--fill); }
-.zonebar button { position: relative; min-width: 76px; padding: 5px 12px; font-size: 12px; border-radius: 8px; color: var(--ink-2); font-variant-numeric: tabular-nums; transition: background-color .2s, color .2s; }
-.zonebar button[aria-pressed="true"] { background: var(--fill-3); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
-.zonebar .n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--on); color: var(--on-ink); font-size: 11px; font-weight: 800; line-height: 18px; }   /* selo: quantos estão ligados */
-.zempty { margin: 0 0 8px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line-2); font-size: 12px; color: var(--ink-3); } .zempty[hidden] { display: none; }
-.zempty button { padding: 6px 4px; color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 7px; }   /* 2 colunas na coluna de 320 px; 1 quando estreita */
-.zone { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 8px 2px 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+/* Ligados · Todos: filtro compacto à esquerda, segmentos de largura igual, com selo âmbar (a planta é o filtro por cômodo) */
+.zonebar { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: max-content; max-width: 100%; box-sizing: border-box; margin: 0 0 16px; }
+.zonebar button { position: relative; min-width: 84px; font-variant-numeric: tabular-nums; }
+.zonebar .n { display: inline-block; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: var(--on); color: var(--on-ink); font-size: 12px; font-weight: 600; line-height: 20px; vertical-align: 1px; }   /* selo: quantos estão ligados */
+.zempty { margin: 0 0 8px; padding: 12px; border-radius: 12px; background: var(--raised); font-size: 15px; line-height: 20px; color: var(--ink-2); } .zempty[hidden] { display: none; }
+.zempty button { padding: 6px 4px; color: var(--ink); font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }   /* 2 colunas na coluna de 320 px; 1 quando estreita */
+/* cômodo como no Home: "Quarto ›" em 17 semibold, contagem em 13 cinza, sem fio */
+.zone { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 24px 2px 0; font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -.025em; color: var(--ink); }
 .zone:first-child { margin-top: 0; }
-.zone::after { content: ""; order: 2; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
-.zone button { display: inline-flex; align-items: center; gap: 4px; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
-.zone button i { font-style: normal; font-size: 13px; letter-spacing: 0; color: var(--ink-3); }   /* "›": leva ao cômodo */
+.zone::after { content: ""; order: 2; flex: 1; }
+.zone button { display: inline-flex; align-items: center; gap: 4px; padding: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.zone button i { display: inline-grid; color: var(--ink-2); } .zone button i svg { width: 14px; height: 14px; }   /* "›": leva ao cômodo */
 .zone button:not(:disabled):hover, .zone button:not(:disabled):hover i { color: var(--ink); } .zone button:disabled { cursor: default; }
-.zone .zn { order: 3; letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }   /* contagem em texto: neutra */
+.zone .zn { order: 3; font-weight: 400; font-size: 13px; letter-spacing: -.006em; color: var(--ink-2); font-variant-numeric: tabular-nums; }   /* contagem em texto: neutra */
 .zone[hidden], .tile[hidden], .blk[hidden], .foot[hidden], .sect[hidden] { display: none; }
-/* bloco (v1.8.1): Casa · Área externa — numa linha, nome, "N de M ligados" e uma ação (a mesma do cômodo); os cômodos dele embaixo, sem vão */
+/* bloco (v1.8.1): Casa · Área externa — numa linha, nome, "N de M ligados" e o interruptor de tudo dele (v1.9); os cômodos dele embaixo */
 .blk { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0 2px; color: var(--ink); }
-:not([hidden]) ~ .blk { margin-top: 14px; } .blk + .zone { margin-top: 0; }   /* vão só entre blocos à vista */
+:not([hidden]) ~ .blk { margin-top: 32px; } .blk + .zone { margin-top: 12px; }   /* vão só entre blocos à vista */
 .blk .bt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }   /* coluna estreita: a contagem desce */
-.blk b { font-size: 15px; font-weight: 700; letter-spacing: -.01em; } .blk small { white-space: nowrap; font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.blk .all button { position: relative; min-height: 30px; padding: 0 12px; } .blk .all button::after { content: ""; position: absolute; inset: -7px 0; }   /* 30 px à vista, alvo de 44 */
-.foot { grid-column: 1 / -1; height: 1px; margin: 10px 2px 3px; background: var(--line-2); }   /* Sandro, no fim: um fio, não um 3º bloco */
-.autos > .sect { margin: 0 2px; } .autos > .sect:not(:first-child) { margin-top: 12px; } .autos > .sect + .zone { margin-top: 0; } .sect[hidden] + .autos { margin-top: 18px; }   /* Automações · bloco → cômodo */
-.tile.wide { grid-column: 1 / -1; } .dock.room .tile.wide { grid-column: auto; } .tile small .sv { font-weight: 500; }   /* aparelho de mais de um cômodo: linha inteira, cabe o "também …" */
-/* bloco compacto (ícone à esquerda, nome e estado à direita) — cabe duas colunas na lateral */
-.tile { position: relative; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 9px; min-height: 64px; padding: 9px 9px 9px 10px; border-radius: 14px; text-align: left; color: var(--ink);
-  background: var(--off-bg); border: 1px solid var(--line);
-  transition: background-color .2s, border-color .2s, transform .14s var(--ease); }
+.blk b { font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.02em; } .blk small { white-space: nowrap; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.foot { grid-column: 1 / -1; height: 1px; margin: 20px 2px 4px; background: var(--line); }   /* Sandro, no fim: um fio, não um 3º bloco */
+.autos > .sect:not(:first-child) { margin-top: 24px; } .autos > .sect + .zone { margin-top: 4px; } .autos .zone { margin-bottom: 8px; } .sect[hidden] + .autos { margin-top: 24px; }   /* Automações · bloco → cômodo */
+.tile.wide { grid-column: 1 / -1; } .dock.room .tile.wide { grid-column: auto; } .tile small .sv { font-weight: 400; }   /* aparelho de mais de um cômodo: linha inteira, cabe o "também …" */
+/* bloco do Home (ícone num círculo à esquerda, nome e estado à direita, sem borda): desligado grafite; ligado claro com o círculo âmbar; sensor nunca acende */
+.tile { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 8px; min-height: 64px; padding: 12px 8px 12px 12px; border-radius: 18px; text-align: left; color: var(--ink);
+  background: var(--raised); border: 0;
+  transition: background-color .2s, transform .14s var(--ease); }
 .tile > * { position: relative; }
-.tile:hover { background: var(--off-bg); border-color: var(--line-2); }   /* sob o mouse: só a borda acende (o fundo continua dizendo o estado) */
-.tile:active { transform: scale(.975); }
-.tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tile:hover { background: #363638; }
+.tile:active { transform: scale(.97); }
+.tile:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .tile .top { display: contents; }
 .tile > span:not(.top) { min-width: 0; }
 .tile .eyebrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* cômodo: só leitor de tela (o nome é curto) */
-.tile .ico { width: 32px; height: 32px; border-radius: 11px; display: grid; place-items: center; background: var(--fill-2); color: var(--off); transition: background-color .2s, color .2s; }
-.tile .ico svg { width: 19px; height: 19px; }
-.tile b { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; letter-spacing: -.005em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile small { display: block; margin-top: 2px; font-size: 11px; line-height: 1.3; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile small .st { color: var(--off-ink); font-weight: 500; }
+.tile .ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--ink-2); transition: background-color .2s, color .2s; }
+.tile .ico svg { width: 20px; height: 20px; }
+svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display: inline; }   /* Phosphor: desligado = regular, ligado = fill (só CSS, sem refazer o bloco) */
+.tile b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: ellipsis; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.015em; color: var(--ink); }   /* até 2 linhas, como no Home */
+.tile small { display: block; font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: -.006em; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile small .st { color: var(--ink-2); }
 .tile small .tm, .tile small .sep { display: none; }   /* o horário fica na aba Atividade */
-.tile .lvl { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--fill); opacity: 0; transition: opacity .2s; }
-.tile .lvl::after { content: ""; display: block; height: 100%; width: var(--lvl, 0%); background: var(--adj); transition: width .35s var(--ease); }   /* brilho é ajuste: azul */
-.tile.on { background: var(--on-bg); border-color: var(--on-line); }   /* ligado: vidro âmbar + a lâmpada acesa no ícone (depois do :hover) */
-.tile.on:hover { border-color: var(--on); }
-.tile.on .ico { background: var(--on); color: var(--on-ink); box-shadow: 0 0 16px -4px var(--on); }   /* o único brilho do painel */
-.tile.on small .st { color: var(--on); }
-.tile[data-kind="sensor"].on { background: var(--off-bg); border-color: var(--line); } .tile[data-kind="sensor"].on .ico { background: var(--fill-2); color: var(--ink-2); box-shadow: none; }   /* sensor é só leitura: nunca âmbar */
-.tile.on.hasl .lvl { opacity: 1; }
-.tile[data-kind="sensor"] small { white-space: normal; } .tile[data-kind="sensor"] small .st { font-size: 12px; color: var(--ink); }   /* leitura: pode quebrar a linha */
-.tile.unavailable { background: transparent; border-style: dashed; border-color: var(--line-2); } .tile.unavailable b { color: var(--ink-2); }
-.tile.unavailable .ico { background: transparent; color: var(--ink-3); box-shadow: none; } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
+.tile.on:not([data-kind="sensor"]) { background: var(--tile-on); }   /* ligado: claro (depois do :hover) */
+.tile.on:not([data-kind="sensor"]):hover { background: #f2f2f7; }
+.tile.on:not([data-kind="sensor"]) b { color: var(--tile-on-ink); }
+.tile.on:not([data-kind="sensor"]) small, .tile.on:not([data-kind="sensor"]) small .st { color: var(--tile-on-ink-2); }
+.tile.on .ico { background: var(--on); color: var(--on-ink); }   /* desenho cheio no círculo âmbar, sem halo */
+.tile[data-kind="sensor"].on { background: var(--raised); } .tile[data-kind="sensor"].on .ico { background: var(--fill-2); color: var(--ink-2); }   /* sensor é só leitura: nunca acende */
+.tile[data-kind="sensor"] small { white-space: normal; } .tile[data-kind="sensor"] small .st { color: var(--ink); }   /* leitura: pode quebrar a linha */
+.tile.unavailable b { color: var(--ink-2); } .tile.unavailable .ico { color: var(--ink-3); } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
 .tile.flash { box-shadow: 0 0 0 3px var(--focus); }   /* "olha aqui" */
-.tile .more { position: absolute; top: 4px; right: 4px; z-index: 1; width: 26px; height: 26px; padding: 0; border-radius: 9px; background: transparent; color: var(--ink-3); font-size: 15px; line-height: 26px; text-align: center; letter-spacing: .04em; cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }   /* z-index: por cima do nome, que senão pega o toque */
-.tile:hover .more, .tile:focus-within .more { opacity: 1; } @media (hover: none) { .tile .more { opacity: 1; } }   /* "⋯" só aparece quando serve (no toque, só os pontos) */
+.tile .more { position: absolute; top: 4px; right: 4px; z-index: 1; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }   /* z-index: por cima do nome, que senão pega o toque */
+.tile .more svg { width: 16px; height: 16px; }
+.tile:hover .more, .tile:focus-within .more { opacity: 1; } @media (hover: none) { .tile .more { opacity: 1; } }   /* "⋯" só aparece quando serve (no toque, sempre) */
 .tile .more:hover, .tile .more:focus-visible { background: var(--fill-2); color: var(--ink); opacity: 1; }
-.tile .more:focus-visible { outline: 2px solid var(--focus); }
+.tile.on .more { color: var(--tile-on-ink-2); } .tile.on .more:hover, .tile.on .more:focus-visible { background: rgba(60, 60, 67, .14); color: #000; }
+.tile .more:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; } .tile.on .more:focus-visible { outline-color: #0040dd; }   /* por dentro do círculo (o bloco recorta); no bloco claro, o azul escuro do iOS (6:1) */
 .tile .more::after { content: ""; position: absolute; inset: -4px; }   /* área de toque maior */
 .tile[data-kind]:not([data-kind="sensor"]):is(:hover, :focus-within) b { padding-right: 22px; } @media (hover: none) { .tile[data-kind]:not([data-kind="sensor"]) b { padding-right: 22px; } }   /* onde o "⋯" aparece, o nome acaba antes dele (reticências), não embaixo */
 .tiles.routines { grid-template-columns: minmax(0, 1fr); }
-.tile.routine { min-height: 62px; }
-.tile.routine .ico { background: var(--fill-2); color: var(--ink-2); }
+.tile.routine .ico { background: var(--fill); color: var(--ink-2); }
 .tile.routine small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }   /* descrição em até 2 linhas (o .tile small é de 1) */
-.tile.routine:hover { background: var(--off-bg); border-color: var(--line-2); transform: translateY(-1px); }
-.tile.routine:active { transform: scale(.975); }
-/* folha de controles do aparelho: fica colada no fim da área rolável */
-.detail { grid-column: 1 / -1; position: sticky; bottom: 4px; z-index: 4; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 12px 14px; border-radius: 16px; margin-top: 4px;
-  background: var(--raised); border: 1px solid var(--line-2); box-shadow: 0 -12px 32px rgba(0, 0, 0, .45); animation: sheetIn .28s var(--ease); }
+/* folha de controles do aparelho: cartão #2c2c2e colado no fim da área rolável */
+.detail { grid-column: 1 / -1; position: sticky; bottom: 4px; z-index: 4; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 16px; border-radius: 18px; margin-top: 4px;
+  background: var(--raised); box-shadow: 0 -8px 32px rgba(0, 0, 0, .4); animation: sheetIn .28s var(--ease); }
 .detail[hidden] { display: none; }
 .detail .dhead { display: flex; align-items: center; gap: 12px; }
 .detail .dbody { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
 .detail .dtitle { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
-.detail .dtitle .ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: var(--off); background: var(--fill-2); flex: none; transition: background-color .2s, color .2s; }
+.detail .dtitle .ico { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); background: var(--fill); flex: none; transition: background-color .2s, color .2s; }
 .detail.on .dtitle .ico { background: var(--on); color: var(--on-ink); }   /* o mesmo ícone aceso do bloco */
 .detail .dtitle .ico svg { width: 20px; height: 20px; }
-.detail .dtitle b { font-size: 14px; } .detail .dtitle small { color: var(--ink-2); font-size: 11.5px; display: block; margin-top: 1px; }
-.detail .close { width: 30px; height: 30px; padding: 0; border-radius: 50%; background: var(--fill-2); color: var(--ink-2); font-size: 16px; line-height: 1; }
-.sw { width: 46px; height: 26px; border-radius: 999px; background: var(--fill-3); position: relative; padding: 0; border: 1px solid var(--line-2); transition: background-color .2s, border-color .2s; flex: none; }   /* um interruptor só: luz, ar, automação */
-.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .45); transition: transform .22s var(--ease); }   /* polegar branco, sem quique */
-.sw[aria-checked="true"] { background: var(--on); border-color: var(--on); } .sw[aria-checked="true"]::after { transform: translateX(20px); }
-.sw:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.seg2 { display: inline-flex; gap: 2px; padding: 3px; background: var(--fill); border: 1px solid var(--line); border-radius: 11px; }
-.seg2 button { padding: 6px 11px; font-size: 11.5px; border-radius: 8px; color: var(--ink-2); transition: background-color .2s, color .2s; }
-.seg2 button[aria-pressed="true"] { background: var(--adj-bg); color: var(--adj-ink); box-shadow: inset 0 0 0 1px var(--adj-line); }   /* valor escolhido (modo do ar, "desligar em"): azul de ajuste */
-.timerseg .tlab { display: inline-flex; align-items: center; gap: 5px; padding: 0 8px 0 6px; font-size: 11px; color: var(--ink-3); }
-.step { display: inline-flex; align-items: center; gap: 6px; padding: 3px; border-radius: 999px; background: var(--fill); border: 1px solid var(--line); }
-.step button { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--fill-2); color: var(--ink); font-size: 18px; line-height: 1; }
-.step button:hover { background: var(--adj-bg); color: var(--adj-ink); }
-.step output { min-width: 50px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; letter-spacing: -.01em; color: var(--adj-ink); }
-.mbtn { width: 36px; height: 32px; padding: 0; border-radius: 10px; background: var(--fill-2); display: inline-grid; place-items: center; font-size: 16px; }
+.detail .dtitle b { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -.025em; } .detail .dtitle small { color: var(--ink-2); font-size: 13px; line-height: 18px; display: block; }
+.detail .close { position: relative; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: var(--fill-2); color: var(--ink-2); } .detail .close svg { width: 13px; height: 13px; }
+/* UISwitch 51×31 (luz, ar, automação e o "tudo" do bloco e do cômodo): polegar 27 branco com a sombra do iOS; ligado em âmbar; estica sob o dedo */
+.sw, .sw:hover { position: relative; flex: none; width: 51px; height: 31px; padding: 0; border-radius: 999px; background: var(--fill-3); transition: background-color .25s var(--ease); }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 14px; background: #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06); transition: transform .3s var(--ease), width .2s var(--ease); }
+.sw[aria-checked="true"] { background: var(--on); } .sw[aria-checked="true"]::after { transform: translateX(20px); }
+.sw:active::after { width: 34px; } .sw[aria-checked="true"]:active::after { transform: translateX(13px); }
+.sw.still, .sw.still::after { transition: none; }   /* 1º desenho: já na posição, sem deslizar */
+.sw:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.seg2 { display: inline-flex; }
+.timerseg .tlab { display: inline-flex; align-items: center; gap: 5px; padding: 0 8px 0 6px; font-size: 13px; color: var(--ink-2); }
+.step { display: inline-flex; align-items: center; gap: 6px; padding: 2px; border-radius: 999px; background: var(--fill); }
+.step button { position: relative; width: 40px; height: 32px; padding: 0; border-radius: 999px; background: transparent; color: var(--ink); font-size: 22px; font-weight: 400; line-height: 1; }
+.step button:hover { background: var(--fill-2); color: var(--ink); }
+.step output { min-width: 50px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 17px; letter-spacing: -.01em; color: var(--ink); }
+.mbtn { position: relative; width: 36px; height: 32px; padding: 0; border-radius: 999px; background: var(--fill-2); display: inline-grid; place-items: center; font-size: 16px; }
 .mbtn:hover { background: var(--fill-3); }
-input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
+input[type="range"] { flex: 1; min-width: 110px; }
 .detail .rng { flex: 1 1 200px; min-width: 150px; display: flex; align-items: center; gap: 10px; }
-.detail .rng output { min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; color: var(--adj-ink); }
-.detail input[type="range"] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 28px; margin: 0; background: transparent; cursor: pointer; --v: 100%; --c: var(--adj); }
-.detail input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--c) var(--v), var(--fill-3) var(--v)); }
-.detail input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .5); transition: transform .15s; }
-.detail input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
-.detail input[type="range"]::-moz-range-track { height: 6px; border-radius: 6px; background: var(--fill-3); }
-.detail input[type="range"]::-moz-range-progress { height: 6px; border-radius: 6px; background: var(--c); }
-.detail input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .5); }
-.detail input[type="range"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
-.swatches { display: flex; gap: 8px; } .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line-2); padding: 0; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); transition: transform .15s, border-color .15s; }
-.swatch:hover { transform: scale(1.15); border-color: var(--ink); }
-.sect { margin: 2px 2px 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.sect::before { content: ""; width: 3px; height: 12px; border-radius: 2px; background: var(--line-2); }
-.sect small { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; color: var(--ink-3); }
-.tiles + .sect { margin-top: 18px; }
-.autos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.auto { display: grid; grid-template-columns: 34px 1fr auto auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 13px; background: var(--off-bg); border: 1px solid var(--line); transition: border-color .2s; }
-.auto:hover { border-color: var(--line-2); }
-.auto .ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--fill-2); color: var(--off); transition: background-color .2s, color .2s; }
-.auto.on .ico { background: var(--on-bg); color: var(--on); }   /* automação ativa: âmbar */
-.auto b { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink); } .auto small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11px; line-height: 1.3; }
+.detail .rng output { min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; color: var(--ink); }
+/* slider grosso do Controle Central: trilho de 36 px, preenchimento branco, sem polegar (a borda do preenchimento é o valor) */
+.detail input[type="range"] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 36px; margin: 0; background: transparent; cursor: pointer; --v: 100%; --c: #fff; }
+.detail input[type="range"]::-webkit-slider-runnable-track { height: 36px; border-radius: 12px; background: linear-gradient(90deg, var(--c) var(--v), var(--fill-3) var(--v)); }
+.detail input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 36px; margin-top: 0; border: 0; background: transparent; box-shadow: none; }
+.detail input[type="range"]::-moz-range-track { height: 36px; border-radius: 12px; background: var(--fill-3); }
+.detail input[type="range"]::-moz-range-progress { height: 36px; border-radius: 12px; background: var(--c); }
+.detail input[type="range"]::-moz-range-thumb { width: 0; height: 36px; border: 0; background: transparent; box-shadow: none; }
+.detail input[type="range"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 14px; }
+.swatches { display: flex; gap: 8px; } .swatch { position: relative; width: 26px; height: 26px; border-radius: 50%; padding: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); transition: transform .15s; }
+.swatch:hover { transform: scale(1.15); }
+/* rótulo de seção (lista agrupada do iOS): a única caixa alta do painel; a nota desce para uma linha própria */
+.sect { margin: 0 12px 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: -.006em; text-transform: uppercase; color: var(--ink-2); }
+.sect small { flex-basis: 100%; text-transform: none; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+.tiles + .sect { margin-top: 24px; }
+/* listas agrupadas (Automações, Atividade e as automações do cômodo): cada sequência de linhas é um cartão #2c2c2e de raio 12, linhas de 44+ com fio inset */
+.autos { display: grid; grid-template-columns: minmax(0, 1fr); }
+.auto { position: relative; display: grid; grid-template-columns: 30px 1fr auto auto; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: var(--raised); transition: background-color .2s; }
+.autos > .auto:first-child, .autos > :not(.auto) + .auto { border-radius: 12px 12px 0 0; }
+.autos > .auto:last-child, .autos > .auto:has(+ :not(.auto)) { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }   /* sem :has, só os cantos de baixo ficam retos */
+.auto + .auto::before, .feed li + li::before { content: ""; position: absolute; top: 0; right: 0; left: 52px; border-top: 1px solid var(--line); }
+.auto:hover { background: #363638; }
+.auto .ico { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: var(--fill-2); color: var(--ink-2); transition: background-color .2s, color .2s; }   /* ícone de Ajustes: quadrado arredondado */
+.auto.on .ico { background: var(--on); color: var(--on-ink); }   /* automação ativa: âmbar */
+.auto b { display: block; font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -.015em; color: var(--ink); } .auto small { display: block; color: var(--ink-2); font-size: 13px; line-height: 18px; letter-spacing: -.006em; }
 .auto.off b { color: var(--ink-2); }
 .auto.flash { animation: flashPulse .7s var(--ease); }
-.auto .run { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--fill-2); display: inline-grid; place-items: center; transition: background-color .2s; }
+.auto .run { position: relative; width: 30px; height: 30px; padding: 0; border-radius: 50%; background: var(--fill); display: inline-grid; place-items: center; transition: background-color .2s; }
 .auto .run:hover { background: var(--fill-3); }
-.autos .empty { color: var(--ink-3); font-size: 12px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line-2); grid-column: 1 / -1; }
-.feed { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
-.feed li { display: grid; grid-template-columns: 28px 1fr auto; gap: 11px; align-items: center; padding: 9px 12px; border-radius: 12px; background: var(--fill); border: 1px solid var(--line); font-size: 12.5px; }
-.feed .d { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--fill-2); color: var(--off); }
+.autos .empty { color: var(--ink-2); font-size: 15px; padding: 12px; border-radius: 12px; background: var(--raised); grid-column: 1 / -1; }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); border-radius: 12px; background: var(--raised); overflow: hidden; }
+.feed li { position: relative; display: grid; grid-template-columns: 28px 1fr auto; gap: 11px; align-items: center; min-height: 44px; box-sizing: border-box; padding: 10px 12px; font-size: 15px; line-height: 20px; letter-spacing: -.015em; }
+.feed .d { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: var(--fill); color: var(--ink-2); }
 .feed .d svg { width: 15px; height: 15px; }
-.feed li.on .d { background: var(--on-bg); color: var(--on); }   /* o que acendeu, ligou ou começou a tocar */
-.feed b { font-weight: 700; color: var(--ink); } .feed time { color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: 11px; text-align: right; white-space: nowrap; }
-.feed .empty { color: var(--ink-3); padding: 14px 12px; font-size: 12px; grid-column: 1 / -1; display: block; border-style: dashed; }
+.feed li.on .d { background: var(--on); color: var(--on-ink); }   /* o que acendeu, ligou ou começou a tocar */
+.feed b { font-weight: 600; color: var(--ink); } .feed time { color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; white-space: nowrap; }
+.feed .empty { color: var(--ink-2); padding: 14px 12px; font-size: 15px; grid-column: 1 / -1; display: block; }
+@media (min-resolution: 2dppx) { .auto + .auto::before, .feed li + li::before { border-top-width: .5px; } .menu .mi + .mi { box-shadow: inset 0 .5px 0 var(--line); } }   /* fio de 0,5 pt, como na Apple */
+:is(.auto .ico, .feed .d, .phead .count, .menubtn, .tlab, .rfoot .enter) svg path:not(.f) { stroke: currentColor; stroke-width: 8; stroke-linejoin: round; }   /* desenhos de até 16 px: o traço do Phosphor (16/256 ≈ 0,9 px) engrossa até o do bold */
 /* aba de reabrir presa à borda esquerda, na altura do topo da coluna: seta, "Painel" na vertical e o nº de luzes acesas */
 .reopen { position: absolute; left: 0; top: var(--side-top, 58px); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px 12px 7px; z-index: 3;
-  border-radius: 0 14px 14px 0; border: 1px solid var(--line-2); border-left: 0; font-size: 12px; color: var(--ink); letter-spacing: .04em;
-  background: var(--glass); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); backdrop-filter: none; -webkit-backdrop-filter: none; animation: reopenIn .3s var(--ease) backwards; }
+  border-radius: 0 14px 14px 0; font-size: 13px; color: var(--ink); letter-spacing: .04em;
+  background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 8px 30px rgba(0, 0, 0, .4); animation: reopenIn .3s var(--ease) backwards; }
 .reopen .rl { writing-mode: vertical-rl; line-height: 1; }
 .reopen svg { width: 14px; height: 14px; color: var(--ink-2); }
 .reopen svg, .phead .collapse svg { transform: scaleX(-1); }   /* setas espelhadas: o painel mora à esquerda (na folha giram 90°) */
 @keyframes reopenIn { from { opacity: 0; transform: translateX(-14px); } }
 .reopen:hover { background: var(--raised); }
-.reopen .rn { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--on); color: var(--on-ink); font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.reopen .rn { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--on); color: var(--on-ink); font-size: 12px; font-weight: 600; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .reopen .rn:empty { display: none; }
 .reopen[hidden] { display: none; }
 /* cômodo tocado (v1.6.1): o painel lateral focado nele — no lugar das abas e do filtro, "‹ Todos os cômodos", nome, "N de M ligados" e
-   Ligar/Desligar tudo; embaixo dos blocos, as automações do cômodo e "Entrar aqui" */
+   o interruptor de tudo do cômodo (v1.9); embaixo dos blocos, as automações do cômodo e "Entrar aqui" */
 .rhead { flex: none; margin: 0 12px 10px; }
 .dock:not(.room) .rhead, .dock:not(.room) .rfoot, .dock.room .tabs, .dock.room .zonebar, .dock.room .zone, .dock.room .blk, .dock.room .foot, .dock.room .tile .sv { display: none; }
-.dock.room .rhead { display: flex; align-items: center; gap: 6px; }   /* [‹] [nome + N de M] [uma ação] */
-.rhead .rback { flex: none; width: 32px; height: 32px; margin-left: -8px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--ink-2); } .rhead .rback svg { width: 18px; height: 18px; }
-.rhead .rback:hover { color: var(--ink); background: var(--fill-2); }
-.rhead .rtitle { flex: 1; min-width: 0; } .rhead .rtitle b { display: block; font-size: 16px; letter-spacing: -.01em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rhead .rtitle small { display: block; margin-top: 1px; color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wrap:not(.sheet) .rhead .rtitle small { white-space: normal; }   /* coluna: a leitura dos sensores quebra a linha em vez de sumir (na folha, a 1ª linha é a espiada) */
-.all { display: flex; flex: none; } .all[hidden], .all button[hidden] { display: none; }
-.all button { padding: 8px 12px; white-space: nowrap; border-radius: 10px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }   /* Desligar tudo: grafite */
-.all button:hover { background: var(--fill-3); }
-.all button:first-child { background: var(--on); color: var(--on-ink); border-color: var(--on); }   /* Ligar tudo: âmbar cheio (vem depois do :hover) */
-.rfoot { margin-top: 14px; } .rfoot .autos { margin-bottom: 12px; }
-.rfoot .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 9px; border-radius: 12px; background: var(--fill-2); color: var(--ink); border: 1px solid var(--line); transition: transform .1s ease-out, background-color .2s; }
+.dock.room .rhead { display: flex; align-items: center; gap: 8px; }   /* [‹] [nome + N de M] [interruptor] */
+.rhead .rback { flex: none; width: 32px; height: 32px; margin-left: -8px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--ink); } .rhead .rback svg { width: 20px; height: 20px; }
+.rhead .rback:hover { background: var(--fill-2); }
+.rhead .rtitle { flex: 1; min-width: 0; } .rhead .rtitle b { display: block; font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhead .rtitle small { display: block; color: var(--ink-2); font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wrap:not(.sheet) .rhead .rtitle b, .wrap:not(.sheet) .rhead .rtitle small { white-space: normal; }   /* coluna: o nome e a leitura dos sensores quebram a linha em vez de sumir (na folha, a 1ª linha é a espiada) */
+.rfoot { margin-top: 24px; } .rfoot .autos { margin-bottom: 12px; }
+.rfoot .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 999px; background: var(--fill-2); color: var(--ink); font-size: 15px; line-height: 20px; letter-spacing: -.015em; transition: transform .1s ease-out, background-color .2s; }
 .rfoot .enter:hover { background: var(--fill-3); }
-.rfoot .enter svg { width: 16px; height: 16px; color: var(--ink-2); }
-.all button:active, .rfoot .enter:active, .sel button:active { transform: scale(.97); }   /* retorno já no toque */
+.rfoot .enter svg { width: 16px; height: 16px; color: var(--ink); }
+.rfoot .enter:active, .sel button:active { transform: scale(.97); }   /* retorno já no toque */
 /* folha de baixo (celular e tablet em pé, ver _layoutHud): altura do conteúdo e três alturas — espiada, média, cheia — por translateY.
    Fora da cheia a lista não rola: o dedo em qualquer ponto move a folha; na cheia, puxar com a lista no topo desce a folha */
-.wrap.sheet .dock { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: calc(100% - var(--side-top, 58px)); border-radius: 22px 22px 0 0; border-width: 1px 0 0; animation-name: drawerIn; touch-action: none; --sab: env(safe-area-inset-bottom, 0px); }
+.wrap.sheet .dock { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: calc(100% - var(--side-top, 58px)); border-radius: 28px 28px 0 0; animation-name: drawerIn; touch-action: none; --sab: env(safe-area-inset-bottom, 0px); }
 .wrap.sheet .dock.closing { animation-name: drawerOut; }
 @keyframes drawerIn { from { transform: translateY(100%); } }
 @keyframes drawerOut { to { transform: translateY(100%); } }
 .wrap.sheet .dock:not([data-snap="full"]) .pane { overflow: clip; touch-action: none; }   /* clip: nem o foco nem o _flashRow rolam a lista escondida */
 .wrap.sheet .dock[data-snap="full"] .pane.top { touch-action: pan-down; }   /* no topo: subir rola a lista, descer é da folha */
 .wrap.sheet .grab { display: block; position: absolute; left: 50%; top: 0; width: 64px; height: 22px; margin-left: -32px; padding: 0; z-index: 1; background: none; }
-.wrap.sheet .grab::before { content: ""; position: absolute; left: 14px; right: 14px; top: 6px; height: 4px; border-radius: 4px; background: var(--ink-3); opacity: .7; }
+.wrap.sheet .grab::before { content: ""; position: absolute; left: 14px; right: 14px; top: 5px; height: 5px; border-radius: 2.5px; background: rgba(235, 235, 245, .4); }   /* alça 36×5 do iOS (3,2:1) */
 .wrap.sheet .grab::after { content: ""; position: absolute; inset: 0 0 -22px; }   /* alvo de 44 px */
 .wrap.sheet .phead .collapse svg { transform: rotate(90deg); }
 .wrap.sheet .dock.room .phead { display: none; } .wrap.sheet .dock.room .rhead { margin-top: 16px; }   /* no cômodo a 1ª linha é a dele */
-.wrap.sheet .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-left: 1px solid var(--line-2); border-bottom: 0; animation-name: fadeIn; }
+.wrap.sheet .reopen { top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); flex-direction: row; padding: 9px 14px calc(9px + env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; animation-name: fadeIn; }
 .wrap.sheet .reopen .rl { writing-mode: horizontal-tb; } .wrap.sheet .reopen svg { transform: rotate(90deg); }   /* a aba de reabrir fica onde a folha mora: embaixo */
-.wrap.sheet .phead { padding: 14px 12px 6px; } .wrap.sheet .tabs, .wrap.sheet .rhead { margin: 0 12px 8px; } .wrap.sheet .pane { padding: 10px 12px calc(14px + env(safe-area-inset-bottom)); }
+.wrap.sheet .phead { padding: 16px 16px 8px; } .wrap.sheet .tabs, .wrap.sheet .rhead { margin: 0 16px 12px; } .wrap.sheet .pane { padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }
 @media (min-width: 641px) {   /* tablet em pé: folha flutuante, blocos em 4 colunas */
-  .wrap.sheet .dock { left: 12px; right: 12px; bottom: 12px; max-height: calc(100% - var(--side-top, 58px) - 12px); border-radius: 22px; border-width: 1px; --sab: 0px; box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset; }   /* a sombra fica no .dshadow: o clip-path a cortaria */
-  .wrap.sheet .dock:not([hidden]) + .dshadow { display: block; position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; border-radius: 22px; box-shadow: 0 24px 60px rgba(0, 0, 0, .5); pointer-events: none; animation: drawerIn .3s var(--ease) backwards; }   /* altura do pedaço à vista (_sideX): sombra em qualquer altura, sem acender no fim da mola */
+  .wrap.sheet .dock { left: 12px; right: 12px; bottom: 12px; max-height: calc(100% - var(--side-top, 58px) - 12px); border-radius: 28px; --sab: 0px; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .1); }   /* a sombra fica no .dshadow: o clip-path a cortaria */
+  .wrap.sheet .dock:not([hidden]) + .dshadow { display: block; position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; border-radius: 28px; box-shadow: 0 8px 40px rgba(0, 0, 0, .38); pointer-events: none; animation: drawerIn .3s var(--ease) backwards; }   /* altura do pedaço à vista (_sideX): sombra em qualquer altura, sem acender no fim da mola */
   .wrap.sheet .dock.closing + .dshadow { animation: drawerOut .2s ease-in forwards; }   /* entra e sai junto com a folha */
-  .wrap.sheet .reopen { bottom: 12px; border-radius: 999px; border-bottom: 1px solid var(--line-2); padding-bottom: 9px; }
+  .wrap.sheet .reopen { bottom: 12px; border-radius: 999px; padding-bottom: 9px; }
   .wrap.sheet .tiles:not(.routines) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 /* coluna à esquerda (v1.8): título em cima com a mesma largura; borda direita arrastável (.sizer); o conteúdo segue a largura do painel */
@@ -3075,9 +3124,9 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 .wrap.side:not(.sheet) .lcol .title { min-width: var(--side-w, 320px); transition-duration: .3s; transition-timing-function: var(--ease); }   /* título e painel formam uma coluna só; abre junto com o dockIn */
 .wrap.side:not(.sheet) .joy { left: calc(var(--side-w, 320px) + 26px); }
 .wrap.side:not(.sheet) .walkhint { left: calc(50% + var(--side-w, 320px) / 2 + 10px); max-width: calc(100% - var(--side-w, 320px) - 52px); }   /* centrada na faixa livre */
-.wrap:not(.sheet) .dock { overflow: visible; } .wrap:not(.sheet) .pane { border-radius: 0 0 21px 21px; }   /* a alça sai 10 px da borda: o .pane recorta os cantos de baixo */
+.wrap:not(.sheet) .dock { overflow: visible; } .wrap:not(.sheet) .pane { border-radius: 0 0 27px 27px; }   /* a alça sai 10 px da borda: o .pane recorta os cantos de baixo */
 .dock { container-type: inline-size; }   /* consultas pela largura do PAINEL (coluna ajustável e folha); sem contain: paint, que cortaria a alça */
-@container (max-width: 300px) { .tabs button[role="tab"] { padding-inline: 3px; font-size: 11.5px; letter-spacing: 0; } }   /* "Automações" inteira a 272 px */
+@container (max-width: 300px) { .tabs button[role="tab"] { padding-inline: 3px; font-size: 12px; letter-spacing: 0; } }   /* "Automações" inteira a 272 px */
 @container (max-width: 400px) { .timerseg { display: flex; flex-wrap: wrap; flex: 1 1 100%; } .timerseg .tlab { flex-basis: 100%; padding: 3px 6px 4px; } .timerseg button { flex: 1 1 auto; padding-inline: 4px; white-space: nowrap; } }   /* "desligar em" em cima, os 4 tempos embaixo */
 .sizer { position: absolute; top: 0; bottom: 0; right: -10px; width: 12px; z-index: 2; cursor: col-resize; touch-action: none; outline: none; }
 .sizer::after { content: ""; position: absolute; top: 50%; left: .5px; width: 4px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--ink-3); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); opacity: 0; transition: opacity .15s, background-color .15s; }   /* a mesma pílula da alça da folha: neutra (não é estado nem valor da casa) */
@@ -3092,40 +3141,59 @@ input[type="range"] { flex: 1; min-width: 110px; accent-color: var(--adj); }
 @media (prefers-contrast: more) { .wrap .dock .sizer::after { opacity: 1; background: var(--ink); } }   /* acima do hover e do foco: sempre no máximo */
 /* toque: alvos de 44 px sem mudar o desenho */
 @media (pointer: coarse) {
-  .phead .collapse::after { content: ""; position: absolute; inset: -6px; } .phead .count { min-height: 36px; }   /* círculo de 32 px, alvo de 44 */
-  .tabs button[role="tab"] { position: relative; min-height: 40px; } .tabs button[role="tab"]::after { content: ""; position: absolute; inset: -2px 0; }   /* alvo de 44 px (o vão do trilho) */
-  .zonebar button { min-height: 34px; } .zonebar button::after { content: ""; position: absolute; inset: -6px 0; }   /* alvo de 46 px sem cobrir o vizinho */
-  .rhead .rback, .all button, .rfoot .enter, .sel button { min-height: 44px; } .rhead .rback { width: 44px; }
+  .phead .collapse::after { content: ""; position: absolute; inset: -9px -7px -5px; } .phead .count { min-height: 36px; }   /* círculo de 30 px, alvo de 44 (sobe: embaixo vem o alvo das abas) */
+  .tabs button[role="tab"], .seg2 button, .menu .mseg button { position: relative; }
+  .tabs button[role="tab"]::after, .zonebar button::after, .seg2 button::after, .menu .mseg button::after { content: ""; position: absolute; inset: -8px 0; }   /* segmentado: 28 de desenho, 44 de alvo */
+  .detail .close::after, .auto .run::after { content: ""; position: absolute; inset: -7px; } .step button::after { content: ""; position: absolute; inset: -6px -2px; } .mbtn::after { content: ""; position: absolute; inset: -6px -4px; }
+  .swatches { gap: 12px; } .swatch { width: 32px; height: 32px; } .swatch::after { content: ""; position: absolute; inset: -6px; }
+  .sw::before { content: ""; position: absolute; inset: -7px 0; }   /* interruptor: 31 de desenho, 45 de alvo */
+  .detail input[type="range"] { height: 44px; }
+  .rhead .rback, .rfoot .enter, .sel button, .goto .grow button { min-height: 44px; } .rhead .rback { width: 44px; }
   .zone button { min-height: 44px; margin: -12px 0; }
   .tile .more::after { inset: -10px; }
 }
 @media (max-width: 640px) {
-  .detail { padding: 11px 12px; gap: 10px; } .detail .rng { flex-basis: 100%; }
+  .detail .rng { flex-basis: 100%; }
   /* cabeçalho numa linha: título (encolhe) à esquerda, bonequinho e menu à direita */
   .hud.top { flex-wrap: nowrap; gap: 8px; }
   .hud > .lcol { flex: 1 1 auto; }
   .title { padding: 8px 12px; max-width: 100%; box-sizing: border-box; }
-  .title b { font-size: 14px; } .title .clock .per { display: none; }   /* "simulado" (só na demo) não cabe ao lado do "‹ Casa" */
+  .title .clock .per { display: none; }   /* "simulado" (só na demo) não cabe ao lado do "‹ Casa" */
   .btn { padding: 7px 10px; }
-  .menubtn { min-width: 44px; min-height: 40px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
-  .menu { left: 10px; right: 10px; width: auto; }
+  .menubtn { min-width: 44px; min-height: 44px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .lcol .title, .pane.active, .tile, .tile .ico, .tile .lvl::after, .detail, .feed li, .auto, .sw, .seg2 button, .swatch, .menu .mi::after, .menubtn, .menu .mi, .menu .mseg button, .detail input[type="range"]::-webkit-slider-thumb, .all button, .rfoot .enter, .sel, .sel button { animation: none !important; transition: none !important; transform: none !important; }
+/* cantos contínuos (Chrome/Edge ≥ 139), raio ~1,4×; só com o vidro: em aparelho fraco, recorte que não é retângulo arredondado pode virar máscara.
+   Os botões são cápsulas (o HIG prefere) e ficam fora */
+@supports (corner-shape: squircle) {
+  .wrap.glass :is(.tile, .detail, .menu, .sel, .panel:not(.dock, .btn), .auto, .autos .empty, .feed, .zempty, .dock, .pane, .dshadow) { corner-shape: squircle; }
+  .wrap.glass .tile, .wrap.glass .detail { border-radius: 26px; }
+  .wrap.glass :is(.menu, .sel, .panel:not(.dock, .btn)) { border-radius: 20px; }
+  .wrap.glass :is(.feed, .zempty, .autos .empty) { border-radius: 17px; }
+  .wrap.glass .autos > :is(.auto:first-child, :not(.auto) + .auto) { border-radius: 17px 17px 0 0; }
+  .wrap.glass .autos > :is(.auto:last-child, .auto:has(+ :not(.auto))) { border-bottom-left-radius: 17px; border-bottom-right-radius: 17px; }
+  .wrap.glass .dock { border-radius: 40px; } .wrap.glass:not(.sheet) .pane { border-radius: 0 0 39px 39px; } .wrap.glass.sheet .dock { border-radius: 40px 40px 0 0; }   /* depois do .panel: a coluna não cai para 20 */
+  .wrap.glass .detail input[type="range"]::-webkit-slider-runnable-track { corner-shape: squircle; border-radius: 17px; }
+  @media (min-width: 641px) { .wrap.glass.sheet .dock, .wrap.glass.sheet .dock:not([hidden]) + .dshadow { border-radius: 40px; } }
+}
+@media (prefers-reduced-motion: reduce) { .lcol .title, .pane.active, .tile, .tile .ico, .detail, .feed li, .auto, .sw, .seg2 button, .swatch, .menubtn, .menu .mi, .menu .mseg button, .rfoot .enter, .sel button { animation: none !important; transition: none !important; transform: none !important; }
   .sw::after { transition: none !important; }   /* sem o transform: none, o polegar ligado ficava preso à esquerda */
-  .dock, .dshadow, .reopen, .menu { animation: fadeIn .15s linear !important; } }   /* sem deslize nem mola: fade curto */
+  .dock, .dshadow, .reopen, .menu, .sel { animation: fadeIn .15s linear !important; }   /* sem deslize nem escala: fade curto (o .sel fica fora da lista de cima: a posição dele é translate) */
+  .menu.out, .sel.out { animation: fadeOut .15s linear forwards !important; } }
 @keyframes fadeIn { from { opacity: 0; } }
-/* menos transparência: superfícies sólidas, sem blur */
+@keyframes fadeOut { to { opacity: 0; } }
+/* menos transparência: o vidro volta a opaco */
 @media (prefers-reduced-transparency: reduce) {
-  :host { --glass: var(--glass-solid); }
-  .panel, .menu, .joy { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .panel { background: var(--glass-solid); } .menu { background: var(--raised); }
+  .wrap.glass { --glass: var(--glass-solid); --mat-chrome: #1c1c1e; --mat-pop: #2c2c2e; --blur: none; --blur-s: none; --ink-2: rgba(235, 235, 245, .6); --ink-3: rgba(235, 235, 245, .6); }
 }
-/* mais contraste: fundo sólido, bordas e textos mais claros (só os tokens mudam) */
+/* mais contraste: fundo sólido, linhas e textos mais claros e um contorno definido (sem bordas no visual da v1.9) */
 @media (prefers-contrast: more) {
   :host { --glass: #0e0e10; --glass-solid: #0e0e10; --raised: #1c1c1f; --fill: rgba(255, 255, 255, .1); --fill-2: rgba(255, 255, 255, .16); --fill-3: rgba(255, 255, 255, .28);
-    --line: rgba(255, 255, 255, .55); --line-2: rgba(255, 255, 255, .8); --ink-2: #dcdce2; --ink-3: #c8c8d0; --on-bg: rgba(255, 181, 71, .24); --on-line: var(--on); --adj-line: var(--adj); }
-  .panel, .dock, .menu { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass); border-color: var(--line); }
-  .zonebar button, .tabs button[role="tab"], .seg2 button { border: 1px solid transparent; } .zonebar button[aria-pressed="true"], .tabs button[aria-selected="true"] { border-color: var(--line-2); }
+    --line: rgba(255, 255, 255, .55); --line-2: rgba(255, 255, 255, .8); --ink-2: #dcdce2; --ink-3: #c8c8d0; --on-bg: rgba(255, 181, 71, .24); --on-line: var(--on); --mat-chrome: var(--glass); --mat-pop: var(--raised); }
+  .wrap.glass { --glass: #0e0e10; --mat-chrome: #0e0e10; --mat-pop: #1c1c1f; --ink-2: #dcdce2; --ink-3: #c8c8d0; --blur: none; --blur-s: none; }
+  .panel, .dock, .reopen, .menu, .sel, .detail, .tile, .auto, .feed, .zempty { outline: 1px solid var(--line); outline-offset: -1px; }   /* o :focus-visible vence pela especificidade */
+  .panel, .dock, .menu { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass); }
+  .zonebar button, .tabs button[role="tab"], .seg2 button, .menu .mseg button { border: 1px solid transparent; }
+  .zonebar button[aria-pressed="true"], .tabs button[aria-selected="true"], .seg2 button[aria-pressed="true"], .menu .mseg button[aria-pressed="true"] { border-color: var(--line-2); }
 }
 `;
 
@@ -3200,6 +3268,7 @@ export class Casa3DCard extends HTMLElement {
     root.innerHTML = '';
     const style = document.createElement('style'); style.textContent = CSS; root.appendChild(style);
     const wrap = document.createElement('div'); wrap.className = 'wrap'; root.appendChild(wrap);
+    wrap.classList.toggle('glass', this._q === 'alta' && Casa3DCard._gpuInfo().glass);   // vidro (backdrop-filter) só no nível alta com GPU conhecida; o governador o tira antes de tudo
     const canvas = document.createElement('canvas'); canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Modelo 3D da casa'); wrap.appendChild(canvas);
     this._canvas = canvas;
     canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && this._mk) { this._hoverDest = null; this._mkHide(); } });   // sai do quadro: some o anel do destino
@@ -3224,13 +3293,12 @@ export class Casa3DCard extends HTMLElement {
       const s = document.createElement('div'); s.className = 'msec'; s.setAttribute('role', 'group'); s.setAttribute('aria-label', label);
       const h = document.createElement('div'); h.className = 'mh'; h.textContent = label; h.setAttribute('aria-hidden', 'true'); s.appendChild(h); menu.appendChild(s); return s;
     };
-    // item do menu: ícone + rótulo (+ nota); `toggle` = mostra o interruptor (estado no aria-pressed, como os botões de antes)
-    const item = (parent, icon, label, { note, toggle, go } = {}) => {
+    // item do menu (pull-down do iOS): marca de verificação à esquerda, rótulo (+ nota), ícone à direita; `toggle` = estado no aria-pressed
+    const item = (parent, icon, label, { note, toggle } = {}) => {
       const b = document.createElement('button'); b.className = 'mi'; b.innerHTML = `${iconSvg(icon)}<span class="ml"></span>`;
       const ml = b.querySelector('.ml'); ml.textContent = label;
       if (note) { const sm = document.createElement('small'); sm.textContent = note; ml.appendChild(sm); }
       if (toggle) b.setAttribute('aria-pressed', 'false');
-      if (go) { const g = document.createElement('span'); g.className = 'go'; g.setAttribute('aria-hidden', 'true'); g.textContent = '›'; b.appendChild(g); }
       b.dataset.label = label; parent.appendChild(b); return b;
     };
     // Ambiente: Auto/Dia/Noite (segmento) + Visão noturna
@@ -3254,15 +3322,15 @@ export class Casa3DCard extends HTMLElement {
     this._roofBtn.addEventListener('click', () => this._setRoof(!this._roofOn));
     this._topBtn = item(sVis, 'plan', 'Vista de cima', { note: 'planta sem telhado, por cômodo', toggle: true });
     this._topBtn.addEventListener('click', () => { this._toggleMenu(false); this._setTopView(!this._topView); });
-    const reset = item(sVis, 'target', 'Recentrar', { go: true }); this._resetBtn = reset;
+    const reset = item(sVis, 'target', 'Recentrar'); this._resetBtn = reset;
     reset.addEventListener('click', () => { this._toggleMenu(false); this._setTopView(true); });   // volta à vista inicial: a planta inteira
     // Navegação: Pessoa, Ir para…
     const sNav = sec('Navegação');
     // Visão de pessoa (v1.4): andar pela casa na altura dos olhos; o bonequinho entra direto num cômodo
-    this._walkBtn = item(sNav, 'person', 'Pessoa', { note: 'andar na altura dos olhos', toggle: true });
+    this._walkBtn = item(sNav, 'walk', 'Pessoa', { note: 'andar na altura dos olhos', toggle: true });
     this._walkBtn.title = 'Ande pela casa na altura dos olhos: clique no piso, setas/WASD ou joystick; arraste para olhar';
     this._walkBtn.addEventListener('click', () => { this._toggleMenu(false); this._setWalk(!this._walkOn); });   // muda o modo: o menu sai da frente
-    this._gotoMi = item(sNav, 'pin', 'Ir para…', { note: 'lista de cômodos', go: true });
+    this._gotoMi = item(sNav, 'pin', 'Ir para…', { note: 'lista de cômodos' });
     this._gotoMi.addEventListener('click', () => { this._toggleMenu(false); this._toggleGoto(true); });
     // Painel: mostrar/ocultar a coluna (ou a folha de baixo)
     const sPan = sec('Painel');
@@ -3275,9 +3343,9 @@ export class Casa3DCard extends HTMLElement {
     this._gotoBtn.addEventListener('click', () => this._toggleGoto());
     btns.appendChild(this._gotoBtn);
     // Vista de cima (v1.6.1): "‹ Planta" / "‹ Casa" sobe um nível (como o Esc); na planta inteira some
-    this._backBtn = document.createElement('button'); this._backBtn.className = 'panel btn'; this._backBtn.hidden = true;
+    this._backBtn = document.createElement('button'); this._backBtn.className = 'panel btn back'; this._backBtn.hidden = true;
     this._backBtn.addEventListener('click', () => this._navBack()); btns.appendChild(this._backBtn);
-    const PERSON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.2" r="3"/><path d="M12 9.6c-2.9 0-4.6 1.5-4.8 4l-.2 3.2c0 .6.4 1 .9 1h.9l.4 4.2c0 .5.4.8.8.8h4c.4 0 .8-.3.8-.8l.4-4.2h.9c.5 0 .9-.4.9-1l-.2-3.2c-.2-2.5-1.9-4-4.8-4z"/></svg>';
+    const PERSON = '<svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M100,36a28,28,0,1,1,28,28A28,28,0,0,1,100,36ZM215.42,140.78l-45.25-51.3a28,28,0,0,0-21-9.48H106.83a28,28,0,0,0-21,9.48l-45.25,51.3a16,16,0,0,0,22.56,22.69L89,142.7l-19.7,74.88a16,16,0,0,0,29.08,13.35L128,180l29.58,51a16,16,0,0,0,29.08-13.35L167,142.7l25.9,20.77a16,16,0,0,0,22.56-22.69Z"/></svg>';   // Phosphor person-fill
     this._pegBtn = document.createElement('button'); this._pegBtn.className = 'panel btn peg'; this._pegBtn.innerHTML = `${PERSON}<span class="lbl">Andar</span>`;
     this._pegBtn.title = 'Andar pela casa: arraste até um cômodo e solte para entrar nele (visão de Pessoa) · toque: lista de cômodos';
     this._pegBtn.setAttribute('aria-label', 'Andar: arraste até um cômodo para entrar nele; Enter abre a lista de cômodos'); this._pegBtn.setAttribute('aria-pressed', 'false');
@@ -3295,7 +3363,7 @@ export class Casa3DCard extends HTMLElement {
     this._menuBtn.setAttribute('aria-label', 'Opções'); this._menuBtn.title = 'Opções: ambiente, vista, navegação e painel';
     this._menuBtn.setAttribute('aria-haspopup', 'dialog'); this._menuBtn.setAttribute('aria-expanded', 'false'); this._menuBtn.setAttribute('aria-controls', menu.id);
     this._menuBtn.addEventListener('click', (e) => this._toggleMenu(null, e.detail === 0));   // detail 0 = veio do teclado → foco no 1º item
-    this._menuBtn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && this._menu.hidden) { e.preventDefault(); this._toggleMenu(true, true); } });
+    this._menuBtn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && this._menuBtn.getAttribute('aria-expanded') !== 'true') { e.preventDefault(); this._toggleMenu(true, true); } });
     btns.appendChild(this._menuBtn);
     wrap.appendChild(menu);
     this._menuBind();
@@ -3354,7 +3422,7 @@ export class Casa3DCard extends HTMLElement {
   // Detecção de GPU (cacheada, 1 contexto descartável por página): strong = dedicada/Apple; soft = desenho por software (sem GPU)
   static _gpuInfo() {
     if (Casa3DCard.__gpu !== undefined) return Casa3DCard.__gpu;
-    let strong = false, soft = false;
+    let strong = false, soft = false, glass = false;
     try {
       const cv = document.createElement('canvas');
       const gl = cv.getContext('webgl2') || cv.getContext('webgl');
@@ -3363,10 +3431,11 @@ export class Casa3DCard extends HTMLElement {
         const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) || '');
         strong = /nvidia|geforce|quadro|rtx|gtx|radeon\s*(rx|pro)|apple m\d|apple gpu/i.test(name) && !/intel|swiftshader|llvmpipe|mali|adreno|powervr/i.test(name);
         soft = /swiftshader|llvmpipe|softpipe|mesa offscreen|basic render/i.test(name);   // desenho por software (sem GPU)
+        glass = strong && !/apple gpu/i.test(name);   // "Apple GPU" é o nome mascarado do WebKit (até Mac Intel e iPad): forte para a cena, mas sem vidro
         const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
       }
-    } catch (_) { strong = soft = false; }
-    return (Casa3DCard.__gpu = { strong, soft });
+    } catch (_) { strong = soft = glass = false; }
+    return (Casa3DCard.__gpu = { strong, soft, glass });
   }
   static _strongGPU() { return Casa3DCard._gpuInfo().strong; }
   // quality: 'alta' | 'media' | 'leve' | 'min' | 'auto' (padrão): min em aparelho muito fraco (software, ≤ 2 GB, ou ≤ 2 núcleos com ≤ 4 GB);
@@ -3842,11 +3911,11 @@ export class Casa3DCard extends HTMLElement {
 
   // rótulo do cômodo: pílula de vidro escuro com texto de 12 px, do mesmo tamanho na tela em qualquer zoom (escala em _resize)
   _makeLabel(text) {
-    const c = document.createElement('canvas'), s = 3, font = '600 12px -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif';
+    const c = document.createElement('canvas'), s = 3, font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif';
     let g = c.getContext('2d'); g.font = font;
     const w = Math.ceil(g.measureText(text).width) + 16, h = 22;
     c.width = w * s; c.height = h * s; g = c.getContext('2d'); g.scale(s, s);
-    g.fillStyle = 'rgba(10,14,26,.62)'; g.beginPath(); g.roundRect(0, 0, w, h, h / 2); g.fill();
+    g.fillStyle = 'rgba(28,28,30,.72)'; g.beginPath(); g.roundRect(0, 0, w, h, h / 2); g.fill();
     g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffffff'; g.fillText(text, w / 2, h / 2 + 0.5);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false }));
@@ -4592,9 +4661,10 @@ export class Casa3DCard extends HTMLElement {
   }
   _toggleMenu(open, kbd) {
     const m = this._menu; if (!m) return;
-    open = open != null ? !!open : m.hidden;
-    if (open === !m.hidden) return;
-    m.hidden = !open; this._menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const was = this._menuBtn.getAttribute('aria-expanded') === 'true'; open = open != null ? !!open : !was;
+    if (open === was) return;
+    clearTimeout(this._menuT); m.classList.toggle('out', !open); this._menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) m.hidden = false; else this._menuT = setTimeout(() => { m.hidden = true; }, this._reduced ? 0 : 150);   // sai encolhendo para o ☰
     if (open) {
       this._closeGoto(); this._placeMenu();
       document.addEventListener('pointerdown', this._menuOut, true); document.addEventListener('keydown', this._menuEsc, true);
@@ -4605,7 +4675,7 @@ export class Casa3DCard extends HTMLElement {
   _placeMenu() {
     const m = this._menu; if (!m || m.hidden) return;
     const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
-    const mw = this._narrow ? wr.width - 20 : Math.min(272, wr.width - 20);
+    const mw = Math.min(250, wr.width - 20);   // 250 pt também no celular, ancorado no ☰
     const top = Math.round((tr.right > wr.right - 10 - mw - 6 ? Math.max(tr.bottom, br.bottom) : br.bottom) - wr.top + 6);
     m.style.top = `${top}px`; m.style.maxHeight = `${Math.max(160, wr.height - top - 10)}px`;
   }
@@ -4702,7 +4772,7 @@ export class Casa3DCard extends HTMLElement {
   }
   _navTo(level, block, room) {
     const n = this._nav = { level: block ? (room ? 2 : 1) : 0, block: block || null, room: (block && room) || null }, b = this._backBtn, up = n.room ? n.block.label : 'Planta';
-    b.hidden = !n.level; b.textContent = `‹ ${up}`; b.setAttribute('aria-label', `Voltar para ${up}`);
+    b.hidden = !n.level; b.innerHTML = `${iconSvg('chevl')}${up}`; b.setAttribute('aria-label', `Voltar para ${up}`);
     this._hoverKey = ''; this._showRoom(n.room);   // cômodo: o painel lateral mostra ele · planta/área: visão geral
     this._setLabels(this._labelsOn); this._resize(); this._resetView(true);
   }
@@ -4750,6 +4820,17 @@ export class Casa3DCard extends HTMLElement {
   _allSet(keys, on) {
     const ctx = this._sceneCtx();
     for (const k of keys) { const kind = ITEMS.find((i) => i.key === k).kind; if (kind !== 'sensor' && (!on || kind === 'light' || kind === 'switch')) ctx[on ? 'on' : 'off'](k); }
+  }
+  // interruptor "tudo" (v1.9, bloco e cômodo): ligado se algum aparelho controlável do grupo está; tocar ligado desliga tudo, desligado liga tudo.
+  // Vira na hora (como o UISwitch) e segura a posição pedida até o HA concordar (no máx. 2 s): sem pisca enquanto ele confirma aparelho por aparelho
+  _swFlip(sw, keys) {
+    const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); sw.dataset.hold = performance.now() + 2000;
+    clearTimeout(this._swT); this._swT = setTimeout(() => this._renderPanel(), 2050); this._allSet(keys, on);   // o HA não confirmou (aparelho fora do ar): volta ao real
+  }
+  _swSet(sw, n, on) {
+    sw.hidden = !n; if (+sw.dataset.hold > performance.now() && (sw.getAttribute('aria-checked') === 'true') !== on) return;
+    delete sw.dataset.hold; sw.setAttribute('aria-checked', String(on)); sw.title = on ? 'Desligar tudo' : 'Ligar tudo';
+    if (sw.classList.contains('still')) requestAnimationFrame(() => sw.classList.remove('still'));   // 1º desenho (e troca de cômodo) sem deslize
   }
   // ---- Ganchos públicos (depuração / demo) ----
   // setWalk(true|false) entra/sai da visão de pessoa · setWalkPose(x, z, yaw, pitch) posiciona a pessoa na hora (sem colisão; yaw 0 olha
@@ -4803,7 +4884,8 @@ export class Casa3DCard extends HTMLElement {
   _select(sel) {
     const b = this._selEl; if (!b) return;
     if (!sel && b.contains(this.shadowRoot.activeElement)) this._canvas.focus({ preventScroll: true });   // o foco no botão do balão volta à maquete
-    const band = this._selBand; this._sel = sel; b.hidden = !sel; this._selTxt = '';
+    const band = this._selBand; this._sel = sel; this._selTxt = ''; clearTimeout(this._selT); b.classList.toggle('out', !sel);
+    if (sel) b.hidden = false; else if (!b.hidden) this._selT = setTimeout(() => { b.hidden = true; }, this._reduced ? 0 : 150);   // sai encolhendo para a ponta
     this._selBand = sel ? band || (this._vb && [this._pNow || 0, ...this._vb]) : null;   // balão aberto: a faixa da cena fica parada (_resize) e o 2º toque cai no mesmo aparelho
     if (sel) this._selRender(); else if (band) this._resize(true);   // fechou: a cena volta à faixa de verdade, deslizando
   }
@@ -4824,7 +4906,7 @@ export class Casa3DCard extends HTMLElement {
     const v = s.p.clone().project(this._camera), W = this._canvas.clientWidth, H = this._canvas.clientHeight, [bw, bh] = this._selWH || [200, 56], b = this._selEl;
     const px = (v.x + 1) / 2 * W, py = (1 - v.y) / 2 * H, P = this._pNow || 0, B = this._vb ? this._vb[0] : 0, m = (P + W) / 2, below = py - 14 - bh < (this._hudH || 58);
     const x = clamp(px, Math.min(P + 8 + bw / 2, m), Math.max(W - 8 - bw / 2, m));   // mais largo que a faixa: centrado nela
-    b.style.transform = `translate(${x.toFixed(1)}px, ${py.toFixed(1)}px) translate(-50%, ${below ? '14px' : 'calc(-100% - 14px)'})`;
+    b.style.translate = `calc(${x.toFixed(1)}px - 50%) calc(${py.toFixed(1)}px ${below ? '+ 14px' : '- 100% - 14px'})`;   // posição em translate: a escala da entrada nasce da ponta (transform-origin)
     b.style.setProperty('--ax', `${clamp(px - x, 24 - bw / 2, bw / 2 - 24).toFixed(1)}px`); b.classList.toggle('below', below);
     b.style.visibility = v.z > 1 || px < P || px > W || py < 0 || py > H - B ? 'hidden' : '';   // B: a folha do celular por cima
   }
@@ -4846,7 +4928,7 @@ export class Casa3DCard extends HTMLElement {
       this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null; if (!stay) this._select(null);   // o balão é do cômodo de antes (no stay o _onClick já troca)
       this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
       if (r) {
-        this._rTitle.textContent = r.label; this._showTab('ctl');
+        this._rTitle.textContent = r.label; this._showTab('ctl'); this._rSw.setAttribute('aria-label', `Tudo em ${r.label}`); this._rSw.classList.add('still');   // outro cômodo: o interruptor já nasce na posição dele
         const autos = this._roomAutos(r), f = this._rFoot; f.replaceChildren();
         if (autos.length) { const h = document.createElement('div'), al = document.createElement('div'); h.className = 'sect'; h.textContent = 'Automações'; al.className = 'autos'; for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); f.append(h, al); }
         f.appendChild(this._rEnter);
@@ -5083,18 +5165,17 @@ export class Casa3DCard extends HTMLElement {
     });
     const spacer = document.createElement('div'); spacer.className = 'spacer'; head.appendChild(spacer);
     const col = document.createElement('button'); col.className = 'collapse'; col.title = 'Recolher painel'; col.setAttribute('aria-label', 'Recolher painel');
-    col.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg>';
+    col.innerHTML = iconSvg('chevr');
     col.addEventListener('click', () => { if (this._sheet && this._dock.dataset.snap !== 'peek') this._snapTo('peek'); else this._setPanel(false); }); head.appendChild(col);   // folha: desce até a espiada; dela, fecha
-    // cômodo tocado (ver _showRoom), numa linha: [‹ o mesmo voltar do topo] [nome + "N de M ligados"] [Ligar ou Desligar tudo]
+    // cômodo tocado (ver _showRoom), numa linha: [‹ o mesmo voltar do topo] [nome + "N de M ligados"] [interruptor: tudo do cômodo]
     const rh = document.createElement('div'); rh.className = 'rhead'; dock.appendChild(rh);
-    rh.innerHTML = `<button class="rback" aria-label="Todos os cômodos">${iconSvg('chevl')}</button><div class="rtitle" role="status"><b></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>`;
+    rh.innerHTML = `<button class="rback" aria-label="Todos os cômodos">${iconSvg('chevl')}</button><div class="rtitle" role="status"><b></b><small></small></div><button class="sw still" role="switch"></button>`;
     this._rBack = rh.firstChild; this._rBack.addEventListener('click', () => {
       const f = this.shadowRoot.activeElement === this._rBack; if (this._topView) this._navBack(); else this._showRoom(null);
       if (f) this._countEl.focus({ preventScroll: true });   // o ‹ some com o cômodo: o foco vai ao resumo (como ao reabrir), não ao body
     });
-    this._rTitle = rh.querySelector('b'); this._rCount = rh.querySelector('small'); this._rAll = rh.querySelector('.all');
-    this._rAll.firstChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), true));
-    this._rAll.lastChild.addEventListener('click', () => this._allSet(this._roomKeys(this._room), false));
+    this._rTitle = rh.querySelector('b'); this._rCount = rh.querySelector('small'); this._rSw = rh.lastChild;
+    this._rSw.addEventListener('click', () => this._swFlip(this._rSw, this._roomKeys(this._room)));
     const tabs = document.createElement('div'); tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Seções do painel'); dock.appendChild(tabs);
     this._panes = {};
     const panes = [];
@@ -5169,11 +5250,10 @@ export class Casa3DCard extends HTMLElement {
     }
     for (const b of this._places) {
       const rooms = b.rooms.map((r) => [r, this._roomKeys(r).filter((k) => home[k] === r)]).filter(([, ks]) => ks.length);   // sem nada próprio (Quarto Casal, Varanda, Quintal, Dispensa): sem grupo
-      const keys = rooms.flatMap(([, ks]) => ks), bh = document.createElement('div'); bh.className = 'blk'; grid.appendChild(bh);   // [nome  N de M ligados] [Ligar tudo ou Desligar tudo do bloco]
-      bh.innerHTML = '<div class="bt"><b role="heading" aria-level="2"></b><small></small></div><div class="all" role="group"><button>Ligar tudo</button><button>Desligar tudo</button></div>';
-      const ba = bh.querySelector('.all'); bh.querySelector('b').textContent = b.label; ba.setAttribute('aria-label', b.label);
-      ba.firstChild.addEventListener('click', () => this._allSet(keys, true)); ba.lastChild.addEventListener('click', () => this._allSet(keys, false));
-      this._groups.push({ zh: bh, zn: bh.querySelector('small'), keys, all: ba });
+      const keys = rooms.flatMap(([, ks]) => ks), bh = document.createElement('div'); bh.className = 'blk'; grid.appendChild(bh);   // [nome  N de M ligados] [interruptor: tudo do bloco]
+      bh.innerHTML = '<div class="bt"><b role="heading" aria-level="2"></b><small></small></div><button class="sw still" role="switch"></button>';
+      const bs = bh.lastChild; bh.querySelector('b').textContent = b.label; bs.setAttribute('aria-label', `Tudo em ${b.label}`); bs.addEventListener('click', () => this._swFlip(bs, keys));
+      this._groups.push({ zh: bh, zn: bh.querySelector('small'), keys, sw: bs });
       for (const [r, ks] of rooms) {
         const zh = this._zoneHead(r); grid.appendChild(zh); this._groups.push({ zh, zn: zh.lastChild, keys: ks });
         for (const k of ks) {
@@ -5188,7 +5268,7 @@ export class Casa3DCard extends HTMLElement {
     if (rest.length) { const f = document.createElement('div'); f.className = 'foot'; f.setAttribute('role', 'separator'); grid.appendChild(f); this._groups.push({ zh: f, keys: rest.map((i) => i.key) }); for (const it of rest) grid.appendChild(this._makeTile(it, 'Casa')); }
     grid.appendChild(this._detail);
     this._rFoot = document.createElement('div'); this._rFoot.className = 'rfoot'; this._panes.ctl.pane.appendChild(this._rFoot);   // automações do cômodo + Entrar aqui
-    this._rEnter = document.createElement('button'); this._rEnter.className = 'enter'; this._rEnter.innerHTML = `${iconSvg('person')}<span>Entrar aqui</span>`;
+    this._rEnter = document.createElement('button'); this._rEnter.className = 'enter'; this._rEnter.innerHTML = `${iconSvg('walk')}<span>Entrar aqui</span>`;
     this._rEnter.title = 'Entra neste cômodo na visão de Pessoa'; this._rEnter.addEventListener('click', () => this._enterRoom(this._room));
     this._timers = {};
     // Automações: rotinas rápidas do cartão + automações do HA (descobertas sozinhas)
@@ -5226,14 +5306,14 @@ export class Casa3DCard extends HTMLElement {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const j = await res.json(); const c = j.current; if (!c) throw new Error('sem dados');
       const [iconKey, desc] = WEATHER_CODE[c.weather_code] || ['cloud', '—'];
-      const icon = !c.is_day && iconKey === 'sun' ? 'moon' : !c.is_day && iconKey === 'cloudsun' ? 'cloud' : iconKey;
+      const icon = !c.is_day && iconKey === 'sun' ? 'night' : !c.is_day && iconKey === 'cloudsun' ? 'cloudnight' : iconKey;
       const t = Math.round(c.temperature_2m);
       ui.chip.innerHTML = `${iconSvg(icon)}${t}°`; ui.chip.hidden = false;
       ui.chip.title = desc; ui.chip.setAttribute('aria-label', `${desc}, ${t} graus`);
       ui.det.innerHTML = '';
       ui.det.append(`${desc} · ${t}°C · sensação ${Math.round(c.apparent_temperature)}° · vento ${Math.round(c.wind_speed_10m)} km/h`);
       const st = this._sunTimes || {};   // nascer/pôr do sol (saiu do título)
-      const upd = document.createElement('small'); upd.textContent = `${st.rise && st.set ? `☀ ${fmtClock(st.rise)}–${fmtClock(st.set)} · ` : ''}atualizado ${fmtClock(Date.now())}`; ui.det.appendChild(upd);
+      const upd = document.createElement('small'); upd.innerHTML = `${st.rise && st.set ? `${iconSvg('sun')} ${fmtClock(st.rise)}–${fmtClock(st.set)} · ` : ''}atualizado ${fmtClock(Date.now())}`; ui.det.appendChild(upd);
       this._weatherOk = Date.now();   // hora da última leitura boa (de volta à vista, só busca de novo depois de 10 min)
     } catch (err) {
       if (!this._weatherOk) ui.det.textContent = 'Clima indisponível';
@@ -5263,7 +5343,7 @@ export class Casa3DCard extends HTMLElement {
   // "Quarto ›  1 de 3 ligados": abre o cômodo (na Vista de cima, aproxima ele) — na aba Cômodos e na Automações
   _zoneHead(r) {
     const zh = document.createElement('div'); zh.className = 'zone'; zh.dataset.room = r.label; zh.setAttribute('role', 'heading'); zh.setAttribute('aria-level', '3');
-    const zt = document.createElement('button'); zt.className = 'zt'; zt.textContent = r.label; zt.insertAdjacentHTML('beforeend', '<i aria-hidden="true">›</i>'); zt.title = `Abrir ${r.label}`;
+    const zt = document.createElement('button'); zt.className = 'zt'; zt.textContent = r.label; zt.insertAdjacentHTML('beforeend', `<i aria-hidden="true">${iconSvg('chevr')}</i>`); zt.title = `Abrir ${r.label}`;
     zt.addEventListener('click', () => (this._topView ? this._navTo(2, r.block, r) : this._showRoom(r)));
     const zn = document.createElement('span'); zn.className = 'zn'; zh.append(zt, zn); return zh;
   }
@@ -5278,10 +5358,9 @@ export class Casa3DCard extends HTMLElement {
     const sSt = document.createElement('span'); sSt.className = 'st'; const sSep = document.createElement('span'); sSep.className = 'sep'; const sTm = document.createElement('span'); sTm.className = 'tm';
     small.append(sSt, sSep, sTm);
     tile.append(top, txt);
-    if (it.dim || it.rgb) { tile.classList.add('hasl'); const lv = document.createElement('i'); lv.className = 'lvl'; lv.setAttribute('aria-hidden', 'true'); tile.appendChild(lv); }
     const t = { tile, small, it, room, sSt, sSep, sTm };
     if (this._hasDetail(it)) {
-      const more = document.createElement('span'); more.className = 'more'; more.textContent = '⋯'; more.title = 'Mais controles'; more.setAttribute('role', 'button'); more.tabIndex = 0;
+      const more = document.createElement('span'); more.className = 'more'; more.innerHTML = iconSvg('more'); more.title = 'Mais controles'; more.setAttribute('role', 'button'); more.tabIndex = 0;
       more.addEventListener('click', (e) => { e.stopPropagation(); this._openDetail(it.key); });
       more.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); this._openDetail(it.key); } });
       top.appendChild(more);
@@ -5350,11 +5429,11 @@ export class Casa3DCard extends HTMLElement {
       const tm = document.createElement('div'); tm.className = 'seg2 timerseg'; tm.setAttribute('aria-label', 'Desligar em');
       const lab = document.createElement('span'); lab.className = 'tlab'; lab.innerHTML = `${iconSvg('timer')} desligar em`; tm.appendChild(lab);
       for (const m of [15, 30, 60]) { const b = document.createElement('button'); b.textContent = `${m} min`; b.addEventListener('click', () => this._setTimer(key, m)); tm.appendChild(b); }
-      const cancel = document.createElement('button'); cancel.textContent = 'cancelar'; cancel.addEventListener('click', () => this._setTimer(key, 0)); tm.appendChild(cancel);
+      const cancel = document.createElement('button'); cancel.textContent = 'Nunca'; cancel.addEventListener('click', () => this._setTimer(key, 0)); tm.appendChild(cancel);
       body.appendChild(tm); this._dTimer = tm;
     }
     d.onkeydown = (e) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); d.hidden = true; this._detailKey = null; const t = this._tiles[key]; const mo = t && t.tile.querySelector('.more'); if (mo) mo.focus(); } };
-    const close = document.createElement('button'); close.className = 'close'; close.textContent = '×'; close.setAttribute('aria-label', 'Fechar');
+    const close = document.createElement('button'); close.className = 'close'; close.innerHTML = iconSvg('close'); close.setAttribute('aria-label', 'Fechar');
     close.addEventListener('click', () => { d.hidden = true; this._detailKey = null; }); head.appendChild(close);
     this._showTab('ctl'); this._renderPanel(); this._snapTo('full');   // folha: os controles pedem a altura cheia (a lista rola)
     if (!this._sheet) d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });   // coluna: a página do HA mostra os controles; na folha a cheia já mostra (com ela ainda subindo, a página rolaria junto)
@@ -5376,7 +5455,7 @@ export class Casa3DCard extends HTMLElement {
       const on = ctl.filter((k) => this._state[k] && this._state[k].on).length;
       const sens = ks.filter((k) => !ctl.includes(k)).map((k) => (k === 'presenca' ? (this._state[k] && this._state[k].on ? 'alguém aqui' : 'ninguém aqui') : this._stateText(ITEMS.find((i) => i.key === k), this._state[k])));   // sensor: leitura, não bloco
       this._rCount.textContent = !ks.length ? 'Nenhum aparelho' : [ctl.length ? `${on} de ${ctl.length} ligados` : '', ...sens].filter(Boolean).map((s) => s.replace(/ /g, '\u00a0')).join('\u00a0· ');   // coluna estreita: quebra só entre as partes
-      this._rAll.hidden = !ctl.length; this._rAll.firstChild.hidden = on > 0; this._rAll.lastChild.hidden = on === 0;   // só a ação que muda algo
+      this._swSet(this._rSw, ctl.length, on > 0);
     }
     const now = Date.now();
     for (const [k, t] of Object.entries(this._tiles)) {
@@ -5388,12 +5467,11 @@ export class Casa3DCard extends HTMLElement {
       const stx = this._stateText(t.it, st, true);
       if (t.sSt.textContent !== stx) t.sSt.textContent = stx;
       t.sSep.textContent = tm ? ' · ' : ''; if (t.sTm.textContent !== tm) t.sTm.textContent = tm;
-      if (st && st.attrs && st.attrs.brightness != null && (t.it.dim || t.it.rgb)) t.tile.style.setProperty('--lvl', `${Math.round(st.attrs.brightness / 2.55)}%`);
     }
     for (const z of this._groups || []) {
       const ks = z.keys.filter((k) => ITEMS.find((i) => i.key === k).kind !== 'sensor'), act = ks.filter((k) => this._state[k] && this._state[k].on).length;
       if (z.zn) z.zn.textContent = ks.length ? `${act} de ${ks.length} ligados` : ''; z.zh.classList.toggle('some', act > 0);   // sensor e pessoa não contam
-      if (z.all) { z.all.hidden = !ks.length; z.all.firstChild.hidden = act > 0; z.all.lastChild.hidden = act === 0; }   // bloco: só a ação que muda algo (como no cômodo)
+      if (z.sw) this._swSet(z.sw, ks.length, act > 0);
     }
     // resumo do que está ligado ("4 luzes · Ar · TV", +N depois de 3 itens) e o filtro "Ligados · N"
     const onK = this._onKeys(), n = onK.filter((k) => ITEMS.find((i) => i.key === k).kind === 'light').length;
@@ -5419,7 +5497,7 @@ export class Casa3DCard extends HTMLElement {
       if (this._dSw) this._dSw.setAttribute('aria-checked', on ? 'true' : 'false');
       this._detail.classList.toggle('on', on);   // ícone do detalhe aceso como o do bloco
       if (this._dSmall) this._dSmall.textContent = this._stateText(it, st) + this._timerText(key, now);
-      if (this._dTimer) for (const b of this._dTimer.querySelectorAll('button')) b.setAttribute('aria-pressed', this._timers[key] && b.textContent === `${this._timers[key].min} min` ? 'true' : 'false');
+      if (this._dTimer) for (const b of this._dTimer.querySelectorAll('button')) b.setAttribute('aria-pressed', b.textContent === (this._timers[key] ? `${this._timers[key].min} min` : 'Nunca') ? 'true' : 'false');
       if (this._dModes) for (const [m, mb] of Object.entries(this._dModes)) mb.setAttribute('aria-pressed', st && st.state === m ? 'true' : 'false');
       if (this._dRange && st && st.attrs && st.attrs.brightness != null && this._dRange.range.getRootNode().activeElement !== this._dRange.range) {
         const r = this._dRange.range; r.value = Math.max(1, Math.round(st.attrs.brightness / 2.55)); r.dispatchEvent(new Event('input'));
@@ -5569,7 +5647,7 @@ export class Casa3DCard extends HTMLElement {
         if (now - g.lastAdj > 300) {
           g.lastAdj = now;
           g.slowWin = g.ft > 40 ? g.slowWin + 1 : 0; g.fastWin = g.ft < 22 ? g.fastWin + 1 : 0;
-          if (g.slowWin >= 2) { g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }
+          if (g.slowWin >= 2) { if (this._wrap.classList.contains('glass')) this._wrap.classList.remove('glass'); else g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }   // lento: 1º sai o vidro (também com quality fixo), depois a resolução
           if (g.fastWin >= 4) { g.moveScale = Math.min(g.moveMax, g.moveScale * 1.1); g.fastWin = 0; }
           // escada (só auto): na escala mínima e ainda < 15 quadros/s por ~1,5 s — nunca nos 20 s após carregar
           // (compilação de shaders e texturas subindo dão picos que não dizem nada do aparelho)
@@ -5594,7 +5672,8 @@ export class Casa3DCard extends HTMLElement {
     const g = this._gov;
     if (ms > 250) {
       g.sharpFast = 0;
-      if (g.idleScale > g.idleMin + 0.01) g.idleScale = Math.max(g.idleMin, g.idleScale * 0.85);   // o próximo quadro nítido é mais leve: sem travar a página
+      if (this._wrap.classList.contains('glass')) this._wrap.classList.remove('glass');   // quadro nítido lento: o vidro sai antes da resolução
+      else if (g.idleScale > g.idleMin + 0.01) g.idleScale = Math.max(g.idleMin, g.idleScale * 0.85);   // o próximo quadro nítido é mais leve: sem travar a página
       else if (g.auto && ms > 400 && ++g.slowIdle >= 3 && performance.now() - g.lastStep > 4000 && this._govSettled(performance.now())) this._govStepDown(performance.now());
     } else if (ms < 30) {
       g.slowIdle = 0;
@@ -5606,7 +5685,7 @@ export class Casa3DCard extends HTMLElement {
   _govSettled(now) { return !this._busy && now - (this._gov.t0 || 0) > 20000; }
   _govStepDown(now) {
     const g = this._gov; if (!g.auto || g.rung >= 3) return;
-    g.rung++; g.lastStep = now; g.slow = g.slowIdle = 0;
+    g.rung++; g.lastStep = now; g.slow = g.slowIdle = 0; this._wrap.classList.remove('glass');
     if (g.rung === 1) {
       let ch = !!this._scene.environment;   // no leve/min já não há ambiente nem sombras pontuais: nada a recompilar
       for (const rt of this._items.values()) for (const { L } of rt.lights || []) if (L.castShadow) { L.castShadow = false; if (L.shadow.map) L.shadow.map.dispose(); ch = true; }
