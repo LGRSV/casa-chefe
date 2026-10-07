@@ -7,6 +7,14 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.9.0 — visual do app Casa da Apple
+
+- **Cara de app Casa (iOS, modo escuro)**: cores de sistema da Apple, escala de texto do iOS, bloco **ligado claro com o ícone num círculo âmbar** e desligado escuro, controle segmentado, interruptor e barra de brilho grossa no estilo iPhone, menu ☰ estilo iOS, folha com cantos de 28 e alça. Fonte: a do sistema nos aparelhos Apple (SF), inclusive dentro do HA; nos outros, a do tema do HA (troque com `--casa3d-font` se quiser).
+- **Ícones Phosphor** (MIT; SF Symbols não podem ser usados fora de apps Apple): traço vazado quando desligado, preenchido quando ligado.
+- **Interruptor «Tudo»** no lugar de Ligar/Desligar tudo, no bloco e no cômodo: ligado se qualquer aparelho do grupo está ligado; tocar desliga tudo, tocar de novo liga.
+- **Vidro desfocado só onde aguenta**: aparelho com GPU dedicada no nível alta; o resto fica opaco (mais leve). Se o aparelho apertar, o cartão tira o vidro antes de baixar a resolução.
+- Contraste conferido (texto ≥ 4,5:1, ícone/controle ≥ 3:1), alvos de 44 px no toque, balão que nasce da ponta e respeita «reduzir movimento».
+
 ## Novidades da v1.8.1 — painel em 2 blocos e ligar/desligar tocando nos objetos
 
 - **Painel em 2 blocos**: **Casa** (Quarto, Sala / Cozinha, Balcão, Varanda) e **Área externa** (Piscina, Jardim, Banheiro, Garagem…), cada um com «N de M ligados» e Ligar/Desligar tudo do bloco; dentro, os cômodos (tocar abre o cômodo) e os aparelhos, cada um uma vez só (a luz externa fica no Jardim, «também Varanda e Quintal»). A aba Automações segue a mesma divisão, com «Outras automações» no fim.
