@@ -213,10 +213,10 @@ function solarPosition(date, lat, lon) {
   return { elevation: alt / rad, azimuth: (az / rad + 360) % 360 };
 }
 function fmtClock(ts) { try { return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (_) { return ''; } }
-function fmtRel(ts, now = Date.now()) {
+function fmtRel(ts, now = Date.now()) {   // espaços inseparáveis: "há 3 d" nunca quebra no meio
   const d = Math.max(0, (now - new Date(ts).getTime()) / 1000);
-  if (d < 45) return 'agora'; if (d < 3600) return `há ${Math.round(d / 60)} min`; if (d < 86400) return `há ${Math.round(d / 3600)} h`;
-  const days = Math.round(d / 86400); return days === 1 ? 'ontem' : `há ${days} d`;
+  if (d < 45) return 'agora'; if (d < 3600) return `há\u00a0${Math.round(d / 60)}\u00a0min`; if (d < 86400) return `há\u00a0${Math.round(d / 3600)}\u00a0h`;
+  const days = Math.round(d / 86400); return days === 1 ? 'ontem' : `há\u00a0${days}\u00a0d`;
 }
 const iconSvg = (k, i = ICONS[k] || ICONS.bulb) => `<svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor" aria-hidden="true"><path${i.f ? ' class="r"' : ''} d="${i.r}"/>${i.f ? `<path class="f" d="${i.f}"/>` : ''}</svg>`;   // r = regular (desligado), f = fill (ligado; o CSS troca)
 
@@ -1034,7 +1034,7 @@ class Walker {
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;   // digitando em outro campo da página
     const c = e.code;
     if (t && t.closest && t.closest('.menu, .sizer')) return;   // teclas dentro do menu de opções (↑/↓, Enter) são do menu; na borda do painel, ←/→ são da largura
-    if (c === 'Escape') { if ((this.card._menu && !this.card._menu.hidden) || this.card._room) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha ele; com um cômodo no painel, volta à visão geral
+    if (c === 'Escape') { if ((this.card._menuBtn && this.card._menuBtn.getAttribute('aria-expanded') === 'true') || this.card._room) return; if (down) { e.stopPropagation(); this.card._setWalk(false); } return; }   // Esc com o menu aberto só fecha ele; com um cômodo no painel, volta à visão geral
     if (c === 'Enter' || c === 'KeyF') {   // interagir: abre/fecha a porta mais perto e à frente (E já é "girar")
       if (t && t !== this.card._canvas && t !== document.body && t !== document.documentElement) return;   // Enter em botões/links da página segue normal
       if (down && !e.repeat) this.card._doorInteract();
@@ -2698,15 +2698,17 @@ const CSS = `
   --alert: #ff6961;                       /* indisponível: systemRed de alto contraste (4,9:1 no #2c2c2e) */
   --focus: #409cff;                       /* foco e seleção: systemBlue de alto contraste (âmbar quer dizer "ligado") */
   --ease: cubic-bezier(.32, .72, 0, 1);   /* curva da folha do iOS */
-  --seg: #636366;                         /* polegar do segmentado */
+  --seg: #636366; --seg-line: rgba(255, 255, 255, .3);   /* polegar do segmentado e o fio dele */
   --tile-on: #e5e5ea; --tile-on-ink: #000; --tile-on-ink-2: #545458;   /* bloco ligado: claro; nome 16,7:1 · estado 6,0:1 */
   --mat-chrome: #1c1c1e; --mat-pop: #2c2c2e;   /* HUD · menu, balão, "Ir para…" (opacos fora do vidro) */
   --blur: none; --blur-s: none;
   --check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E");   /* Phosphor check (bold) */
   -webkit-tap-highlight-color: transparent; color-scheme: dark; }   /* sem o flash de toque do Android (o retorno é o :active) · controles nativos escuros */
 .wrap { position: absolute; inset: 0; }
+.wrap:not(.sf) * { letter-spacing: 0 !important; }   /* tracking calibrado para o SF: na Roboto, na Segoe e na fonte do tema fica o desenho dela */
 .wrap.glass { --glass: rgba(28, 28, 30, .78); --mat-chrome: rgba(28, 28, 30, .78); --mat-pop: rgba(44, 44, 46, .84); --blur: blur(30px) saturate(180%); --blur-s: blur(20px) saturate(180%);
-  --ink-2: rgba(235, 235, 245, .72); --ink-3: rgba(235, 235, 245, .72); }   /* vidro (nível alta, GPU dedicada; o governador o tira): o cinza sobe ("vibrancy"), 4,7:1 com a cena a 240 atrás */
+  --ink-2: rgba(235, 235, 245, .8); --ink-3: rgba(235, 235, 245, .8); --seg-line: rgba(255, 255, 255, .5); }   /* vidro (nível alta, GPU dedicada; o governador o tira): o cinza sobe ("vibrancy"), 4,5:1 até na cápsula com a cena branca atrás; o fio do segmento, 3,3:1 */
+.wrap.glass :is(button, .tile, input):focus-visible { box-shadow: 0 0 0 2px #000; }   /* sobre o vidro o azul sozinho dá 2,9:1: anel duplo, como sobre a cena */
 canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab; }
 canvas.pick { cursor: pointer; }
 canvas:active { cursor: grabbing; }
@@ -2769,6 +2771,7 @@ button[aria-pressed="true"] { background: var(--on-bg); color: var(--on); }
 .btn { min-height: 36px; padding: 7px 14px; border-radius: 999px; font-size: 15px; line-height: 20px; letter-spacing: -.015em; }   /* cápsula, como os botões de barra do HIG */
 @media (pointer: coarse) { .btn { min-height: 44px; } }
 .back svg { width: 16px; height: 16px; margin: 0 2px 0 -4px; vertical-align: -3px; }   /* "‹ Planta" / "‹ Casa" */
+.back.compact { min-width: 44px; padding-inline: 0; } .back.compact span { display: none; } .back.compact svg { margin: 0; }   /* sem lugar para o título: só "‹" (o destino fica no aria-label) */
 .wrap::before, .wrap::after { content: ""; position: absolute; left: 0; right: 0; height: 120px; pointer-events: none; }
 .wrap::before { top: 0; background: linear-gradient(rgba(6, 9, 18, .55), transparent); }
 .wrap::after { bottom: 0; background: linear-gradient(transparent, rgba(6, 9, 18, .6)); }
@@ -2792,14 +2795,15 @@ canvas.walk.pick { cursor: pointer; }
 .sel.below { transform-origin: calc(50% + var(--ax, 0px)) -8px; }
 @keyframes selIn { from { opacity: 0; scale: .9; } }
 .sel[hidden] { display: none; } .sel > span { min-width: 0; } .sel b, .sel small { overflow: hidden; text-overflow: ellipsis; }   /* texto longo: reticências; o botão fica inteiro */
-.sel::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -8px; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top-color: var(--mat-pop); }   /* ponta de 16×8 */
-.sel.below::after { top: -8px; bottom: auto; border: 8px solid transparent; border-top: 0; border-bottom-color: var(--mat-pop); }   /* aberto embaixo do ponto: a ponta sobe */
+.sel::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -5.5px; width: 12px; height: 12px; margin-left: -6px; background: var(--mat-pop); transform: rotate(45deg);
+  clip-path: polygon(0 100%, 100% 100%, 100% 0); box-shadow: inset -.5px -.5px 0 rgba(255, 255, 255, .12); }   /* ponta de 17×8: metade de fora de um quadrado girado, com o mesmo fio de 0,5 px do corpo */
+.sel.below::after { top: -5.5px; bottom: auto; clip-path: polygon(0 100%, 0 0, 100% 0); box-shadow: inset .5px .5px 0 rgba(255, 255, 255, .12); }   /* aberto embaixo do ponto: a ponta sobe */
 .sel b { display: block; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.015em; color: var(--ink); } .sel small { display: block; font-size: 13px; line-height: 18px; color: var(--ink-2); }
 .sel button { flex: none; min-height: 32px; padding: 6px 14px; border-radius: 999px; background: var(--fill-2); color: var(--ink); font-size: 15px; line-height: 20px; letter-spacing: -.015em; transition: transform .1s ease-out, background-color .2s; }
 .sel button:hover { background: var(--fill-3); } .sel button.go { background: var(--on); color: var(--on-ink); }
 .peg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--on); touch-action: none; cursor: grab; padding: 8px 10px; }   /* o bonequinho continua âmbar (o mesmo --on) */
 /* dica de primeiro acesso apontando para o bonequinho (some quando ele é usado ou ao fechar) */
-.pegdica { position: absolute; z-index: 7; max-width: 230px; padding: 9px 36px 9px 12px; font-size: 13px; line-height: 18px; color: var(--ink); }
+.pegdica { position: absolute; z-index: 7; max-width: 260px; padding: 9px 36px 9px 12px; font-size: 13px; line-height: 18px; color: var(--ink); text-wrap: pretty; }   /* 260: a frase em 13 px cabe numa linha; se quebrar, sem palavra sozinha embaixo */
 .pegdica::before { content: ""; position: absolute; top: -6px; right: var(--ax, 18px); width: 10px; height: 10px; background: inherit; transform: rotate(45deg); }
 .pegdica button { position: absolute; top: -2px; right: -2px; padding: 10px 12px; font-size: 14px; color: var(--ink-2); }
 .pegdica.lado { transform: translateY(-50%); }   /* desktop: à esquerda dos botões, apontando para eles (não cobre o painel) */
@@ -2822,7 +2826,7 @@ canvas.walk.pick { cursor: pointer; }
 .goto .grow button { background: var(--fill-2); border-radius: 999px; padding: 7px 14px; font-size: 15px; line-height: 20px; }
 .goto .grow button:hover { background: var(--fill-3); color: var(--ink); }
 .fade { position: absolute; inset: 0; background: #06090f; opacity: 0; pointer-events: none; z-index: 5; }
-@media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 40px; } .goto, .wrap.side .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
+@media (max-width: 640px) { .peg { padding: 9px 11px; min-width: 44px; min-height: 44px; } .goto, .wrap.side .goto { top: auto; bottom: 138px; right: 10px; left: 10px; width: auto; max-height: 50%; } }
 @media (max-width: 640px) { .joy { width: 104px; height: 104px; left: 14px; bottom: 14px; } .walkhint { bottom: 130px; } }
 /* Painel lateral (v1.5) — coluna grafite à esquerda (barra lateral flutuante do iPadOS); âmbar só no que está ligado (tokens no :host).
    --side-w / --side-top vêm do _layoutHud (largura da coluna e topo logo abaixo do título, ou dos botões se eles invadirem a faixa) */
@@ -2856,7 +2860,7 @@ canvas.walk.pick { cursor: pointer; }
 .tabs, .zonebar, .seg2, .menu .mseg { gap: 0; padding: 2px; border: 0; border-radius: 9px; background: var(--fill); }
 .tabs button[role="tab"], .zonebar button, .seg2 button, .menu .mseg button { min-height: 28px; padding: 4px 10px; border-radius: 7px; font-size: 13px; line-height: 20px; font-weight: 500; letter-spacing: -.006em; color: var(--ink); transition: background-color .2s, box-shadow .2s; }
 .tabs button[aria-selected="true"], .zonebar button[aria-pressed="true"], .seg2 button[aria-pressed="true"], .menu .mseg button[aria-pressed="true"] {
-  background: var(--seg); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+  background: var(--seg); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--seg-line), 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
 .tabs { display: flex; margin: 0 12px 12px; flex: none; }
 .tabs button[role="tab"] { flex: 1; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding-inline: 4px; }
 .tabs button[role="tab"] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2884,8 +2888,8 @@ canvas.walk.pick { cursor: pointer; }
 /* bloco (v1.8.1): Casa · Área externa — numa linha, nome, "N de M ligados" e o interruptor de tudo dele (v1.9); os cômodos dele embaixo */
 .blk { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0 2px; color: var(--ink); }
 :not([hidden]) ~ .blk { margin-top: 32px; } .blk + .zone { margin-top: 12px; }   /* vão só entre blocos à vista */
-.blk .bt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }   /* coluna estreita: a contagem desce */
-.blk b { font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.02em; } .blk small { white-space: nowrap; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.blk .bt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.blk b { font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.02em; } .blk small { flex-basis: 100%; white-space: nowrap; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); font-variant-numeric: tabular-nums; }   /* contagem sempre embaixo do nome: os blocos ficam iguais */
 .foot { grid-column: 1 / -1; height: 1px; margin: 20px 2px 4px; background: var(--line); }   /* Sandro, no fim: um fio, não um 3º bloco */
 .autos > .sect:not(:first-child) { margin-top: 24px; } .autos > .sect + .zone { margin-top: 4px; } .autos .zone { margin-bottom: 8px; } .sect[hidden] + .autos { margin-top: 24px; }   /* Automações · bloco → cômodo */
 .tile.wide { grid-column: 1 / -1; } .dock.room .tile.wide { grid-column: auto; } .tile small .sv { font-weight: 400; }   /* aparelho de mais de um cômodo: linha inteira, cabe o "também …" */
@@ -2903,7 +2907,7 @@ canvas.walk.pick { cursor: pointer; }
 .tile .ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--ink-2); transition: background-color .2s, color .2s; }
 .tile .ico svg { width: 20px; height: 20px; }
 svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display: inline; }   /* Phosphor: desligado = regular, ligado = fill (só CSS, sem refazer o bloco) */
-.tile b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: ellipsis; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.015em; color: var(--ink); }   /* até 2 linhas, como no Home */
+.tile b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.015em; color: var(--ink); }   /* até 2 linhas, como no Home; palavra maior que a linha quebra ("Iluminânc|ia"), não some cortada */
 .tile small { display: block; font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: -.006em; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile small .st { color: var(--ink-2); }
 .tile small .tm, .tile small .sep { display: none; }   /* o horário fica na aba Atividade */
@@ -2914,7 +2918,7 @@ svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display
 .tile.on .ico { background: var(--on); color: var(--on-ink); }   /* desenho cheio no círculo âmbar, sem halo */
 .tile[data-kind="sensor"].on { background: var(--raised); } .tile[data-kind="sensor"].on .ico { background: var(--fill-2); color: var(--ink-2); }   /* sensor é só leitura: nunca acende */
 .tile[data-kind="sensor"] small { white-space: normal; } .tile[data-kind="sensor"] small .st { color: var(--ink); }   /* leitura: pode quebrar a linha */
-.tile.unavailable b { color: var(--ink-2); } .tile.unavailable .ico { color: var(--ink-3); } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
+.tile.unavailable:hover { background: #323234; }   /* o vermelho continua com 4,5:1 */ .tile.unavailable b { color: var(--ink-2); } .tile.unavailable .ico { color: var(--ink-3); } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
 .tile.flash { box-shadow: 0 0 0 3px var(--focus); }   /* "olha aqui" */
 .tile .more { position: absolute; top: 4px; right: 4px; z-index: 1; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }   /* z-index: por cima do nome, que senão pega o toque */
 .tile .more svg { width: 16px; height: 16px; }
@@ -2926,7 +2930,7 @@ svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display
 .tile[data-kind]:not([data-kind="sensor"]):is(:hover, :focus-within) b { padding-right: 22px; } @media (hover: none) { .tile[data-kind]:not([data-kind="sensor"]) b { padding-right: 22px; } }   /* onde o "⋯" aparece, o nome acaba antes dele (reticências), não embaixo */
 .tiles.routines { grid-template-columns: minmax(0, 1fr); }
 .tile.routine .ico { background: var(--fill); color: var(--ink-2); }
-.tile.routine small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }   /* descrição em até 2 linhas (o .tile small é de 1) */
+.tile.routine small, .tile.wide small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }   /* descrição e o "também …" em até 2 linhas (o .tile small é de 1) */
 /* folha de controles do aparelho: cartão #2c2c2e colado no fim da área rolável */
 .detail { grid-column: 1 / -1; position: sticky; bottom: 4px; z-index: 4; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 16px; border-radius: 18px; margin-top: 4px;
   background: var(--raised); box-shadow: 0 -8px 32px rgba(0, 0, 0, .4); animation: sheetIn .28s var(--ease); }
@@ -2946,6 +2950,7 @@ svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display
 .sw:active::after { width: 34px; } .sw[aria-checked="true"]:active::after { transform: translateX(13px); }
 .sw.still, .sw.still::after { transition: none; }   /* 1º desenho: já na posição, sem deslizar */
 .sw:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.swl { flex: none; font-size: 13px; line-height: 18px; letter-spacing: -.006em; color: var(--ink-2); } .swl[hidden] { display: none; }   /* "Tudo" à vista: o interruptor do grupo não se confunde com o de uma automação */
 .seg2 { display: inline-flex; }
 .timerseg .tlab { display: inline-flex; align-items: center; gap: 5px; padding: 0 8px 0 6px; font-size: 13px; color: var(--ink-2); }
 .step { display: inline-flex; align-items: center; gap: 6px; padding: 2px; border-radius: 999px; background: var(--fill); }
@@ -2973,14 +2978,14 @@ input[type="range"] { flex: 1; min-width: 110px; }
 .tiles + .sect { margin-top: 24px; }
 /* listas agrupadas (Automações, Atividade e as automações do cômodo): cada sequência de linhas é um cartão #2c2c2e de raio 12, linhas de 44+ com fio inset */
 .autos { display: grid; grid-template-columns: minmax(0, 1fr); }
-.auto { position: relative; display: grid; grid-template-columns: 30px 1fr auto auto; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: var(--raised); transition: background-color .2s; }
+.auto { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 10px 12px; background: var(--raised); transition: background-color .2s; }
 .autos > .auto:first-child, .autos > :not(.auto) + .auto { border-radius: 12px 12px 0 0; }
 .autos > .auto:last-child, .autos > .auto:has(+ :not(.auto)) { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }   /* sem :has, só os cantos de baixo ficam retos */
 .auto + .auto::before, .feed li + li::before { content: ""; position: absolute; top: 0; right: 0; left: 52px; border-top: 1px solid var(--line); }
 .auto:hover { background: #363638; }
 .auto .ico { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: var(--fill-2); color: var(--ink-2); transition: background-color .2s, color .2s; }   /* ícone de Ajustes: quadrado arredondado */
 .auto.on .ico { background: var(--on); color: var(--on-ink); }   /* automação ativa: âmbar */
-.auto b { display: block; font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -.015em; color: var(--ink); } .auto small { display: block; color: var(--ink-2); font-size: 13px; line-height: 18px; letter-spacing: -.006em; }
+.auto b { display: block; font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -.015em; color: var(--ink); } .auto small { display: block; color: var(--ink-2); font-size: 13px; line-height: 18px; letter-spacing: -.006em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* legenda numa linha, como no Casa */
 .auto.off b { color: var(--ink-2); }
 .auto.flash { animation: flashPulse .7s var(--ease); }
 .auto .run { position: relative; width: 30px; height: 30px; padding: 0; border-radius: 50%; background: var(--fill); display: inline-grid; place-items: center; transition: background-color .2s; }
@@ -3067,7 +3072,7 @@ input[type="range"] { flex: 1; min-width: 110px; }
 @media (prefers-contrast: more) { .wrap .dock .sizer::after { opacity: 1; background: var(--ink); } }   /* acima do hover e do foco: sempre no máximo */
 /* toque: alvos de 44 px sem mudar o desenho */
 @media (pointer: coarse) {
-  .phead .collapse::after { content: ""; position: absolute; inset: -9px -7px -5px; } .phead .count { min-height: 36px; }   /* círculo de 30 px, alvo de 44 (sobe: embaixo vem o alvo das abas) */
+  .phead .collapse::after { content: ""; position: absolute; inset: -9px -7px -5px; } .phead .count { min-height: 44px; border-block: 4px solid transparent; margin-block: -4px; background-clip: padding-box; } .phead .count:focus-visible { outline-offset: -2px; }   /* círculo de 30 px, alvo de 44 (sobe: embaixo vem o alvo das abas) · cápsula: 36 de desenho, 44 de alvo (a borda transparente conta no toque) */
   .tabs button[role="tab"], .seg2 button, .menu .mseg button { position: relative; }
   .tabs button[role="tab"]::after, .zonebar button::after, .seg2 button::after, .menu .mseg button::after { content: ""; position: absolute; inset: -8px 0; }   /* segmentado: 28 de desenho, 44 de alvo */
   .detail .close::after, .auto .run::after { content: ""; position: absolute; inset: -7px; } .step button::after { content: ""; position: absolute; inset: -6px -2px; } .mbtn::after { content: ""; position: absolute; inset: -6px -4px; }
@@ -3088,6 +3093,7 @@ input[type="range"] { flex: 1; min-width: 110px; }
   .btn { padding: 7px 10px; }
   .menubtn { min-width: 44px; min-height: 44px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
 }
+@media (max-width: 340px) { .title b { font-size: 15px; line-height: 20px; } .title .cline { gap: 8px; } .rhead .swl { display: none; } }   /* celular de 320: "Casa 3D" numa linha ao lado dos três círculos; o nome do cômodo antes do rótulo "Tudo" */
 /* cantos contínuos (Chrome/Edge ≥ 139), raio ~1,4×; só com o vidro: em aparelho fraco, recorte que não é retângulo arredondado pode virar máscara.
    Os botões são cápsulas (o HIG prefere) e ficam fora */
 @supports (corner-shape: squircle) {
@@ -3194,6 +3200,7 @@ export class Casa3DCard extends HTMLElement {
     root.innerHTML = '';
     const style = document.createElement('style'); style.textContent = CSS; root.appendChild(style);
     const wrap = document.createElement('div'); wrap.className = 'wrap'; root.appendChild(wrap);
+    wrap.classList.toggle('sf', /Macintosh|iPhone|iPad|iPod/.test(navigator.userAgent));   // aparelho Apple: a pilha cai no SF, e o tracking do CSS é o dele
     wrap.classList.toggle('glass', this._q === 'alta' && Casa3DCard._gpuInfo().glass);   // vidro (backdrop-filter) só no nível alta com GPU conhecida; o governador o tira antes de tudo
     const canvas = document.createElement('canvas'); canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Modelo 3D da casa'); wrap.appendChild(canvas);
     this._canvas = canvas;
@@ -3300,7 +3307,7 @@ export class Casa3DCard extends HTMLElement {
     this._fadeEl = document.createElement('div'); this._fadeEl.className = 'fade'; wrap.appendChild(this._fadeEl);
     // Esc/Backspace na Vista de cima sobem um nível; fora dela o Esc volta o painel do cômodo à visão geral (com o menu aberto, o Esc só fecha ele)
     const navKey = (e) => {
-      if (!this._menu.hidden || (e.key !== 'Escape' && !(e.key === 'Backspace' && this._topView))) return;
+      if (this._menuBtn.getAttribute('aria-expanded') === 'true' || (e.key !== 'Escape' && !(e.key === 'Backspace' && this._topView))) return;   // aberto pelo aria-expanded: saindo (150 ms) já conta como fechado
       if (e.key === 'Escape' && this._sel) this._select(null);   // 1º Esc: o balão do aparelho
       else if (this._topView) this._navBack(); else if (this._room) this._showRoom(null); else return;
       e.preventDefault();
@@ -4424,7 +4431,7 @@ export class Casa3DCard extends HTMLElement {
   // marcador do destino e realce do cômodo sob o bonequinho (criados depois do mergeStatic)
   _buildWalkAids() {
     this._hlGeo = new THREE.PlaneGeometry(1, 1);
-    this._hlMat = new THREE.MeshBasicMaterial({ color: 0xa6cfff, transparent: true, opacity: 0.34, depthTest: false, depthWrite: false, toneMapped: false });   // cômodo escolhido: azul de seleção (o --focus), não luz acesa
+    this._hlMat = new THREE.MeshBasicMaterial({ color: 0x409cff, transparent: true, opacity: 0.34, depthTest: false, depthWrite: false, toneMapped: false });   // cômodo escolhido: o mesmo azul do --focus (foco e seleção), não luz acesa
     this._hl = new THREE.Group(); this._hl.visible = false; this._hl.userData.keep = true; this._scene.add(this._hl);
     const mkMat = new THREE.MeshBasicMaterial({ color: 0xffc46b, transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false, fog: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.2, 40), mkMat.clone()), dot = new THREE.Mesh(new THREE.CircleGeometry(0.045, 20), mkMat);
@@ -4609,8 +4616,10 @@ export class Casa3DCard extends HTMLElement {
   // se eles invadirem a faixa da coluna; no celular (gaveta por cima) abaixo do cabeçalho inteiro
   _layoutHud(w) {
     if (!this._titleCard || !this._wrap) return;
-    const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
     this._narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;   // mesmo corte do CSS
+    const bk = this._backBtn, cut = (e) => e.scrollWidth > e.clientWidth + 1 || e.offsetHeight > 30; bk.classList.remove('compact');   // celular: se o título não cabe numa linha, o "‹ Área externa" vira só "‹" (como a barra do iOS)
+    if (this._narrow && !bk.hidden && (cut(this._titleEl) || cut(this._subEl.parentNode))) bk.classList.add('compact');
+    const wr = this._wrap.getBoundingClientRect(), tr = this._titleCard.getBoundingClientRect(), br = this._btnsEl.getBoundingClientRect();
     const sheet = this._narrow || (w < 1024 && this.clientHeight > w * 1.1);   // folha de baixo: celular e tablet em pé (tamanho do cartão, não da janela)
     if (sheet !== this._sheet) {   // girou o tablet: troca folha ↔ coluna sem herdar o deslocamento do outro eixo
       this._sheet = sheet; this._wrap.classList.toggle('sheet', sheet);
@@ -4698,7 +4707,7 @@ export class Casa3DCard extends HTMLElement {
   }
   _navTo(level, block, room) {
     const n = this._nav = { level: block ? (room ? 2 : 1) : 0, block: block || null, room: (block && room) || null }, b = this._backBtn, up = n.room ? n.block.label : 'Planta';
-    b.hidden = !n.level; b.innerHTML = `${iconSvg('chevl')}${up}`; b.setAttribute('aria-label', `Voltar para ${up}`);
+    b.hidden = !n.level; b.innerHTML = `${iconSvg('chevl')}<span>${up}</span>`; b.setAttribute('aria-label', `Voltar para ${up}`);
     this._hoverKey = ''; this._showRoom(n.room);   // cômodo: o painel lateral mostra ele · planta/área: visão geral
     this._setLabels(this._labelsOn); this._resize(); this._resetView(true);
   }
@@ -4754,7 +4763,7 @@ export class Casa3DCard extends HTMLElement {
     clearTimeout(this._swT); this._swT = setTimeout(() => this._renderPanel(), 2050); this._allSet(keys, on);   // o HA não confirmou (aparelho fora do ar): volta ao real
   }
   _swSet(sw, n, on) {
-    sw.hidden = !n; if (+sw.dataset.hold > performance.now() && (sw.getAttribute('aria-checked') === 'true') !== on) return;
+    sw.hidden = sw.previousSibling.hidden = !n; if (+sw.dataset.hold > performance.now() && (sw.getAttribute('aria-checked') === 'true') !== on) return;
     delete sw.dataset.hold; sw.setAttribute('aria-checked', String(on)); sw.title = on ? 'Desligar tudo' : 'Ligar tudo';
     if (sw.classList.contains('still')) requestAnimationFrame(() => sw.classList.remove('still'));   // 1º desenho (e troca de cômodo) sem deslize
   }
@@ -4810,8 +4819,8 @@ export class Casa3DCard extends HTMLElement {
   _select(sel) {
     const b = this._selEl; if (!b) return;
     if (!sel && b.contains(this.shadowRoot.activeElement)) this._canvas.focus({ preventScroll: true });   // o foco no botão do balão volta à maquete
-    const band = this._selBand; this._sel = sel; this._selTxt = ''; clearTimeout(this._selT); b.classList.toggle('out', !sel);
-    if (sel) b.hidden = false; else if (!b.hidden) this._selT = setTimeout(() => { b.hidden = true; }, this._reduced ? 0 : 150);   // sai encolhendo para a ponta
+    const band = this._selBand; this._selGone = sel ? null : this._sel || this._selGone; this._sel = sel; this._selTxt = ''; clearTimeout(this._selT); b.classList.toggle('out', !sel);   // _selGone: saindo, o balão segue preso ao ponto
+    if (sel) b.hidden = false; else if (!b.hidden) this._selT = setTimeout(() => { b.hidden = true; this._selGone = null; }, this._reduced ? 0 : 150);   // sai encolhendo para a ponta
     this._selBand = sel ? band || (this._vb && [this._pNow || 0, ...this._vb]) : null;   // balão aberto: a faixa da cena fica parada (_resize) e o 2º toque cai no mesmo aparelho
     if (sel) this._selRender(); else if (band) this._resize(true);   // fechou: a cena volta à faixa de verdade, deslizando
   }
@@ -4827,7 +4836,7 @@ export class Casa3DCard extends HTMLElement {
   // balão preso ao ponto tocado: acompanha a câmera (_frame); some quando ela gira para longe (ponto atrás dela ou fora da faixa da cena).
   // Encostado na borda, a ponta continua no ponto; perto do cabeçalho, abre embaixo dele
   _selPlace() {
-    const s = this._sel; if (!s) return;
+    const s = this._sel || this._selGone; if (!s) return;
     this._camera.updateMatrixWorld();
     const v = s.p.clone().project(this._camera), W = this._canvas.clientWidth, H = this._canvas.clientHeight, [bw, bh] = this._selWH || [200, 56], b = this._selEl;
     const px = (v.x + 1) / 2 * W, py = (1 - v.y) / 2 * H, P = this._pNow || 0, B = this._vb ? this._vb[0] : 0, m = (P + W) / 2, below = py - 14 - bh < (this._hudH || 58);
@@ -4854,7 +4863,7 @@ export class Casa3DCard extends HTMLElement {
       this._room = r; d.classList.toggle('room', !!r); this._detail.hidden = true; this._detailKey = null; if (!stay) this._select(null);   // o balão é do cômodo de antes (no stay o _onClick já troca)
       this._reopen.querySelector('.rl').textContent = r ? r.label : 'Painel';
       if (r) {
-        this._rTitle.textContent = r.label; this._showTab('ctl'); this._rSw.setAttribute('aria-label', `Tudo em ${r.label}`); this._rSw.classList.add('still');   // outro cômodo: o interruptor já nasce na posição dele
+        this._rTitle.textContent = r.label; this._showTab('ctl'); this._rSw.setAttribute('aria-label', `Tudo em ${r.label}`); this._rSw.classList.add('still'); delete this._rSw.dataset.hold;   // outro cômodo: o interruptor já nasce na posição dele (a posição segurada era do de antes)
         const autos = this._roomAutos(r), f = this._rFoot; f.replaceChildren();
         if (autos.length) { const h = document.createElement('div'), al = document.createElement('div'); h.className = 'sect'; h.textContent = 'Automações'; al.className = 'autos'; for (const a of autos) al.appendChild(this._autoRow(a, Date.now())); f.append(h, al); }
         f.appendChild(this._rEnter);
@@ -5095,7 +5104,7 @@ export class Casa3DCard extends HTMLElement {
     col.addEventListener('click', () => { if (this._sheet && this._dock.dataset.snap !== 'peek') this._snapTo('peek'); else this._setPanel(false); }); head.appendChild(col);   // folha: desce até a espiada; dela, fecha
     // cômodo tocado (ver _showRoom), numa linha: [‹ o mesmo voltar do topo] [nome + "N de M ligados"] [interruptor: tudo do cômodo]
     const rh = document.createElement('div'); rh.className = 'rhead'; dock.appendChild(rh);
-    rh.innerHTML = `<button class="rback" aria-label="Todos os cômodos">${iconSvg('chevl')}</button><div class="rtitle" role="status"><b></b><small></small></div><button class="sw still" role="switch"></button>`;
+    rh.innerHTML = `<button class="rback" aria-label="Todos os cômodos">${iconSvg('chevl')}</button><div class="rtitle" role="status"><b></b><small></small></div><span class="swl" aria-hidden="true">Tudo</span><button class="sw still" role="switch"></button>`;
     this._rBack = rh.firstChild; this._rBack.addEventListener('click', () => {
       const f = this.shadowRoot.activeElement === this._rBack; if (this._topView) this._navBack(); else this._showRoom(null);
       if (f) this._countEl.focus({ preventScroll: true });   // o ‹ some com o cômodo: o foco vai ao resumo (como ao reabrir), não ao body
@@ -5177,7 +5186,7 @@ export class Casa3DCard extends HTMLElement {
     for (const b of this._places) {
       const rooms = b.rooms.map((r) => [r, this._roomKeys(r).filter((k) => home[k] === r)]).filter(([, ks]) => ks.length);   // sem nada próprio (Quarto Casal, Varanda, Quintal, Dispensa): sem grupo
       const keys = rooms.flatMap(([, ks]) => ks), bh = document.createElement('div'); bh.className = 'blk'; grid.appendChild(bh);   // [nome  N de M ligados] [interruptor: tudo do bloco]
-      bh.innerHTML = '<div class="bt"><b role="heading" aria-level="2"></b><small></small></div><button class="sw still" role="switch"></button>';
+      bh.innerHTML = '<div class="bt"><b role="heading" aria-level="2"></b><small></small></div><span class="swl" aria-hidden="true">Tudo</span><button class="sw still" role="switch"></button>';
       const bs = bh.lastChild; bh.querySelector('b').textContent = b.label; bs.setAttribute('aria-label', `Tudo em ${b.label}`); bs.addEventListener('click', () => this._swFlip(bs, keys));
       this._groups.push({ zh: bh, zn: bh.querySelector('small'), keys, sw: bs });
       for (const [r, ks] of rooms) {
@@ -5467,7 +5476,7 @@ export class Casa3DCard extends HTMLElement {
     const sw = document.createElement('button'); sw.className = 'sw'; sw.setAttribute('role', 'switch'); sw.setAttribute('aria-label', `${a.name} ativa`);
     const paint = () => {
       row.className = 'auto ' + (a.on ? 'on' : 'off'); sw.setAttribute('aria-checked', a.on ? 'true' : 'false');
-      sm.textContent = `${a.last ? `última execução ${fmtClock(a.last)} · ${fmtRel(a.last, now)}` : 'nunca executou'}${a.on ? '' : ' · desativada'}`;
+      sm.textContent = `${a.last ? `executou ${fmtRel(a.last, now)} · ${fmtClock(a.last)}` : 'nunca executou'}${a.on ? '' : ' · desativada'}`;   // curto e o "há …" antes da hora: na coluna estreita as reticências cortam só a hora
     };
     paint();
     sw.addEventListener('click', () => { a.on = !a.on; this._svc('automation', a.on ? 'turn_on' : 'turn_off', a.id); paint(); this._renderAutos(); });
@@ -5573,7 +5582,7 @@ export class Casa3DCard extends HTMLElement {
         if (now - g.lastAdj > 300) {
           g.lastAdj = now;
           g.slowWin = g.ft > 40 ? g.slowWin + 1 : 0; g.fastWin = g.ft < 22 ? g.fastWin + 1 : 0;
-          if (g.slowWin >= 2) { if (this._wrap.classList.contains('glass')) this._wrap.classList.remove('glass'); else g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); g.slowWin = 0; }   // lento: 1º sai o vidro (também com quality fixo), depois a resolução
+          if (g.slowWin >= 2) { if (!this._wrap.classList.contains('glass')) g.moveScale = Math.max(g.moveMin, g.moveScale * 0.85); else if (this._govSettled(now)) this._wrap.classList.remove('glass'); g.slowWin = 0; }   // lento: 1º sai o vidro (também com quality fixo), depois a resolução; nos 20 s da entrada (picos de shader e textura) nenhum dos dois
           if (g.fastWin >= 4) { g.moveScale = Math.min(g.moveMax, g.moveScale * 1.1); g.fastWin = 0; }
           // escada (só auto): na escala mínima e ainda < 15 quadros/s por ~1,5 s — nunca nos 20 s após carregar
           // (compilação de shaders e texturas subindo dão picos que não dizem nada do aparelho)
@@ -5598,7 +5607,7 @@ export class Casa3DCard extends HTMLElement {
     const g = this._gov;
     if (ms > 250) {
       g.sharpFast = 0;
-      if (this._wrap.classList.contains('glass')) this._wrap.classList.remove('glass');   // quadro nítido lento: o vidro sai antes da resolução
+      if (this._wrap.classList.contains('glass')) { if (this._govSettled(performance.now())) this._wrap.classList.remove('glass'); }   // quadro nítido lento: o vidro sai antes da resolução (passados os picos da entrada)
       else if (g.idleScale > g.idleMin + 0.01) g.idleScale = Math.max(g.idleMin, g.idleScale * 0.85);   // o próximo quadro nítido é mais leve: sem travar a página
       else if (g.auto && ms > 400 && ++g.slowIdle >= 3 && performance.now() - g.lastStep > 4000 && this._govSettled(performance.now())) this._govStepDown(performance.now());
     } else if (ms < 30) {
@@ -5751,7 +5760,7 @@ export class Casa3DCard extends HTMLElement {
     }
     if (this._needShadow) { this._renderer.shadowMap.needsUpdate = true; this._needShadow = false; dirty = true; }
     if (dirty && this._labels) this._declutter();
-    if (dirty && this._sel) this._selPlace();   // o balão do aparelho acompanha a câmera
+    if (dirty && (this._sel || this._selGone)) this._selPlace();   // o balão do aparelho acompanha a câmera
     // rótulos esmaecem (~150 ms) em vez de piscar ao aparecer/sumir no giro e no zoom
     for (const s of this._labels || []) {
       const m = s.material, a = s.userData.alvo || 0;
