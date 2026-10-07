@@ -7,7 +7,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.8.0';
+export const VERSION = '1.8.1';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
