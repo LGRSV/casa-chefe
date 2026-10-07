@@ -3094,7 +3094,7 @@ input[type="range"] { flex: 1; min-width: 110px; }
 .rhead .rback { flex: none; width: 32px; height: 32px; margin-left: -8px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--ink); } .rhead .rback svg { width: 20px; height: 20px; }
 .rhead .rback:hover { background: var(--fill-2); }
 .rhead .rtitle { flex: 1; min-width: 0; } .rhead .rtitle b { display: block; font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rhead .rtitle small { display: block; color: var(--ink-2); font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhead .rtitle small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: var(--ink-2); font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }   /* até 2 linhas: com o rótulo «Tudo» ao lado, a leitura dos sensores não some (a espiada mede a linha real) */
 .wrap:not(.sheet) .rhead .rtitle b, .wrap:not(.sheet) .rhead .rtitle small { white-space: normal; }   /* coluna: o nome e a leitura dos sensores quebram a linha em vez de sumir (na folha, a 1ª linha é a espiada) */
 .rfoot { margin-top: 24px; } .rfoot .autos { margin-bottom: 12px; }
 .rfoot .enter { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 999px; background: var(--fill-2); color: var(--ink); font-size: 15px; line-height: 20px; letter-spacing: -.015em; transition: transform .1s ease-out, background-color .2s; }
@@ -3167,7 +3167,7 @@ input[type="range"] { flex: 1; min-width: 110px; }
   .btn { padding: 7px 10px; }
   .menubtn { min-width: 44px; min-height: 44px; justify-content: center; } .menubtn .lbl, .peg .lbl { display: none; }
 }
-@media (max-width: 340px) { .title b { font-size: 15px; line-height: 20px; } .title .cline { gap: 8px; } .rhead .swl { display: none; } }   /* celular de 320: "Casa 3D" numa linha ao lado dos três círculos; o nome do cômodo antes do rótulo "Tudo" */
+@media (max-width: 340px) { .tile b { font-size: 14px; line-height: 19px; } .title b { font-size: 15px; line-height: 20px; } .title .cline { gap: 8px; } .rhead .swl { display: none; } }   /* celular de 320: nome curto do bloco inteiro ("Bomba" ao lado do ⋯) e "Casa 3D" numa linha ao lado dos três círculos; o nome do cômodo antes do rótulo "Tudo" */
 /* cantos contínuos (Chrome/Edge ≥ 139), raio ~1,4×; só com o vidro: em aparelho fraco, recorte que não é retângulo arredondado pode virar máscara.
    Os botões são cápsulas (o HIG prefere) e ficam fora */
 @supports (corner-shape: squircle) {
