@@ -38,14 +38,12 @@ export const CARS = [
   { x: 5.7, z: 14.15, len: 4.5, wid: 1.86, rot: Math.PI, color: 0x3a3d43, type: 'suv' },         // vaga de visitante
 ];
 
-// Vegetação. palms: [x, z, altura, escala]; shrubs: [x, z, raio, tom]; trees: [x, z, raio]; flowers: [x, z]
+// Vegetação (só dentro do lote). palms: [x, z, altura, escala]; shrubs: [x, z, raio, tom]; trees: [x, z, raio]; flowers: [x, z]
 // tom: 0 verde-escuro, 1 verde-médio, 2 verde-claro
 export const PALMS = [
   [0.45, 4.6, 1.1, 0.5],                           // palmeira em vaso na varanda
   [12.75, 6.7, 2.9, 0.75], [12.8, 11.2, 3.3, 0.8],  // jardim
   [12.75, 16.1, 2.8, 0.75],                         // pátio, canto junto ao muro
-  [-1.4, 3.0, 4.2, 0.95], [-1.8, 9.6, 4.8, 1.0], [-1.3, 15.0, 3.9, 0.9],   // fora do lote, à esquerda
-  [14.8, 2.2, 4.4, 0.95], [15.0, 14.6, 4.0, 0.9],                          // fora do lote, à direita
 ];
 export const SHRUBS = [
   // faixa de grama entre varanda e deck
@@ -56,16 +54,9 @@ export const SHRUBS = [
   [11.2, 12.0, 0.28, 2], [11.1, 7.2, 0.26, 1],
   // muro do fundo (lado externo) e pátio
   [9.0, 16.25, 0.3, 1], [10.2, 16.25, 0.34, 0], [11.4, 16.25, 0.3, 2], [7.2, 16.25, 0.26, 1],
-  // fora do lote
-  [-0.9, 1.0, 0.5, 0], [-0.8, 6.0, 0.55, 1], [-0.9, 11.5, 0.5, 0], [-0.8, 17.8, 0.45, 1],
-  [14.2, 5.0, 0.55, 0], [14.3, 9.0, 0.6, 1], [14.2, 12.0, 0.5, 2], [14.1, 17.6, 0.5, 0],
-  [3.0, -1.0, 0.55, 1], [6.5, -0.9, 0.5, 0], [10.0, -1.0, 0.55, 2],
 ];
 export const TREES = [
   [12.0, 9.0, 1.0],                                            // árvore do jardim
-  [-4.4, 0.0, 1.6], [-4.8, 6.6, 1.8], [-4.4, 12.6, 1.6], [-4.6, 19.0, 1.5],
-  [18.0, -0.6, 1.7], [18.4, 6.0, 1.8], [17.8, 11.2, 1.6], [18.4, 18.2, 1.7],
-  [1.4, -4.0, 1.6], [7.0, -4.4, 1.8], [12.4, -4.0, 1.6],
 ];
 // Bromélias vermelhas ao longo do muro direito do pátio (como na referência)
 export const FLOWERS = [[13.0, 12.8], [13.05, 13.35], [13.0, 13.9], [13.05, 14.45], [13.0, 15.0], [13.05, 15.5]];

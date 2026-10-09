@@ -20,7 +20,8 @@ export const REAL_CSS = `
   overflow: hidden;
   height: var(--planta-h, 560px);
   border-radius: var(--ha-card-border-radius, 16px);
-  background: #5b8a3a;
+  /* fundo neutro de estúdio: a maquete fica sozinha, com sombra de contato */
+  background: radial-gradient(120% 90% at 50% 38%, #fbfaf8 0%, #efede9 55%, #dddad4 100%);
   color: var(--pr-text);
   font-family: var(--pr-font);
   container-type: inline-size;

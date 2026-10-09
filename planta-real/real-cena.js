@@ -9,6 +9,29 @@ const FOV = 30;
 const RAD = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = (t) => 1 - (1 - t) ** 3;
+// Limite de pixels do canvas (tablet fraco): até 2× e no máximo ~3,7 MP
+const MAX_PX = 3.7e6;
+const GLOSSY = { f_water: 0.9, carA: 0.7, carB: 0.8, carGlass: 1, glass: 1, chrome: 0.8, steel: 0.6, rim: 0.7, screen: 0.6, f_tile: 0.15, f_tileCool: 0.2 };
+
+// Ambiente de céu (gradiente céu → horizonte → chão) pré-filtrado uma vez para reflexos e luz difusa
+function skyEnv(renderer) {
+  const g = new THREE.SphereGeometry(10, 32, 16);
+  const p = g.attributes.position, col = [];
+  const top = new THREE.Color(0xc2d4e8), hor = new THREE.Color(0xf4efe7), bot = new THREE.Color(0x8c8273), c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i) / 10;
+    if (y > 0) c.copy(hor).lerp(top, Math.pow(y, 0.6)); else c.copy(hor).lerp(bot, Math.min(1, -y * 3));
+    col.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const pm = new THREE.PMREMGenerator(renderer);
+  const rt = pm.fromScene(env, 0, 0.1, 100, { size: 32 });
+  pm.dispose();
+  g.dispose();
+  return rt.texture;
+}
 
 export class RealScene {
   constructor(host, { onPick } = {}) {
@@ -16,32 +39,38 @@ export class RealScene {
     this._onPick = onPick ?? (() => {});
     this._m = buildModel();
     const sc = (this._scene = new THREE.Scene());
-    sc.background = new THREE.Color(0x5b8a3a);
-    sc.add(this._m.group);
+    sc.add(this._m.group); // sem fundo: o canvas é transparente sobre o gradiente do cartão
 
-    // Luz de dia quente e suave: céu + sol baixo pela frente-esquerda
-    sc.add(new THREE.HemisphereLight(0xfff4e2, 0x7d8a5c, 1.35));
-    const sun = (this._sun = new THREE.DirectionalLight(0xffe2bd, 2.6));
+    // Luz de dia: sol quente baixo pela frente-esquerda + céu suave + ambiente (reflexos)
+    sc.add(new THREE.HemisphereLight(0xf3f6fa, 0xdedbd5, 1.0));
+    const sun = (this._sun = new THREE.DirectionalLight(0xfff0dd, 2.5));
     const c = this._m.bounds.getCenter(new THREE.Vector3());
     sun.position.set(c.x - 9, 16, c.z + 7);
     sun.target.position.copy(c);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 1, far: 50 });
-    sun.shadow.bias = -0.0004;
-    sun.shadow.normalBias = 0.03;
+    // Caixa de sombra justa no lote (mais resolução) e filtro largo = sombras macias
+    Object.assign(sun.shadow.camera, { left: -11.5, right: 11.5, top: 11.5, bottom: -11.5, near: 4, far: 40 });
+    sun.shadow.radius = 3.5;
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = 0.025;
     sc.add(sun, sun.target);
 
     this._cam = new THREE.PerspectiveCamera(FOV, 1, 1, 300);
-    const r = (this._r = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }));
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const r = (this._r = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' }));
+    r.setClearColor(0x000000, 0);
     r.outputColorSpace = THREE.SRGBColorSpace;
-    r.toneMapping = THREE.NeutralToneMapping;
-    r.toneMappingExposure = 1.0;
+    r.toneMapping = THREE.ACESFilmicToneMapping;
+    r.toneMappingExposure = 1.12;
     r.shadowMap.enabled = true;
-    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    r.shadowMap.type = THREE.PCFShadowMap; // PCF com raio > 1 = penumbra macia
     r.shadowMap.autoUpdate = false; // sombras calculadas uma vez (a cena é estática)
     r.shadowMap.needsUpdate = true;
+    // Reflexo do céu só nas superfícies brilhantes (água, vidro, carros, metal): barato e onde aparece
+    this._env = skyEnv(r);
+    this._m.group.traverse((o) => {
+      if (GLOSSY[o.name] != null) Object.assign(o.material, { envMap: this._env, envMapIntensity: GLOSSY[o.name] });
+    });
     this._cv = r.domElement;
     this._cv.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
     host.append(this._cv);
@@ -135,6 +164,7 @@ export class RealScene {
     cancelAnimationFrame(this._raf);
     cancelAnimationFrame(this._tw);
     disposeModel(this._m);
+    this._env.dispose();
     this._r.dispose();
     this._cv.remove();
   }
@@ -183,6 +213,7 @@ export class RealScene {
     const w = this._host.clientWidth, h = this._host.clientHeight;
     if (!(w > 0 && h > 0)) return;
     this._w = w; this._h = h;
+    this._r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PX / (w * h))));
     this._r.setSize(w, h, false);
     this.requestRender();
   }
