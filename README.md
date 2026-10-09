@@ -7,6 +7,10 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.9.1
+
+- Sem o realce azul ao selecionar cômodos e aparelhos (na maquete, no painel e na Vista de cima por cômodo). O azul fica só no foco do teclado e no passar do mouse pela planta/área da Vista de cima.
+
 ## Novidades da v1.9.0 — visual do app Casa da Apple
 
 - **Cara de app Casa (iOS, modo escuro)**: cores de sistema da Apple, escala de texto do iOS, bloco **ligado claro com o ícone num círculo âmbar** e desligado escuro, controle segmentado, interruptor e barra de brilho grossa no estilo iPhone, menu ☰ estilo iOS, folha com cantos de 28 e alça. Fonte: a do sistema nos aparelhos Apple (SF), inclusive dentro do HA; nos outros, a do tema do HA (troque com `--casa3d-font` se quiser).

@@ -81,7 +81,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.9.0';
+export const VERSION = '1.9.1';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
@@ -2916,7 +2916,7 @@ canvas.walk.pick { cursor: pointer; }
 .dshadow { display: none; }   /* sombra da folha flutuante (só no tablet em pé) */
 @keyframes paneIn { from { opacity: 0; } }   /* troca de aba: só esmaece */
 @keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
-@keyframes flashPulse { 0% { box-shadow: 0 0 0 0 var(--focus); } 100% { box-shadow: 0 0 0 14px transparent; } }
+@keyframes flashPulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.75); } 100% { box-shadow: 0 0 0 14px transparent; } }
 /* cabeçalho da coluna: cápsula do que está ligado (como "Luzes · 4 acesas" do Home) + recolher; abaixo, as abas em segmento de largura igual */
 .phead { display: flex; align-items: center; gap: 8px; padding: 12px; flex: none; }
 .phead .spacer { flex: 1; }
@@ -2993,7 +2993,7 @@ svg .f, :is(.on, .lit) svg .r { display: none; } :is(.on, .lit) svg .f { display
 .tile[data-kind="sensor"].on { background: var(--raised); } .tile[data-kind="sensor"].on .ico { background: var(--fill-2); color: var(--ink-2); }   /* sensor é só leitura: nunca acende */
 .tile[data-kind="sensor"] small { white-space: normal; } .tile[data-kind="sensor"] small .st { color: var(--ink); }   /* leitura: pode quebrar a linha */
 .tile.unavailable:hover { background: #323234; }   /* o vermelho continua com 4,5:1 */ .tile.unavailable b { color: var(--ink-2); } .tile.unavailable .ico { color: var(--ink-3); } .tile.unavailable small .st { color: var(--alert); }   /* sem opacidade nem filtro: continua legível */
-.tile.flash { box-shadow: 0 0 0 3px var(--focus); }   /* "olha aqui" */
+.tile.flash { box-shadow: 0 0 0 3px rgba(255,255,255,.75); }   /* "olha aqui" em branco (sem azul de seleção) */
 .tile .more { position: absolute; top: 4px; right: 4px; z-index: 1; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; opacity: 0; transition: background-color .2s, opacity .2s; }   /* z-index: por cima do nome, que senão pega o toque */
 .tile .more svg { width: 16px; height: 16px; }
 .tile:hover .more, .tile:focus-within .more { opacity: 1; } @media (hover: none) { .tile .more { opacity: 1; } }   /* "⋯" só aparece quando serve (no toque, sempre) */
@@ -3397,12 +3397,6 @@ export class Casa3DCard extends HTMLElement {
     sel.addEventListener('keydown', navKey);   // Esc no botão do balão fecha ele
 
     canvas.addEventListener('pointerdown', () => this._dicaOff(), { once: true });   // a dica do bonequinho some no 1º gesto na cena
-    // retorno já no toque: o cômodo sob o dedo realça antes de soltar; se virar arrasto, volta ao do painel
-    // (registrado antes do Orbit/Walker: no pointerup roda primeiro, e o clique em seguida decide o cômodo)
-    const press = () => this._raycaster && !this._walkOn && !(this._topView && this._nav.level < 2);   // planta/área: o realce é o do mouse
-    canvas.addEventListener('pointerdown', (e) => { const t = e.button === 0 && press() && this._tapRoom(e); if (t) this._roomHl(t.r); });
-    const unpress = () => { if (press()) this._roomHl(this._room); };
-    canvas.addEventListener('pointerup', unpress); canvas.addEventListener('pointercancel', unpress);
 
     try {
       this._build3D(canvas);
@@ -4945,13 +4939,13 @@ export class Casa3DCard extends HTMLElement {
       this._setZone(r ? this._zone : this._onKeys().length ? 'on' : '');   // blocos: só os do cômodo · de volta ao geral: "Ligados" se houver
     }
     if (r) { const bl = this._topView && !this._backBtn.hidden ? this._backBtn.getAttribute('aria-label') : 'Todos os cômodos'; this._rBack.setAttribute('aria-label', bl); this._rBack.title = bl; }   // o mesmo voltar do topo (o 2º toque muda ele sem trocar de cômodo)
-    this._roomHl(r);
+    this._roomHl();
     if (r && !this._panelOpen && !stay && !(this._walkOn && this._sideOverlay)) this._setPanel(true);
     else { this._renderPanel(); if ((r || ch) && !stay) this._snapTo(r ? 'half' : 'peek'); }   // folha: cômodo na média, geral na espiada
     if (key) this._flashRow(key);
   }
-  // realce azul do cômodo do painel (na Pessoa não: desenhado por cima de tudo, atravessaria as paredes)
-  _roomHl(r) { this._hlShow(r && !this._walkOn ? r.rects.map(([x, z, w, d]) => [x, z, x + w, z + d]) : null); this._orbit.dirty = true; }
+  // sem realce azul ao selecionar cômodo/aparelho (pedido do dono); o azul fica só no passar do mouse na planta/área da Vista de cima
+  _roomHl() { this._hlShow(null); this._orbit.dirty = true; }
   _onHover(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
     if (this._topView && this._nav.level < 2) {   // planta: realça a área · área: o cômodo sob o mouse
@@ -4959,12 +4953,12 @@ export class Casa3DCard extends HTMLElement {
       const key = r ? (b ? 'b:' + b.id : 'r:' + r.id) : '';
       this._canvas.classList.toggle('pick', !!r);
       if (key !== this._hoverKey) {
-        this._hoverKey = key; if (r) this._hlShow((b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d])); else this._roomHl(this._room);   // saiu: volta o realce do selecionado
+        this._hoverKey = key; if (r) this._hlShow((b ? b.rooms : [r]).flatMap((q) => q.rects).map(([x, z, w, d]) => [x, z, x + w, z + d])); else this._roomHl();   // saiu: sem realce
         this._orbit.dirty = true;
       }
       return;
     }
-    if (this._hoverKey) { this._hoverKey = ''; this._roomHl(this._room); }
+    if (this._hoverKey) { this._hoverKey = ''; this._roomHl(); }
     const o = this._pick(e);
     if (this._walkOn) this._walkHover(e);
     // no modo Pessoa o piso vira destino (anel âmbar) e a folha da porta também é clicável
@@ -5375,8 +5369,6 @@ export class Casa3DCard extends HTMLElement {
       top.appendChild(more);
     }
     tile.addEventListener('click', () => this._toggleItem(it.key));
-    tile.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') this._roomHl(this._roomsAll().find((q) => this._roomKeys(q).includes(it.key))); });   // mouse no bloco: realça o cômodo dele
-    tile.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') this._roomHl(this._room); });
     this._tiles[it.key] = t; return tile;
   }
   // liga/desliga o aparelho (bloco do painel)
