@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planta Real</title>
+<meta name="description" content="Maquete realista da casa sem telhado: toque num cômodo para ligar e desligar.">
+<style>
+  html, body { margin: 0; height: 100%; background: #5b8a3a; }
+  planta-real-card { display: block; }
+</style>
+</head>
+<body>
+<planta-real-card id="card"></planta-real-card>
+<script type="module">
+  import './real-card.js';
+
+  const card = document.getElementById('card');
+  card.setConfig({ title: 'Casa', height: CSS.supports('height', '100dvh') ? '100dvh' : '100vh' });
+
+  // Estados simulados (mesmos nomes de entidade da demo da Casa)
+  const states = {};
+  const ago = (min) => new Date(Date.now() - min * 60000).toISOString();
+  const mk = (id, state, attributes = {}, min = 0) => {
+    states[id] = { entity_id: id, state, attributes, last_changed: ago(min) };
+  };
+
+  mk('switch.quarto_interruptor_1', 'on', { friendly_name: 'Luz Quarto' });
+  mk('light.0xa4c1387cf3257eb7', 'on', { friendly_name: 'LED Quarto', rgb_color: [255, 120, 60], brightness: 190 });
+  mk('light.interruptor_cozinha_left', 'on', { friendly_name: 'Luz Cozinha' });
+  mk('switch.balcao_interruptor_1', 'off', { friendly_name: 'Luz Balcão' });
+  mk('light.interruptor_cozinha_center', 'off', { friendly_name: 'Luz Externa' });
+  mk('switch.garagem_interruptor_1', 'off', { friendly_name: 'Garagem' });
+  mk('switch.led_piscina_interruptor_1', 'on', { friendly_name: 'LED piscina' });
+  mk('switch.piscina_interruptor_1', 'on', { friendly_name: 'Piscina' });
+  mk('climate.ir_ac_cozinha_ac_cozinha', 'cool', {
+    friendly_name: 'AC Cozinha', temperature: 23, current_temperature: 27,
+    min_temp: 16, max_temp: 31, hvac_modes: ['off', 'heat_cool', 'cool', 'fan_only', 'dry'],
+  });
+  mk('media_player.m_s', 'playing', { friendly_name: 'M&S', media_title: 'Netflix', volume_level: 0.35 });
+  mk('binary_sensor.0xa4c13846f2a0df88_occupancy', 'on', { friendly_name: 'Presença', device_class: 'occupancy' });
+  mk('sensor.0xa4c13846f2a0df88_illuminance', '18', { friendly_name: 'Iluminância', unit_of_measurement: 'lx' });
+  mk('person.sandro', 'home', { friendly_name: 'Sandro' });
+  mk('weather.casa', 'partlycloudy', { friendly_name: 'Casa', temperature: 31, humidity: 58 });
+
+  // Novo objeto states a cada push, como o HA
+  const push = () => { card.hass = { states: { ...states }, language: 'pt', callService }; };
+
+  // Simula o serviço com a latência de um interruptor Wi-Fi
+  function callService(domain, service, data) {
+    const id = data.entity_id;
+    if (!states[id]) return;
+    console.debug('callService', domain, service, data);
+    setTimeout(() => {
+      const s = states[id];
+      if (!s) return;
+      const media = id.startsWith('media_player.');
+      let state = s.state;
+      if (service === 'turn_on') state = media ? 'playing' : 'on';
+      else if (service === 'turn_off') state = 'off';
+      else if (service === 'toggle') state = media ? (s.state === 'off' ? 'playing' : 'off') : (s.state === 'on' ? 'off' : 'on');
+      else if (service === 'set_hvac_mode') state = data.hvac_mode;
+      states[id] = { ...s, state, last_changed: new Date().toISOString() };
+      push();
+    }, 220);
+  }
+
+  push();
+  window.__planta = { states, push, card };
+</script>
+</body>
+</html>
