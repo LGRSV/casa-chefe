@@ -81,7 +81,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.9.1';
+export const VERSION = '1.10.0';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
@@ -102,6 +102,7 @@ const GOV = {
 const DEFAULT_CONFIG = {
   title: 'Casa 3D', labels: true, mode: 'auto', night_vision: true, panel: true, roof: false,
   quality: 'auto', car_color: '#f3f3f0', entities: {},   // auto | alta | media | leve | min
+  car_model: true,   // v1.10: up! TSI do modelo 3D (modelos/up-tsi.bin); false = carro desenhado; texto = outra URL do arquivo
   latitude: -10.2, longitude: -48.3, timezone: 'America/Sao_Paulo', orientation: 180,
   weather: true, weather_city: 'Palmas, TO',
   telhado_pessoa: true,   // v1.4: na visão de Pessoa o Telhado (forro) liga sozinho e volta ao sair
@@ -349,6 +350,77 @@ function mulberry32(a) {
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
+}
+
+// ---------------------------------------------------------------------------
+// up! TSI Pepper do modelo 3D "VolksWagen UP!" de esprit3d.website (Sketchfab, CC BY 4.0), já limpo e recolorido
+// em modelos/up-tsi.bin: grupos por material, posição Int16 na caixa, normal Int8, índices u16/u32. Frente em -z, origem no chão.
+// ---------------------------------------------------------------------------
+/* global TextDecoder, URL */
+function upModelo(buf, paint) {
+  const [mag, hl] = new Uint32Array(buf, 0, 2);
+  if (mag !== 0x32435055) throw new Error('up-tsi.bin inválido');
+  const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 8, hl)));
+  const [lo, ext] = head.box;
+  const M = (o) => new THREE.MeshStandardMaterial(o);
+  const canvas = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d')); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const placa = canvas(512, 160, (x) => {   // placa Mercosul genérica
+    x.fillStyle = '#f6f6f3'; x.fillRect(0, 0, 512, 160); x.fillStyle = '#1f4fa3'; x.fillRect(0, 0, 512, 34);
+    x.fillStyle = '#fff'; x.font = 'bold 24px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('BRASIL', 256, 17);
+    x.fillStyle = '#151515'; x.font = 'bold 96px Arial'; x.fillText('UPT 5I19', 256, 100);
+  });
+  const MAT = {
+    pintura: M({ color: paint, roughness: 0.22, metalness: 0.05 }),
+    vermelho: M({ color: 0xd3121b, roughness: 0.25 }),
+    liga: M({ color: 0x3b3e43, metalness: 0.75, roughness: 0.32 }),
+    preto: M({ color: 0x141516, roughness: 0.7 }),
+    pretoBrilho: M({ color: 0x08090a, roughness: 0.15 }),
+    metal: M({ color: 0x8a8d90, metalness: 0.8, roughness: 0.4 }),
+    cromado: M({ color: 0xdfe3e8, metalness: 1, roughness: 0.12 }),
+    vidro: M({ color: 0x0b1015, roughness: 0.05, metalness: 0.1 }),
+    lente: M({ color: 0xc9d1d8, metalness: 0.6, roughness: 0.06 }),
+    ambar: M({ color: 0xd98a1c, roughness: 0.3 }),
+    lanterna: M({ color: 0x9c0f14, roughness: 0.2, emissive: 0x2a0004 }),
+    placa: M({ map: placa, roughness: 0.4 }),
+  };
+  const g = new THREE.Group();
+  let o = 8 + hl, corpo = null;
+  const al = () => { o = (o + 3) & ~3; };
+  for (const e of head.grupos) {
+    const q = new Uint16Array(buf, o, e.vc * 3); o += e.vc * 6; al();
+    const pos = new Float32Array(e.vc * 3);
+    for (let i = 0; i < pos.length; i++) pos[i] = lo[i % 3] + (q[i] / 65535) * ext[i % 3];
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(buf, o, e.vc * 3), 3, true)); o += e.vc * 3; al();
+    if (e.uv) { geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(buf, o, e.vc * 2), 2)); o += e.vc * 8; }
+    geo.setIndex(new THREE.BufferAttribute(e.big ? new Uint32Array(buf, o, e.ic) : new Uint16Array(buf, o, e.ic), 1)); o += e.ic * (e.big ? 4 : 2); al();
+    const m = new THREE.Mesh(geo, MAT[e.k] || MAT.preto);
+    m.castShadow = !['vidro', 'lente', 'placa', 'ambar', 'lanterna', 'vermelho'].includes(e.k);
+    m.receiveShadow = true;
+    g.add(m);
+    if (e.k === 'pintura') corpo = m;
+  }
+  // adesivo PEPPER na porta dianteira, colado na lateral pelo raio
+  if (corpo) {
+    const pep = new THREE.MeshStandardMaterial({ roughness: 0.3, map: canvas(512, 96, (x) => {
+      x.fillStyle = '#' + new THREE.Color(paint).getHexString(); x.fillRect(0, 0, 512, 96);   // fundo da cor da pintura: sem transparência
+      x.fillStyle = '#d3121b'; x.font = 'italic bold 70px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('PEPPER', 232, 48);
+      x.beginPath(); x.moveTo(384, 34); x.lineTo(426, 48); x.lineTo(384, 62); x.fill();
+    }) });
+    const ray = new THREE.Raycaster(), Z = new THREE.Vector3(0, 0, 1);
+    for (const sx of [-1, 1]) {
+      ray.set(new THREE.Vector3(sx * 2, 0.70, -0.42), new THREE.Vector3(-sx, 0, 0));
+      const h = ray.intersectObject(corpo, false)[0];
+      if (!h) continue;
+      const n = h.face.normal.clone().transformDirection(corpo.matrixWorld);
+      const d = new THREE.Mesh(new THREE.PlaneGeometry(0.30, 0.056), pep);
+      d.position.copy(h.point).addScaledVector(n, 0.004);
+      d.quaternion.setFromUnitVectors(Z, n);
+      g.add(d);
+    }
+  }
+  return g;
 }
 
 // ---------------------------------------------------------------------------
@@ -3604,6 +3676,20 @@ export class Casa3DCard extends HTMLElement {
     renderer.shadowMap.needsUpdate = true;
     this._precompile();
   }
+  // up! do modelo 3D (v1.10): baixa depois da cena pronta e troca o carro desenhado; sem rede ou no nível min, fica o desenhado
+  _loadCar(car) {
+    const cm = this._config.car_model;
+    if (cm === false || this._min) return;
+    const url = typeof cm === 'string' ? cm : new URL('modelos/up-tsi.bin', import.meta.url).href;
+    fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status)))).then((buf) => {
+      if (!this._scene) return;
+      const novo = upModelo(buf, new THREE.Color(this._config.car_color || '#f3f3f0'));
+      car.traverse((m) => { if (m.isMesh) m.geometry.dispose(); });
+      car.clear(); car.add(novo);
+      this._renderer.shadowMap.needsUpdate = true;
+      this._precompile();
+    }).catch((e) => console.info('casa3d: carro 3D não carregou, fica o desenhado', e && e.message));
+  }
   // Compila os shaders antes do primeiro quadro — em paralelo quando o navegador deixa (KHR_parallel_shader_compile),
   // sem travar a página na carga — com o telhado visível, para o botão dele não engasgar depois. Enquanto isso _frame não desenha.
   _precompile() {
@@ -3855,7 +3941,9 @@ export class Casa3DCard extends HTMLElement {
     acRt.ledMat = new THREE.MeshStandardMaterial({ color: 0x0a2a3a, emissive: 0x67d3ff, emissiveIntensity: 0 });
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.02), acRt.ledMat); led.position.set(7.9, 2.31, 0.32); led.castShadow = false; scene.add(led);
     // Carro na garagem (cor em `car_color`)
-    place(F.upTsi(new THREE.Color(this._config.car_color || '#f3f3f0')), 1.5, 13.6);
+    const car = place(F.upTsi(new THREE.Color(this._config.car_color || '#f3f3f0')), 1.5, 13.6);
+    car.userData.keep = true;   // fora do mergeStatic: o modelo 3D entra no lugar quando chegar
+    this._loadCar(car);
 
     // Decoração por cômodo (funções room*, no topo do arquivo)
     // @room quarto_casal
