@@ -79,6 +79,20 @@ export class PlantaRealCard extends HTMLElement {
       onReset: () => { this._scene.resetView(); this._close(); },
     });
     this._scene = new RealScene(stage, { onPick: (id) => this._pick(id) });
+    // Recortes da maquete: em cima o cabeçalho (largo) ou a barra sob ele (estreito); embaixo 12 px.
+    // O painel aberto não muda o enquadramento
+    this._insets = () => {
+      const pr = planta.getBoundingClientRect();
+      if (!pr.height) return;
+      const narrow = pr.width <= 520;
+      const el = planta.querySelector(narrow ? '.bar' : '.hdr');
+      const top = el ? Math.max(0, Math.round(el.getBoundingClientRect().bottom - pr.top)) : 0;
+      this._scene.setInsets(top, 12);
+    };
+    this._insRO = new ResizeObserver(() => this._insets());
+    this._insRO.observe(planta);
+    for (const el of planta.querySelectorAll('.hdr, .bar')) this._insRO.observe(el);
+    this._insets();
 
     this._applyHeight();
     this._header.update(this._headerModel());
@@ -128,6 +142,7 @@ export class PlantaRealCard extends HTMLElement {
       map[room.id] = k ? (CONTROLS[k].glow ?? null) : null;
     }
     this._scene.setGlow(map);
+    this._scene.setPump(this._on('bomba_piscina'));
 
     this._header.update(this._headerModel());
     if (this._panel.open && this._sel) this._panel.update(this._model(this._sel));

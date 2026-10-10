@@ -1,9 +1,12 @@
 // Planta Real — cena, luz do dia, câmera fixa em 3/4, render sob demanda e toque
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
-import { buildModel, setHighlight, setGlow, disposeModel, roomAt } from './real-geometria.js';
+import { buildModel, setHighlight, setGlow, setPump, disposeModel, roomAt } from './real-geometria.js';
 
 // Vista 0 = ângulo da referência: pela frente (rua), alto, levemente de lado. Graus
 export const VIEWS = [{ az: 8, el: 60 }, { az: 98, el: 60 }, { az: 188, el: 60 }, { az: 278, el: 60 }];
+// Retrato (celular em pé): vista 0 de frente e mais alta, para o lote ocupar a tela
+const PORTRAIT0 = { az: 0, el: 70 };
+const SIDE_SPILL = 0.53; // m do lote que podem sair por cada lado no retrato
 const FOV = 30;
 
 const RAD = Math.PI / 180;
@@ -11,7 +14,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = (t) => 1 - (1 - t) ** 3;
 // Limite de pixels do canvas (tablet fraco): até 2× e no máximo ~3,7 MP
 const MAX_PX = 3.7e6;
-const GLOSSY = { f_water: 0.9, carA: 0.7, carB: 0.8, carGlass: 1, glass: 1, chrome: 0.8, steel: 0.6, rim: 0.7, screen: 0.6, f_tile: 0.15, f_tileCool: 0.2 };
+const GLOSSY = { f_water: 0.9, glass: 1, chrome: 0.8, steel: 0.6, rim: 0.7, screen: 0.6, f_tile: 0.15, f_tileCool: 0.2 };
 
 // Ambiente de céu (gradiente céu → horizonte → chão) pré-filtrado uma vez para reflexos e luz difusa
 function skyEnv(renderer) {
@@ -41,9 +44,9 @@ export class RealScene {
     const sc = (this._scene = new THREE.Scene());
     sc.add(this._m.group); // sem fundo: o canvas é transparente sobre o gradiente do cartão
 
-    // Luz de dia: sol quente baixo pela frente-esquerda + céu suave + ambiente (reflexos)
-    sc.add(new THREE.HemisphereLight(0xf3f6fa, 0xdedbd5, 1.0));
-    const sun = (this._sun = new THREE.DirectionalLight(0xfff0dd, 2.5));
+    // Luz de dia neutra (branco limpo): sol pela frente-esquerda + céu + ambiente (reflexos)
+    sc.add(new THREE.HemisphereLight(0xffffff, 0xe9e9e6, 1.0));
+    const sun = (this._sun = new THREE.DirectionalLight(0xfffaf2, 2.5));
     const c = this._m.bounds.getCenter(new THREE.Vector3());
     sun.position.set(c.x - 9, 16, c.z + 7);
     sun.target.position.copy(c);
@@ -71,15 +74,20 @@ export class RealScene {
     this._m.group.traverse((o) => {
       if (GLOSSY[o.name] != null) Object.assign(o.material, { envMap: this._env, envMapIntensity: GLOSSY[o.name] });
     });
+    // up!: reflexo do céu em todo material sem envMap (mantém o envMapIntensity do autor)
+    this._m.up.traverse((o) => {
+      if (o.isMesh) for (const m of [].concat(o.material)) if (!m.envMap) m.envMap = this._env;
+    });
     this._cv = r.domElement;
     this._cv.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
     host.append(this._cv);
 
-    this._tgt0 = c.clone().setY(0);
+    this._tgt0 = this._m.foot.getCenter(new THREE.Vector3()).setX(this._m.lotCx); // centro do lote (entre garagem e jardim)
     this._ray = new THREE.Raycaster();
     this._ptrs = new Map();
     this._g = null;
     this._pinch = null;
+    this._insets = [0, 0]; // px livres em cima (cabeçalho/barra) e embaixo
     this._az = VIEWS[0].az;
     this._el = VIEWS[0].el;
     this._vi = 0;
@@ -104,10 +112,19 @@ export class RealScene {
   }
 
   setGlow(map) { setGlow(this._m, map); this.requestRender(); }
+  setPump(on) { setPump(this._m, on); this.requestRender(); }
+  // Recortes de cima e de baixo (px CSS) que a maquete deve evitar
+  setInsets(top, bottom) {
+    if (top === this._insets[0] && bottom === this._insets[1]) return;
+    this._insets = [top, bottom];
+    this.requestRender();
+  }
+  get _portrait() { return this._w > 0 && this._w / this._h < 0.75; }
+  _view(i) { return i === 0 && this._portrait ? PORTRAIT0 : VIEWS[i]; }
   select(roomId) { setHighlight(this._m, roomId ?? null); this.requestRender(); }
 
   setView(i) {
-    const to = VIEWS[i];
+    const to = this._view(i);
     this._vi = i;
     cancelAnimationFrame(this._tw);
     this._tw = 0;
@@ -177,42 +194,63 @@ export class RealScene {
     this._count++;
   }
 
-  // Câmera em perspectiva enquadrando o lote (distância mínima que cabe os 8 cantos)
+  // Câmera em perspectiva enquadrando a pegada real do lote na faixa livre (entre os recortes de cima e de baixo).
+  // Largura e altura calculadas à parte; no retrato o lote pode sair um pouco pelos lados
   _frame() {
-    const cam = this._cam, b = this._m.bounds;
+    const cam = this._cam, b = this._m.foot;
     const az = this._az * RAD, el = this._el * RAD;
     const back = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
     const right = new THREE.Vector3(Math.cos(az), 0, -Math.sin(az));
     const up = new THREE.Vector3().crossVectors(back, right);
-    const asp = this._w && this._h ? this._w / this._h : 1;
-    const tv = Math.tan(FOV * RAD / 2), th = tv * asp;
-    let d = 0;
+    const W = this._w || 1, Hh = this._h || 1, asp = W / Hh;
+    const [top, bot] = this._insets;
+    const free = Math.max(0.3, (Hh - top - bot) / Hh);   // fração da altura livre
+    const tv = Math.tan(FOV * RAD / 2), th = tv * asp, tvf = tv * free;
+    let dw = 0, dh = 0;
     const v = new THREE.Vector3();
     for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
       v.set(x, y, z).sub(this._tgt0);
       const cz = v.dot(back);
-      d = Math.max(d, cz + Math.abs(v.dot(right)) / th, cz + Math.abs(v.dot(up)) / tv);
+      dw = Math.max(dw, cz + Math.abs(v.dot(right)) / th);
+      dh = Math.max(dh, cz + Math.abs(v.dot(up)) / tvf);
     }
-    d *= 1.04;
+    const lotW = b.max.x - b.min.x;
+    const d = asp < 0.75 ? Math.max(dh, dw * (1 - 2 * SIDE_SPILL / lotW)) : Math.max(dw, dh) * 1.02;
     this._dist = d;
-    // Planta desce um pouco para o cabeçalho; pan desloca o alvo no plano da tela
-    const tgt = this._tgt0.clone()
-      .addScaledVector(up, 0.05 * d * tv + this._py)
-      .addScaledVector(right, this._px);
-    cam.position.copy(tgt).addScaledVector(back, d / this._zoom);
-    cam.up.set(0, 1, 0);
-    cam.lookAt(tgt);
-    cam.aspect = asp;
-    cam.near = Math.max(0.5, d / this._zoom - 40);
-    cam.far = d / this._zoom + 80;
-    cam.updateProjectionMatrix();
-    cam.updateMatrixWorld();
+    // Centro da faixa livre: sobe o alvo (top − bottom)/2 px convertidos em metros; pan desloca no plano da tela
+    const mpp = 2 * d * tv / Hh;
+    let lift = top / 2 * mpp;
+    const place = (zoom, px, py) => {
+      const tgt = this._tgt0.clone().addScaledVector(up, lift + py).addScaledVector(right, px);
+      cam.position.copy(tgt).addScaledVector(back, d / zoom);
+      cam.up.set(0, 1, 0);
+      cam.lookAt(tgt);
+      cam.aspect = asp;
+      cam.near = Math.max(0.5, d / zoom - 40);
+      cam.far = d / zoom + 80;
+      cam.updateProjectionMatrix();
+      cam.updateMatrixWorld();
+    };
+    place(1, 0, 0);
+    // Correção da perspectiva: centra de fato o lote projetado na faixa livre (uma passada, sem zoom/pan)
+    let y0 = 1, y1 = -1;
+    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+      const py = v.set(x, y, z).project(cam).y;
+      y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    }
+    // centro entre o recorte de cima e a borda de baixo (a folga de baixo só entra no ajuste de tamanho)
+    const want = ((1 - 2 * top / Hh) + -1) / 2;
+    lift -= (want - (y0 + y1) / 2) * d * tv;
+    place(this._zoom, this._px, this._py);
   }
 
   _resize() {
     const w = this._host.clientWidth, h = this._host.clientHeight;
     if (!(w > 0 && h > 0)) return;
+    const wasPortrait = this._portrait;
     this._w = w; this._h = h;
+    // Girou o aparelho na vista 0 (sem animação): troca a vista de retrato/paisagem
+    if (this._vi === 0 && !this._tw && wasPortrait !== this._portrait) { const v = this._view(0); this._az = v.az; this._el = v.el; }
     this._r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PX / (w * h))));
     this._r.setSize(w, h, false);
     this.requestRender();
@@ -240,7 +278,8 @@ export class RealScene {
       if (!g.moved) return;
       // Pan: metros por pixel no plano do alvo
       const mpp = (2 * Math.tan(FOV * RAD / 2) * this._dist / this._zoom) / this._h;
-      const lim = 0.35 * this._dist * Math.tan(FOV * RAD / 2);
+      // limite do pan: alcança as bordas cortadas no retrato
+      const lim = Math.max(0.35 * this._dist * Math.tan(FOV * RAD / 2), SIDE_SPILL + 0.6);
       this._px = clamp(this._px - (p.x - g.last.x) * mpp, -lim, lim);
       this._py = clamp(this._py + (p.y - g.last.y) * mpp, -lim, lim);
       g.last = { x: p.x, y: p.y };
