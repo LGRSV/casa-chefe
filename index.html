@@ -369,8 +369,13 @@ function upModelo(buf, paint) {
     x.fillStyle = '#fff'; x.font = 'bold 24px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('BRASIL', 256, 17);
     x.fillStyle = '#151515'; x.font = 'bold 96px Arial'; x.fillText('UPT 5I19', 256, 100);
   });
+  const colmeia = canvas(512, 128, (x) => {   // grade inferior do Pepper: colmeia preta
+    x.fillStyle = '#0d0e0f'; x.fillRect(0, 0, 512, 128); x.strokeStyle = '#25282c'; x.lineWidth = 3;
+    for (let r = 0; r * 11 < 140; r++) for (let c = -1; c * 16 < 530; c++) { const cx = c * 16 + (r % 2) * 8, cy = r * 11; x.beginPath(); x.moveTo(cx - 7, cy); x.lineTo(cx, cy - 6); x.lineTo(cx + 7, cy); x.lineTo(cx, cy + 6); x.closePath(); x.stroke(); }
+    x.fillStyle = '#1b1c1e'; x.fillRect(0, 0, 512, 7); x.fillRect(0, 121, 512, 7);   // moldura
+  });
   const MAT = {
-    pintura: M({ color: paint, roughness: 0.22, metalness: 0.05 }),
+    pintura: new THREE.MeshPhysicalMaterial({ color: paint, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04 }),   // branco sólido com verniz
     vermelho: M({ color: 0xd3121b, roughness: 0.25 }),
     liga: M({ color: 0x3b3e43, metalness: 0.75, roughness: 0.32 }),
     preto: M({ color: 0x141516, roughness: 0.7 }),
@@ -378,10 +383,11 @@ function upModelo(buf, paint) {
     metal: M({ color: 0x8a8d90, metalness: 0.8, roughness: 0.4 }),
     cromado: M({ color: 0xdfe3e8, metalness: 1, roughness: 0.12 }),
     vidro: M({ color: 0x0b1015, roughness: 0.05, metalness: 0.1 }),
-    lente: M({ color: 0xc9d1d8, metalness: 0.6, roughness: 0.06 }),
+    lente: M({ color: 0xffffff, roughness: 0.02, metalness: 0, transparent: true, opacity: 0.16, depthWrite: false }),   // farol transparente: o refletor cromado aparece por dentro
     ambar: M({ color: 0xd98a1c, roughness: 0.3 }),
     lanterna: M({ color: 0x9c0f14, roughness: 0.2, emissive: 0x2a0004 }),
     placa: M({ map: placa, roughness: 0.4 }),
+    grade: M({ map: colmeia, roughness: 0.55 }),
   };
   const g = new THREE.Group();
   let o = 8 + hl, corpo = null;
@@ -396,7 +402,7 @@ function upModelo(buf, paint) {
     if (e.uv) { geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(buf, o, e.vc * 2), 2)); o += e.vc * 8; }
     geo.setIndex(new THREE.BufferAttribute(e.big ? new Uint32Array(buf, o, e.ic) : new Uint16Array(buf, o, e.ic), 1)); o += e.ic * (e.big ? 4 : 2); al();
     const m = new THREE.Mesh(geo, MAT[e.k] || MAT.preto);
-    m.castShadow = !['vidro', 'lente', 'placa', 'ambar', 'lanterna', 'vermelho'].includes(e.k);
+    m.castShadow = !['vidro', 'lente', 'placa', 'ambar', 'lanterna', 'vermelho', 'grade'].includes(e.k);
     m.receiveShadow = true;
     g.add(m);
     if (e.k === 'pintura') corpo = m;
@@ -405,7 +411,7 @@ function upModelo(buf, paint) {
   if (corpo) {
     const pep = new THREE.MeshStandardMaterial({ roughness: 0.3, map: canvas(512, 96, (x) => {
       x.fillStyle = '#' + new THREE.Color(paint).getHexString(); x.fillRect(0, 0, 512, 96);   // fundo da cor da pintura: sem transparência
-      x.fillStyle = '#d3121b'; x.font = 'italic bold 70px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('PEPPER', 232, 48);
+      x.fillStyle = '#c8101a'; x.font = 'italic 900 78px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('PEPPER', 232, 50);
       x.beginPath(); x.moveTo(384, 34); x.lineTo(426, 48); x.lineTo(384, 62); x.fill();
     }) });
     const ray = new THREE.Raycaster(), Z = new THREE.Vector3(0, 0, 1);
