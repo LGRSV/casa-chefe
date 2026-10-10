@@ -7,6 +7,13 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.10.0 — up! TSI de verdade na garagem
+
+- O carro da garagem agora é um modelo 3D real do VW up! (arquivo `modelos/up-tsi.bin`, ~860 KB), pintado como o **up! TSI Pepper**: branco, retrovisores vermelhos, filete vermelho na grade, para-choque preto, rodas grafite, adesivo PEPPER e placa Mercosul. Ele carrega depois que a casa aparece; até lá (ou sem internet, ou no nível de qualidade `min`) fica o carro desenhado de antes.
+- Opção nova `car_model`: `true` (padrão) usa o arquivo ao lado do cartão; `false` volta ao carro desenhado; um texto é a URL de outro arquivo. Instalação local (`/local/`): copie também a pasta `modelos/`.
+- `car_color` continua valendo para a pintura.
+- Crédito do modelo: **"VolksWagen UP!"** de [esprit3d.website](https://sketchfab.com/Shogos_esprit), [Sketchfab](https://sketchfab.com/3d-models/volkswagen-up-65d0be2f60fe49e6bb7a016efc8e5cb3), licença [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/). Alterações: interior e peças escondidas removidos, malha unida por material e cores trocadas para o up! TSI Pepper.
+
 ## Novidades da v1.9.1
 
 - Sem o realce azul ao selecionar cômodos e aparelhos (na maquete, no painel e na Vista de cima por cômodo). O azul fica só no foco do teclado e no passar do mouse pela planta/área da Vista de cima.
