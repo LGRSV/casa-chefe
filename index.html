@@ -81,7 +81,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.10.1';
+export const VERSION = '1.10.0';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
@@ -376,20 +376,18 @@ function upModelo(buf, paint) {
   });
   const MAT = {
     pintura: new THREE.MeshPhysicalMaterial({ color: paint, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04 }),   // branco sólido com verniz
-    vermelho: new THREE.MeshPhysicalMaterial({ color: 0xbf0d16, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05 }),   // capas dos retrovisores com verniz
-    plastico: M({ color: 0x18191b, roughness: 0.9, envMapIntensity: 0.25 }),   // plástico preto texturizado do para-choque
+    vermelho: M({ color: 0xd3121b, roughness: 0.25 }),
     liga: M({ color: 0x3b3e43, metalness: 0.75, roughness: 0.32 }),
-    preto: M({ color: 0x121314, roughness: 0.9, envMapIntensity: 0.25 }),   // plástico/borracha fosco: não clareia com o céu de lado
-    farol: new THREE.MeshPhysicalMaterial({ color: 0x8c949c, metalness: 0.95, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0 }),   // refletor cromado sob o vidro (o verniz faz o papel do vidro)
+    preto: M({ color: 0x141516, roughness: 0.7 }),
     pretoBrilho: M({ color: 0x08090a, roughness: 0.15 }),
     metal: M({ color: 0x8a8d90, metalness: 0.8, roughness: 0.4 }),
     cromado: M({ color: 0xdfe3e8, metalness: 1, roughness: 0.12 }),
     vidro: M({ color: 0x0b1015, roughness: 0.05, metalness: 0.1 }),
-    lente: M({ color: 0xffffff, roughness: 0.02, metalness: 1, transparent: true, opacity: 0.45, depthWrite: false, envMapIntensity: 1.6 }),   // vidro do farol: espelha o céu pela metade e deixa ver o refletor   // vidro do farol: reflete o céu e deixa ver o refletor
+    lente: M({ color: 0xffffff, roughness: 0.02, metalness: 0, transparent: true, opacity: 0.16, depthWrite: false }),   // farol transparente: o refletor cromado aparece por dentro
     ambar: M({ color: 0xd98a1c, roughness: 0.3 }),
     lanterna: M({ color: 0x9c0f14, roughness: 0.2, emissive: 0x2a0004 }),
     placa: M({ map: placa, roughness: 0.4 }),
-    grade: M({ map: colmeia, roughness: 0.8, envMapIntensity: 0.3 }),
+    grade: M({ map: colmeia, roughness: 0.55 }),
   };
   const g = new THREE.Group();
   let o = 8 + hl, corpo = null;
@@ -404,7 +402,7 @@ function upModelo(buf, paint) {
     if (e.uv) { geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(buf, o, e.vc * 2), 2)); o += e.vc * 8; }
     geo.setIndex(new THREE.BufferAttribute(e.big ? new Uint32Array(buf, o, e.ic) : new Uint16Array(buf, o, e.ic), 1)); o += e.ic * (e.big ? 4 : 2); al();
     const m = new THREE.Mesh(geo, MAT[e.k] || MAT.preto);
-    m.castShadow = !['vidro', 'lente', 'placa', 'ambar', 'lanterna', 'vermelho', 'grade', 'plastico'].includes(e.k);
+    m.castShadow = !['vidro', 'lente', 'placa', 'ambar', 'lanterna', 'vermelho', 'grade'].includes(e.k);
     m.receiveShadow = true;
     g.add(m);
     if (e.k === 'pintura') corpo = m;
