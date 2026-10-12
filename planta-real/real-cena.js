@@ -1,0 +1,325 @@
+// Planta Real — cena, luz do dia, câmera fixa em 3/4, render sob demanda e toque
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
+import { buildModel, setHighlight, setGlow, setPump, disposeModel, roomAt } from './real-geometria.js';
+
+// Vista 0 = ângulo da referência: pela frente (rua), alto, levemente de lado. Graus
+export const VIEWS = [{ az: 8, el: 60 }, { az: 98, el: 60 }, { az: 188, el: 60 }, { az: 278, el: 60 }];
+// Retrato (celular em pé): vista 0 de frente e mais alta, para o lote ocupar a tela
+const PORTRAIT0 = { az: 0, el: 70 };
+const SIDE_SPILL = 0.53; // m do lote que podem sair por cada lado no retrato
+const FOV = 30;
+
+const RAD = Math.PI / 180;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const ease = (t) => 1 - (1 - t) ** 3;
+// Limite de pixels do canvas (tablet fraco): até 2× e no máximo ~3,7 MP
+const MAX_PX = 3.7e6;
+const GLOSSY = { f_water: 0.9, glass: 1, chrome: 0.8, steel: 0.6, rim: 0.7, screen: 0.6, f_tile: 0.15, f_tileCool: 0.2 };
+
+// Ambiente de céu (gradiente céu → horizonte → chão) pré-filtrado uma vez para reflexos e luz difusa
+function skyEnv(renderer) {
+  const g = new THREE.SphereGeometry(10, 32, 16);
+  const p = g.attributes.position, col = [];
+  const top = new THREE.Color(0xc2d4e8), hor = new THREE.Color(0xf4efe7), bot = new THREE.Color(0x8c8273), c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i) / 10;
+    if (y > 0) c.copy(hor).lerp(top, Math.pow(y, 0.6)); else c.copy(hor).lerp(bot, Math.min(1, -y * 3));
+    col.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const pm = new THREE.PMREMGenerator(renderer);
+  const rt = pm.fromScene(env, 0, 0.1, 100, { size: 32 });
+  pm.dispose();
+  g.dispose();
+  return rt.texture;
+}
+
+export class RealScene {
+  constructor(host, { onPick } = {}) {
+    this._host = host;
+    this._onPick = onPick ?? (() => {});
+    this._m = buildModel();
+    const sc = (this._scene = new THREE.Scene());
+    sc.add(this._m.group); // sem fundo: o canvas é transparente sobre o gradiente do cartão
+
+    // Luz de dia neutra (branco limpo): sol pela frente-esquerda + céu + ambiente (reflexos)
+    sc.add(new THREE.HemisphereLight(0xffffff, 0xe9e9e6, 1.0));
+    const sun = (this._sun = new THREE.DirectionalLight(0xfffaf2, 2.5));
+    const c = this._m.bounds.getCenter(new THREE.Vector3());
+    sun.position.set(c.x - 9, 16, c.z + 7);
+    sun.target.position.copy(c);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    // Caixa de sombra justa no lote (mais resolução) e filtro largo = sombras macias
+    Object.assign(sun.shadow.camera, { left: -11.5, right: 11.5, top: 11.5, bottom: -11.5, near: 4, far: 40 });
+    sun.shadow.radius = 3.5;
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = 0.025;
+    sc.add(sun, sun.target);
+
+    this._cam = new THREE.PerspectiveCamera(FOV, 1, 1, 300);
+    const r = (this._r = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' }));
+    r.setClearColor(0x000000, 0);
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    r.toneMapping = THREE.ACESFilmicToneMapping;
+    r.toneMappingExposure = 1.12;
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = THREE.PCFShadowMap; // PCF com raio > 1 = penumbra macia
+    r.shadowMap.autoUpdate = false; // sombras calculadas uma vez (a cena é estática)
+    r.shadowMap.needsUpdate = true;
+    // Reflexo do céu só nas superfícies brilhantes (água, vidro, carros, metal): barato e onde aparece
+    this._env = skyEnv(r);
+    this._m.group.traverse((o) => {
+      if (GLOSSY[o.name] != null) Object.assign(o.material, { envMap: this._env, envMapIntensity: GLOSSY[o.name] });
+    });
+    // up!: reflexo do céu em todo material sem envMap (mantém o envMapIntensity do autor)
+    this._m.up.traverse((o) => {
+      if (o.isMesh) for (const m of [].concat(o.material)) if (!m.envMap) m.envMap = this._env;
+    });
+    this._cv = r.domElement;
+    this._cv.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
+    host.append(this._cv);
+
+    this._tgt0 = this._m.foot.getCenter(new THREE.Vector3()).setX(this._m.lotCx); // centro do lote (entre garagem e jardim)
+    this._ray = new THREE.Raycaster();
+    this._ptrs = new Map();
+    this._g = null;
+    this._pinch = null;
+    this._insets = [0, 0]; // px livres em cima (cabeçalho/barra) e embaixo
+    this._az = VIEWS[0].az;
+    this._el = VIEWS[0].el;
+    this._vi = 0;
+    this._zoom = 1;
+    this._px = 0; this._py = 0; // pan em metros no plano da tela
+    this._dist = 40;
+    this._w = 0; this._h = 0;
+    this._raf = 0; this._tw = 0; this._count = 0;
+
+    this._ev = [
+      ['pointerdown', (e) => this._down(e)],
+      ['pointermove', (e) => this._move(e)],
+      ['pointerup', (e) => this._up(e, true)],
+      ['pointercancel', (e) => this._up(e, false)],
+      ['wheel', (e) => this._wheel(e), { passive: false }],
+    ];
+    for (const [t, f, o] of this._ev) this._cv.addEventListener(t, f, o);
+
+    this._ro = new ResizeObserver(() => this._resize());
+    this._ro.observe(host);
+    this._resize();
+  }
+
+  setGlow(map) { setGlow(this._m, map); this.requestRender(); }
+  setPump(on) { setPump(this._m, on); this.requestRender(); }
+  // Recortes de cima e de baixo (px CSS) que a maquete deve evitar
+  setInsets(top, bottom) {
+    if (top === this._insets[0] && bottom === this._insets[1]) return;
+    this._insets = [top, bottom];
+    this.requestRender();
+  }
+  get _portrait() { return this._w > 0 && this._w / this._h < 0.75; }
+  _view(i) { return i === 0 && this._portrait ? PORTRAIT0 : VIEWS[i]; }
+  select(roomId) { setHighlight(this._m, roomId ?? null); this.requestRender(); }
+
+  setView(i) {
+    const to = this._view(i);
+    this._vi = i;
+    cancelAnimationFrame(this._tw);
+    this._tw = 0;
+    const az0 = this._az, el0 = this._el;
+    const da = ((to.az - az0) % 360 + 540) % 360 - 180; // menor caminho
+    const de = to.el - el0;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || (Math.abs(da) < 1e-3 && Math.abs(de) < 1e-3)) {
+      this._az = to.az; this._el = to.el;
+      this.requestRender();
+      return;
+    }
+    const t0 = performance.now();
+    const step = () => {
+      const k = ease(Math.min(1, (performance.now() - t0) / 480));
+      this._az = az0 + da * k;
+      this._el = el0 + de * k;
+      this._tw = k < 1 ? requestAnimationFrame(step) : 0;
+      this.requestRender();
+    };
+    this._tw = requestAnimationFrame(step);
+  }
+
+  nextView() { this.setView((this._vi + 1) % VIEWS.length); return this._vi; }
+
+  resetView() {
+    this._zoom = 1; this._px = 0; this._py = 0;
+    this.setView(0);
+  }
+
+  get viewIndex() { return this._vi; }
+  get renderCount() { return this._count; }
+
+  // Ponto da tela (px CSS, relativo à janela) do centro do piso de um cômodo — usado nos testes
+  // u, v = fração do retângulo do cômodo em x e z (0,5 = centro)
+  screenOf(roomId, u = 0.5, v0 = 0.5) {
+    const room = this._m.rooms[roomId];
+    if (!room) return null;
+    this._frame();
+    const [x, z, w, d] = room.rect;
+    const v = new THREE.Vector3(x + w * u, room.center.y, z + d * v0).project(this._cam);
+    const r = this._cv.getBoundingClientRect();
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+  }
+
+  // Um único rAF coalescido; nunca loop contínuo
+  requestRender() {
+    if (!this._raf) this._raf = requestAnimationFrame(() => this._draw());
+  }
+
+  dispose() {
+    this._ro.disconnect();
+    for (const [t, f, o] of this._ev) this._cv.removeEventListener(t, f, o);
+    cancelAnimationFrame(this._raf);
+    cancelAnimationFrame(this._tw);
+    disposeModel(this._m);
+    this._env.dispose();
+    this._r.dispose();
+    this._cv.remove();
+  }
+
+  _draw() {
+    this._raf = 0;
+    if (!this._w) return;
+    this._frame();
+    this._r.render(this._scene, this._cam);
+    this._count++;
+  }
+
+  // Câmera em perspectiva enquadrando a pegada real do lote na faixa livre (entre os recortes de cima e de baixo).
+  // Largura e altura calculadas à parte; no retrato o lote pode sair um pouco pelos lados
+  _frame() {
+    const cam = this._cam, b = this._m.foot;
+    const az = this._az * RAD, el = this._el * RAD;
+    const back = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    const right = new THREE.Vector3(Math.cos(az), 0, -Math.sin(az));
+    const up = new THREE.Vector3().crossVectors(back, right);
+    const W = this._w || 1, Hh = this._h || 1, asp = W / Hh;
+    const [top, bot] = this._insets;
+    const free = Math.max(0.3, (Hh - top - bot) / Hh);   // fração da altura livre
+    const tv = Math.tan(FOV * RAD / 2), th = tv * asp, tvf = tv * free;
+    let dw = 0, dh = 0;
+    const v = new THREE.Vector3();
+    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+      v.set(x, y, z).sub(this._tgt0);
+      const cz = v.dot(back);
+      dw = Math.max(dw, cz + Math.abs(v.dot(right)) / th);
+      dh = Math.max(dh, cz + Math.abs(v.dot(up)) / tvf);
+    }
+    const lotW = b.max.x - b.min.x;
+    const d = asp < 0.75 ? Math.max(dh, dw * (1 - 2 * SIDE_SPILL / lotW)) : Math.max(dw, dh) * 1.02;
+    this._dist = d;
+    // Centro da faixa livre: sobe o alvo (top − bottom)/2 px convertidos em metros; pan desloca no plano da tela
+    const mpp = 2 * d * tv / Hh;
+    let lift = top / 2 * mpp;
+    const place = (zoom, px, py) => {
+      const tgt = this._tgt0.clone().addScaledVector(up, lift + py).addScaledVector(right, px);
+      cam.position.copy(tgt).addScaledVector(back, d / zoom);
+      cam.up.set(0, 1, 0);
+      cam.lookAt(tgt);
+      cam.aspect = asp;
+      cam.near = Math.max(0.5, d / zoom - 40);
+      cam.far = d / zoom + 80;
+      cam.updateProjectionMatrix();
+      cam.updateMatrixWorld();
+    };
+    place(1, 0, 0);
+    // Correção da perspectiva: centra de fato o lote projetado na faixa livre (uma passada, sem zoom/pan)
+    let y0 = 1, y1 = -1;
+    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+      const py = v.set(x, y, z).project(cam).y;
+      y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    }
+    // centro entre o recorte de cima e a borda de baixo (a folga de baixo só entra no ajuste de tamanho)
+    const want = ((1 - 2 * top / Hh) + -1) / 2;
+    lift -= (want - (y0 + y1) / 2) * d * tv;
+    place(this._zoom, this._px, this._py);
+  }
+
+  _resize() {
+    const w = this._host.clientWidth, h = this._host.clientHeight;
+    if (!(w > 0 && h > 0)) return;
+    const wasPortrait = this._portrait;
+    this._w = w; this._h = h;
+    // Girou o aparelho na vista 0 (sem animação): troca a vista de retrato/paisagem
+    if (this._vi === 0 && !this._tw && wasPortrait !== this._portrait) { const v = this._view(0); this._az = v.az; this._el = v.el; }
+    this._r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PX / (w * h))));
+    this._r.setSize(w, h, false);
+    this.requestRender();
+  }
+
+  _down(e) {
+    this._cv.setPointerCapture?.(e.pointerId);
+    this._ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this._ptrs.size === 1) {
+      this._g = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false, multi: false, last: null };
+    } else if (this._ptrs.size === 2 && this._g) {
+      const [a, b] = this._ptrs.values();
+      this._g.multi = true; this._g.moved = true;
+      this._pinch = { zoom: this._zoom, d: Math.hypot(a.x - b.x, a.y - b.y) };
+    }
+  }
+
+  _move(e) {
+    const p = this._ptrs.get(e.pointerId);
+    if (!p) return;
+    p.x = e.clientX; p.y = e.clientY;
+    const g = this._g;
+    if (this._ptrs.size === 1 && g) {
+      if (!g.moved && Math.hypot(p.x - g.x, p.y - g.y) > 6) { g.moved = true; g.last = { x: g.x, y: g.y }; }
+      if (!g.moved) return;
+      // Pan: metros por pixel no plano do alvo
+      const mpp = (2 * Math.tan(FOV * RAD / 2) * this._dist / this._zoom) / this._h;
+      // limite do pan: alcança as bordas cortadas no retrato
+      const lim = Math.max(0.35 * this._dist * Math.tan(FOV * RAD / 2), SIDE_SPILL + 0.6);
+      this._px = clamp(this._px - (p.x - g.last.x) * mpp, -lim, lim);
+      this._py = clamp(this._py + (p.y - g.last.y) * mpp, -lim, lim);
+      g.last = { x: p.x, y: p.y };
+      this.requestRender();
+    } else if (this._ptrs.size === 2 && this._pinch?.d > 0) {
+      const [a, b] = this._ptrs.values();
+      this._zoom = clamp(this._pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / this._pinch.d, 1, 3);
+      this.requestRender();
+    }
+  }
+
+  _up(e, tap) {
+    if (!this._ptrs.delete(e.pointerId)) return;
+    const g = this._g;
+    if (this._ptrs.size === 0) {
+      if (tap && g && !g.moved && !g.multi && performance.now() - g.t < 600) this._pick(e);
+      this._g = null;
+      this._pinch = null;
+    } else if (this._ptrs.size === 1 && g) {
+      const r = this._ptrs.values().next().value;
+      g.multi = true; g.moved = true; g.last = { x: r.x, y: r.y };
+    }
+  }
+
+  _pick(e) {
+    this._frame();
+    const r = this._cv.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    this._ray.setFromCamera(ndc, this._cam);
+    // Primeiro ponto visível (parede, móvel, piso, planta) → cômodo cujo retângulo o contém
+    const hit = this._ray.intersectObjects(this._m.solid, false)[0];
+    let id = hit ? roomAt(hit.point.x, hit.point.z) : null;
+    // Fora dos cômodos (muro, faixa de grama): cai na caixa do cômodo mais próxima pelo raio
+    if (!id && hit) id = this._ray.intersectObjects(this._m.pick, false)[0]?.object.userData.roomId ?? null;
+    this._onPick(id);
+  }
+
+  _wheel(e) {
+    e.preventDefault();
+    this._zoom = clamp(this._zoom * Math.exp(-e.deltaY * 0.0015), 1, 3);
+    this.requestRender();
+  }
+}
