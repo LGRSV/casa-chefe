@@ -7,6 +7,10 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.10.3
+
+- Sem nenhum realce azul de seleção: também saiu o azul ao passar o mouse pela planta/área da Vista de cima e ao arrastar a Pessoa até um cômodo.
+
 ## Novidades da v1.10.2
 
 - Sem o azul ao selecionar qualquer móvel ou objeto da casa: o duplo toque/clique na maquete virava uma seleção de texto do navegador, pintada de azul por cima da cena (no Safari, a cena inteira). Agora a maquete e o painel não são selecionáveis como texto — o 2 toques nos objetos continua igual.

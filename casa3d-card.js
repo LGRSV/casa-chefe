@@ -7,7 +7,7 @@
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 
-export const VERSION = '1.10.2';
+export const VERSION = '1.10.3';
 
 // quality leve: quantas luzes reais cada item mantém (as outras viram só malha + halo); min: 1 por item. Itens fora da tabela (1 fixture) ficam como estão.
 const LITE_LIGHTS = { externa: 2, led_piscina: 1, banheiro: 1 };
@@ -4588,19 +4588,8 @@ export class Casa3DCard extends HTMLElement {
     this._enterAt(sp, this._roomYaw(r, sp.x, sp.z)); return true;
   }
   // realce azul (seleção) dos retângulos [x0, z0, x1, z1] do cômodo sob o bonequinho (desenhado por cima, sem teste de profundidade)
-  _hlShow(rects) {
-    const g = this._hl; if (!g) return;
-    if (rects) {
-      while (g.children.length < rects.length) {
-        const m = new THREE.Mesh(this._hlGeo, this._hlMat); m.rotation.x = -Math.PI / 2; m.position.y = 0.06; m.renderOrder = 40; g.add(m);
-      }
-      g.children.forEach((m, k) => {
-        const r = rects[k]; m.visible = !!r;
-        if (r) { m.scale.set(r[2] - r[0], r[3] - r[1], 1); m.position.x = (r[0] + r[2]) / 2; m.position.z = (r[1] + r[3]) / 2; }
-      });
-    }
-    g.visible = !!rects;
-  }
+  // v1.10.2: sem realce azul nenhum (nem no passar do mouse na Vista de cima, nem ao arrastar a Pessoa) — pedido do dono
+  _hlShow() { if (this._hl) this._hl.visible = false; }
   // Bonequinho (estilo Street View): arrastar até um ponto do piso da maquete e soltar → entra na visão de Pessoa ali
   _pegBind(btn) {
     let st = null;
