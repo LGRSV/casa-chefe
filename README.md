@@ -7,6 +7,10 @@ gira, dá zoom, e cada cômodo acende conforme o interruptor real. Tocar no côm
 na luminária abre esse cômodo no painel lateral (tocar não liga nada); o bloco do painel alterna direto. Substitui o
 `picture-elements` com PNGs da vista "3D" por uma cena de verdade.
 
+## Novidades da v1.10.2
+
+- Sem nenhum realce azul de seleção: também saiu o azul ao passar o mouse pela planta/área da Vista de cima e ao arrastar a Pessoa até um cômodo.
+
 ## Novidades da v1.10.0 — up! TSI de verdade na garagem
 
 - O carro da garagem agora é um modelo 3D real do VW up! (arquivo `modelos/up-tsi.bin`, ~860 KB), pintado como o **up! TSI Pepper**: branco, retrovisores vermelhos, filete vermelho na grade, para-choque preto, rodas grafite, adesivo PEPPER e placa Mercosul. Ele carrega depois que a casa aparece; até lá (ou sem internet, ou no nível de qualidade `min`) fica o carro desenhado de antes.
